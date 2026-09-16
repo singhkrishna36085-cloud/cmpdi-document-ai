@@ -48,3 +48,6 @@ yarn-error.log*
 backend/app/uploads/
 backend/app/vector_store/
 backend/uploads/
+
+!frontend/lib/
+!frontend/lib/**
