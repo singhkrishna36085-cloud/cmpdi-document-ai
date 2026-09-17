@@ -1,0 +1,314 @@
+{
+  "HOD": {
+    "/": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/",
+      "headings": [
+        "SYSTEM",
+        "Dashboard & System Intelligence",
+        "Coal Production & Quality Intelligence (4-Year Trend)"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/documents": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/documents",
+      "headings": [
+        "SYSTEM",
+        "Document Repository",
+        "CIL Q1 2026 Mine Operations Report"
+      ],
+      "buttons_count": 2,
+      "inputs_count": 3,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/assistant": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/assistant",
+      "headings": [
+        "SYSTEM",
+        "AI Document Assistant",
+        "CMPDI Intelligent AI Assistant"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/cross-document": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/cross-document",
+      "headings": [
+        "SYSTEM",
+        "SYSTEM",
+        "Cross-Document Intelligence Center"
+      ],
+      "buttons_count": 17,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/validation": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/validation",
+      "headings": [
+        "SYSTEM",
+        "Validation & Data Quality Center",
+        "6"
+      ],
+      "buttons_count": 13,
+      "inputs_count": 6,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/reports": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/reports",
+      "headings": [
+        "SYSTEM",
+        "Report Generator",
+        "Generated Reports"
+      ],
+      "buttons_count": 4,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/search": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/search",
+      "headings": [
+        "SYSTEM",
+        "Global Semantic Search",
+        "Ready for Semantic Search"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 3,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/topics": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/topics",
+      "headings": [
+        "SYSTEM",
+        "Word Cloud & Topic Intelligence",
+        "No topic analysis available yet."
+      ],
+      "buttons_count": 4,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/knowledge-base": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/knowledge-base",
+      "headings": [
+        "SYSTEM",
+        "Knowledge Base & Vector Store",
+        "FAISS Vector Engine Specifications"
+      ],
+      "buttons_count": 5,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/upload": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/upload",
+      "headings": [
+        "SYSTEM",
+        "Upload Documents"
+      ],
+      "buttons_count": 2,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/documents/viewer": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/documents/viewer",
+      "headings": [
+        "SYSTEM",
+        "Document Viewer",
+        "Select a Document to View"
+      ],
+      "buttons_count": 2,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/audit": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/audit",
+      "headings": [
+        "SYSTEM",
+        "Audit & Governance Center",
+        "532"
+      ],
+      "buttons_count": 34,
+      "inputs_count": 6,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/processing": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/processing",
+      "headings": [
+        "SYSTEM",
+        "Processing Monitoring Center"
+      ],
+      "buttons_count": 8,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    }
+  },
+  "NORMAL_USER": {
+    "/": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/",
+      "headings": [
+        "SYSTEM",
+        "Dashboard & System Intelligence",
+        "Coal Production & Quality Intelligence (4-Year Trend)"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/documents": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/documents",
+      "headings": [
+        "SYSTEM",
+        "Document Repository",
+        "CIL Q1 2026 Mine Operations Report"
+      ],
+      "buttons_count": 2,
+      "inputs_count": 3,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/assistant": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/assistant",
+      "headings": [
+        "SYSTEM",
+        "AI Document Assistant",
+        "CMPDI Intelligent AI Assistant"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/cross-document": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/cross-document",
+      "headings": [
+        "SYSTEM",
+        "SYSTEM",
+        "Cross-Document Intelligence Center"
+      ],
+      "buttons_count": 10,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/validation": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/validation",
+      "headings": [
+        "SYSTEM",
+        "Validation & Data Quality Center",
+        "-"
+      ],
+      "buttons_count": 12,
+      "inputs_count": 6,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/reports": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/reports",
+      "headings": [
+        "SYSTEM",
+        "Report Generator",
+        "Generated Reports"
+      ],
+      "buttons_count": 4,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/search": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/search",
+      "headings": [
+        "SYSTEM",
+        "Global Semantic Search",
+        "Ready for Semantic Search"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 3,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/topics": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/topics",
+      "headings": [
+        "SYSTEM",
+        "Word Cloud & Topic Intelligence",
+        "No topic analysis available yet."
+      ],
+      "buttons_count": 4,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/knowledge-base": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/knowledge-base",
+      "headings": [
+        "SYSTEM",
+        "Knowledge Base & Vector Store",
+        "FAISS Vector Engine Specifications"
+      ],
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/upload": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/upload",
+      "headings": [
+        "SYSTEM",
+        "Upload Documents"
+      ],
+      "buttons_count": 2,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/documents/viewer": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/documents/viewer",
+      "headings": [
+        "SYSTEM",
+        "Document Viewer",
+        "Select a Document to View"
+      ],
+      "buttons_count": 2,
+      "inputs_count": 1,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/audit": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/audit",
+      "headings": [
+        "SYSTEM",
+        "Audit & Governance Center",
+        "96"
+      ],
+      "buttons_count": 34,
+      "inputs_count": 6,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    },
+    "/processing": {
+      "status": "PASS",
+      "url": "https://sih-26023-flame.vercel.app/processing",
+      "headings": [
+        "SYSTEM",
+        "Processing Monitoring Center"
+      ],
+      "buttons_count": 40,
+      "inputs_count": 2,
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Generator Word Cloud & Topics AI A"
+    }
+  }
+}
