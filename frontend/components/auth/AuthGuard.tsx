@@ -17,12 +17,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated && !isLoginPage) {
-        router.replace("/login");
+        window.location.href = "/login";
       } else if (isAuthenticated && isLoginPage) {
-        router.replace("/");
+        window.location.href = "/";
       }
     }
-  }, [isLoading, isAuthenticated, isLoginPage, router]);
+  }, [isLoading, isAuthenticated, isLoginPage]);
 
   // 1. Initial loading state (verifying token / restoring session)
   if (isLoading) {

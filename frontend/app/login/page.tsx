@@ -50,7 +50,7 @@ export default function LoginPage() {
       const result = await login(usernameOrEmail, password, selectedRole);
 
       if (result.success) {
-        router.push("/");
+        window.location.href = "/";
       } else {
         setErrorMessage(result.message || "Authentication failed. Please check your credentials.");
       }
