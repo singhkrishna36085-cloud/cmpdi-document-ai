@@ -73,18 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const loginData: LoginResponse = data;
       const backendUser = loginData.user;
 
-      // ── Role Verification Check ─────────────────────────────────────────
-      // Ensure backend user role matches user's selected role
-      if (selectedRole && backendUser.role !== selectedRole) {
-        return {
-          success: false,
-          message: `Role mismatch: Your account is registered as ${
-            backendUser.role === "HOD" ? "Head of Department (HOD)" : "Normal User"
-          }. Please select your correct role to log in.`,
-        };
-      }
-
-      // Store JWT token securely
+      // User authenticated successfully — set stored token and user profile
       setStoredToken(loginData.access_token);
       setToken(loginData.access_token);
       setUser(backendUser);
