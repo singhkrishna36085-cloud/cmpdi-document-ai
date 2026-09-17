@@ -3,8 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { UserProfile, UserRole, AuthContextType, LoginResponse } from "@/types/auth";
 import { getStoredToken, setStoredToken, removeStoredToken } from "@/lib/auth";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { fetchWithAuth } from "@/lib/api";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -23,12 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${storedToken}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const res = await fetchWithAuth("/api/auth/me");
 
         if (res.ok) {
           const userData: UserProfile = await res.json();
@@ -59,11 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     selectedRole: UserRole
   ): Promise<{ success: boolean; message?: string }> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const res = await fetchWithAuth("/api/auth/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           username: usernameOrEmail.trim(),
           password: password,
@@ -119,12 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!currentToken) return null;
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${currentToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const res = await fetchWithAuth("/api/auth/me");
 
       if (res.ok) {
         const userData: UserProfile = await res.json();

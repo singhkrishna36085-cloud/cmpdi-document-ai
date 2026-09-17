@@ -56,7 +56,10 @@ export default function CrossDocumentPage() {
   }, []);
 
   const getHeaders = () => {
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "bypass-tunnel-reminder": "true"
+    };
     const savedToken = token || localStorage.getItem("access_token");
     if (savedToken) {
       headers["Authorization"] = `Bearer ${savedToken}`;

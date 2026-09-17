@@ -24,6 +24,8 @@ import {
 import { DocumentItem } from "@/types/reports";
 import { TopicAnalysisResponse, TopicCluster, WordFrequency, AnalyzedDocInfo } from "@/types/topics";
 
+import { fetchWithAuth } from "@/lib/api";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function TopicsPage() {
@@ -46,7 +48,7 @@ export default function TopicsPage() {
   const fetchDocuments = async () => {
     setIsLoadingDocs(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/documents`);
+      const res = await fetchWithAuth("/api/documents");
       if (!res.ok) throw new Error("Failed to load documents");
       const data = await res.json();
       setDocuments(data.documents || []);
@@ -90,11 +92,8 @@ export default function TopicsPage() {
         document_ids: useAllDocs ? null : selectedDocIds
       };
 
-      const res = await fetch(`${API_BASE_URL}/api/topics/analyze`, {
+      const res = await fetchWithAuth("/api/topics/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
         body: JSON.stringify(payload)
       });
 
