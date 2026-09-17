@@ -1,0 +1,132 @@
+{
+  "/": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/",
+    "headings": [
+      "SYSTEM",
+      "Dashboard & System Intelligence"
+    ],
+    "buttons": 7,
+    "inputs": 1
+  },
+  "/documents": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/documents",
+    "headings": [
+      "SYSTEM",
+      "Document Repository"
+    ],
+    "buttons": 2,
+    "inputs": 2
+  },
+  "/assistant": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/assistant",
+    "headings": [
+      "SYSTEM",
+      "AI Document Assistant"
+    ],
+    "buttons": 7,
+    "inputs": 2
+  },
+  "/cross-document": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/cross-document",
+    "headings": [
+      "SYSTEM",
+      "SYSTEM"
+    ],
+    "buttons": 10,
+    "inputs": 2
+  },
+  "/validation": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/validation",
+    "headings": [
+      "SYSTEM",
+      "Validation & Data Quality Center"
+    ],
+    "buttons": 13,
+    "inputs": 6
+  },
+  "/reports": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/reports",
+    "headings": [
+      "SYSTEM",
+      "Report Generator"
+    ],
+    "buttons": 4,
+    "inputs": 1
+  },
+  "/search": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/search",
+    "headings": [
+      "SYSTEM",
+      "Global Semantic Search"
+    ],
+    "buttons": 7,
+    "inputs": 3
+  },
+  "/topics": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/topics",
+    "headings": [
+      "SYSTEM",
+      "Word Cloud & Topic Intelligence"
+    ],
+    "buttons": 4,
+    "inputs": 1
+  },
+  "/knowledge-base": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/knowledge-base",
+    "headings": [
+      "SYSTEM",
+      "Knowledge Base & Vector Store"
+    ],
+    "buttons": 5,
+    "inputs": 2
+  },
+  "/upload": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/upload",
+    "headings": [
+      "SYSTEM",
+      "Upload Documents"
+    ],
+    "buttons": 2,
+    "inputs": 2
+  },
+  "/documents/viewer": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/documents/viewer",
+    "headings": [
+      "SYSTEM",
+      "Document Viewer"
+    ],
+    "buttons": 2,
+    "inputs": 1
+  },
+  "/audit": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/audit",
+    "headings": [
+      "SYSTEM",
+      "Audit & Governance Center"
+    ],
+    "buttons": 34,
+    "inputs": 6
+  },
+  "/processing": {
+    "status": "PASS",
+    "url": "https://sih-26023-flame.vercel.app/processing",
+    "headings": [
+      "SYSTEM",
+      "Processing Monitoring Center"
+    ],
+    "buttons": 8,
+    "inputs": 2
+  }
+}
