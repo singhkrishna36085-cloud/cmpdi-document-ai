@@ -1,0 +1,240 @@
+{
+  "HOD": {
+    "/": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/documents": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/assistant": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/cross-document": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/validation": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/reports": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/search": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/topics": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/knowledge-base": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/upload": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/documents/viewer": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/audit": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/processing": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    }
+  },
+  "NORMAL_USER": {
+    "/": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/documents": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/assistant": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/cross-document": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/validation": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/reports": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/search": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/topics": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/knowledge-base": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/upload": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/documents/viewer": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/audit": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    },
+    "/processing": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "buttons": 4,
+      "inputs": 2,
+      "cards": 12,
+      "console_errors": [],
+      "network_errors": []
+    }
+  }
+}

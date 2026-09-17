@@ -1,0 +1,160 @@
+{
+  "HOD": {
+    "/": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/",
+      "headings": [
+        "SYSTEM",
+        "Dashboard & System Intelligence",
+        "Coal Production & Quality Intelligence (4-Year Trend)"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 1,
+      "interaction_status": "OK",
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Gene"
+    },
+    "/documents": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/documents",
+      "headings": [],
+      "buttons_count": 0,
+      "inputs_count": 0,
+      "interaction_status": "OK",
+      "body_snippet": "C Verifying CMPDI Security Credentials..."
+    },
+    "/assistant": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/cross-document": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/validation": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/reports": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/search": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/topics": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/knowledge-base": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/upload": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/documents/viewer": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/audit": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/processing": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    }
+  },
+  "NORMAL_USER": {
+    "/": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/",
+      "headings": [
+        "SYSTEM",
+        "Dashboard & System Intelligence",
+        "Coal Production & Quality Intelligence (4-Year Trend)"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 1,
+      "interaction_status": "OK",
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Gene"
+    },
+    "/documents": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/documents",
+      "headings": [
+        "SYSTEM",
+        "Document Repository",
+        "CIL Q1 2026 Mine Operations Report"
+      ],
+      "buttons_count": 2,
+      "inputs_count": 3,
+      "interaction_status": "OK",
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Gene"
+    },
+    "/assistant": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/assistant",
+      "headings": [
+        "SYSTEM",
+        "AI Document Assistant",
+        "CMPDI Intelligent AI Assistant"
+      ],
+      "buttons_count": 7,
+      "inputs_count": 2,
+      "interaction_status": "OK",
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Gene"
+    },
+    "/cross-document": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/cross-document",
+      "headings": [
+        "SYSTEM",
+        "SYSTEM",
+        "Cross-Document Intelligence Center"
+      ],
+      "buttons_count": 17,
+      "inputs_count": 2,
+      "interaction_status": "OK",
+      "body_snippet": "C CMPDI DOCUMENT AI Dashboard Documents Upload Documents Document Viewer AI Processing Knowledge Base Search Report Gene"
+    },
+    "/validation": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/reports": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/search": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/topics": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/knowledge-base": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/upload": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/documents/viewer": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/audit": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    },
+    "/processing": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "url": "https://sih-26023-flame.vercel.app/login"
+    }
+  }
+}

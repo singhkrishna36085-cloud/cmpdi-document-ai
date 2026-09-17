@@ -1,0 +1,322 @@
+{
+  "HOD": {
+    "/": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/",
+      "title": "CMPDI Document AI",
+      "buttons_count": 7,
+      "inputs_count": 1,
+      "tables_count": 0,
+      "cards_count": 161,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/documents": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/documents",
+      "title": "CMPDI Document AI",
+      "buttons_count": 2,
+      "inputs_count": 3,
+      "tables_count": 0,
+      "cards_count": 227,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/assistant": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/assistant",
+      "title": "CMPDI Document AI",
+      "buttons_count": 7,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 38,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/cross-document": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/cross-document",
+      "title": "CMPDI Document AI",
+      "buttons_count": 17,
+      "inputs_count": 2,
+      "tables_count": 1,
+      "cards_count": 88,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/validation": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/validation",
+      "title": "CMPDI Document AI",
+      "buttons_count": 13,
+      "inputs_count": 6,
+      "tables_count": 1,
+      "cards_count": 77,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/reports": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/reports",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 1,
+      "tables_count": 1,
+      "cards_count": 59,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/search": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/search",
+      "title": "CMPDI Document AI",
+      "buttons_count": 7,
+      "inputs_count": 3,
+      "tables_count": 0,
+      "cards_count": 35,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/topics": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/topics",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 1,
+      "tables_count": 0,
+      "cards_count": 29,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/knowledge-base": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/knowledge-base",
+      "title": "CMPDI Document AI",
+      "buttons_count": 5,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 48,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/upload": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/upload",
+      "title": "CMPDI Document AI",
+      "buttons_count": 2,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 27,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/documents/viewer": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/documents/viewer",
+      "title": "CMPDI Document AI",
+      "buttons_count": 2,
+      "inputs_count": 1,
+      "tables_count": 0,
+      "cards_count": 93,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/audit": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/audit",
+      "title": "CMPDI Document AI",
+      "buttons_count": 34,
+      "inputs_count": 6,
+      "tables_count": 1,
+      "cards_count": 154,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/processing": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/processing",
+      "title": "CMPDI Document AI",
+      "buttons_count": 41,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 268,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | CMPDI Admin |  | Head of Department (HOD) |  | Sign Out | Search | View",
+      "console_errors": [],
+      "network_failures": []
+    }
+  },
+  "NORMAL_USER": {
+    "/": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/",
+      "title": "CMPDI Document AI",
+      "buttons_count": 7,
+      "inputs_count": 1,
+      "tables_count": 0,
+      "cards_count": 161,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | Normal User |  | Normal User |  | Sign Out | Search | View notification",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/documents": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/documents",
+      "title": "CMPDI Document AI",
+      "buttons_count": 2,
+      "inputs_count": 3,
+      "tables_count": 0,
+      "cards_count": 220,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | Normal User |  | Normal User |  | Sign Out | Search | View notification",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/assistant": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/assistant",
+      "title": "CMPDI Document AI",
+      "buttons_count": 7,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 38,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | Normal User |  | Normal User |  | Sign Out | Search | View notification",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/cross-document": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/cross-document",
+      "title": "CMPDI Document AI",
+      "buttons_count": 17,
+      "inputs_count": 2,
+      "tables_count": 1,
+      "cards_count": 88,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | Normal User |  | Normal User |  | Sign Out | Search | View notification",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/validation": {
+      "status": "PASS",
+      "final_url": "https://sih-26023-flame.vercel.app/validation",
+      "title": "CMPDI Document AI",
+      "buttons_count": 12,
+      "inputs_count": 6,
+      "tables_count": 1,
+      "cards_count": 73,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Dashboard | Documents | Upload Documents | Document Viewer | AI Processing | Knowledge Base | Search | Report Generator | Word Cloud & Topics | AI Assistant | Cross-Doc Intelligence | Validation & Traceability | Audit / History | SYSTEM | Settings |  | Normal User |  | Normal User |  | Sign Out | Search | View notification",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/reports": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [
+        "[ERROR] Failed to load resource: the server responded with a status of 502 ()"
+      ],
+      "network_failures": [
+        "[502] https://sih-26023-flame.vercel.app/api/auth/me"
+      ]
+    },
+    "/search": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/topics": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/knowledge-base": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/upload": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/documents/viewer": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/audit": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [],
+      "network_failures": []
+    },
+    "/processing": {
+      "status": "REDIRECTED_TO_LOGIN",
+      "final_url": "https://sih-26023-flame.vercel.app/login",
+      "title": "CMPDI Document AI",
+      "buttons_count": 4,
+      "inputs_count": 2,
+      "tables_count": 0,
+      "cards_count": 12,
+      "text_snippet": "C | CMPDI DOCUMENT AI | Enterprise |  | Central Mine Planning & Design Institute Limited (Coal India Subsidiary) |  | CIL Enterprise Network | RBAC Protected | Sign in to your Portal |  | Access Geological, Mining & Production AI Intelligence |  | SELECT SYSTEM ROLE | Normal User | HOD Admin | Username or Official Email | Password",
+      "console_errors": [],
+      "network_failures": []
+    }
+  }
+}

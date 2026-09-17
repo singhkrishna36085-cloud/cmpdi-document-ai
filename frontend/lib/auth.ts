@@ -22,7 +22,8 @@ export function setStoredToken(token: string): void {
 
   // Set secure cookie (30 days expiry)
   const maxAge = 30 * 24 * 60 * 60;
-  document.cookie = `${TOKEN_KEY}=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+  const isSecure = window.location.protocol === "https:";
+  document.cookie = `${TOKEN_KEY}=${encodeURIComponent(token)}; path=/; max-age=${maxAge}; SameSite=Lax${isSecure ? "; Secure" : ""}`;
 
   // Also sync to localStorage under both keys for maximum component compatibility
   try {
@@ -37,7 +38,8 @@ export function removeStoredToken(): void {
   if (typeof window === "undefined") return;
 
   // Clear cookie
-  document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+  const isSecure = window.location.protocol === "https:";
+  document.cookie = `${TOKEN_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax${isSecure ? "; Secure" : ""}`;
 
   // Clear localStorage for both keys
   try {
