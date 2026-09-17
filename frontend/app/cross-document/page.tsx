@@ -21,10 +21,9 @@ import {
   Filter
 } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL !== undefined && process.env.NEXT_PUBLIC_API_URL !== "" ? process.env.NEXT_PUBLIC_API_URL : "";
+import { fetchWithAuth } from "@/lib/api";
 
 export default function CrossDocumentPage() {
-  const [token, setToken] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"compare" | "analytics" | "filter" | "safety" | "conflicts">("compare");
   
   // Data States
@@ -50,23 +49,6 @@ export default function CrossDocumentPage() {
   const [filterSafety, setFilterSafety] = useState<string>("all");
   const [filterRiskKw, setFilterRiskKw] = useState<string>("");
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem("access_token");
-    setToken(savedToken);
-  }, []);
-
-  const getHeaders = () => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      "bypass-tunnel-reminder": "true"
-    };
-    const savedToken = token || localStorage.getItem("access_token");
-    if (savedToken) {
-      headers["Authorization"] = `Bearer ${savedToken}`;
-    }
-    return headers;
-  };
-
   // Initial Data Fetch
   useEffect(() => {
     fetchMetricsMetadata();
@@ -77,7 +59,7 @@ export default function CrossDocumentPage() {
   // Fetch Metadata
   const fetchMetricsMetadata = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/cross-document/metrics`, { headers: getHeaders() });
+      const res = await fetchWithAuth("/api/cross-document/metrics");
       if (res.ok) {
         const data = await res.json();
         setAvailableProjects(data.projects || []);
@@ -97,9 +79,8 @@ export default function CrossDocumentPage() {
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE}/api/cross-document/analyze`, {
-        method: "POST",
-        headers: getHeaders()
+      const res = await fetchWithAuth("/api/cross-document/analyze", {
+        method: "POST"
       });
       if (res.ok) {
         const data = await res.json();
@@ -117,9 +98,8 @@ export default function CrossDocumentPage() {
     try {
       setCompareLoading(true);
       const payload = { projects: projList || selectedProjects };
-      const res = await fetch(`${API_BASE}/api/cross-document/compare`, {
+      const res = await fetchWithAuth("/api/cross-document/compare", {
         method: "POST",
-        headers: getHeaders(),
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -146,9 +126,8 @@ export default function CrossDocumentPage() {
       if (filterSafety === "no") payload.has_safety_incidents = false;
       if (filterRiskKw) payload.risk_keyword = filterRiskKw;
 
-      const res = await fetch(`${API_BASE}/api/cross-document/filter`, {
+      const res = await fetchWithAuth("/api/cross-document/filter", {
         method: "POST",
-        headers: getHeaders(),
         body: JSON.stringify(payload)
       });
       if (res.ok) {
@@ -165,7 +144,7 @@ export default function CrossDocumentPage() {
   // Fetch Conflicts
   const fetchConflicts = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/cross-document/conflicts`, { headers: getHeaders() });
+      const res = await fetchWithAuth("/api/cross-document/conflicts");
       if (res.ok) {
         const data = await res.json();
         setConflictsData(data);
