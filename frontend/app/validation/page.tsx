@@ -188,7 +188,7 @@ export default function ValidationCenterPage() {
       if (severityFilter) params.append("severity", severityFilter);
       if (ruleTypeFilter) params.append("rule_type", ruleTypeFilter);
       if (statusFilter) params.append("status", statusFilter);
-      if (docFilter) params.append("document_id", docFilter);
+      if (docFilter && !isNaN(Number(docFilter))) params.append("document_id", docFilter);
 
       const res = await fetchWithAuth(`/api/validation/issues?${params.toString()}`);
       if (!res.ok) {
