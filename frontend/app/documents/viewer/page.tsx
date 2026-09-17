@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -34,7 +34,7 @@ import {
   FolderOpen
 } from "lucide-react";
 
-export default function DocumentViewerPage() {
+function DocumentViewerContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const rawId = searchParams.get("id");
@@ -950,3 +950,12 @@ export default function DocumentViewerPage() {
     </div>
   );
 }
+
+export default function DocumentViewerPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading Document Viewer...</div>}>
+      <DocumentViewerContent />
+    </Suspense>
+  );
+}
+

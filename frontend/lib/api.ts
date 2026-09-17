@@ -1,8 +1,6 @@
 import { getStoredToken, removeStoredToken } from "./auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL !== undefined && process.env.NEXT_PUBLIC_API_URL !== "" 
-  ? process.env.NEXT_PUBLIC_API_URL 
-  : "";
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
 
 export async function fetchWithAuth(endpoint: string, options: RequestInit = {}): Promise<Response> {
   const token = getStoredToken();
@@ -12,7 +10,10 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
     headers.set("Authorization", `Bearer ${token}`);
   }
 
+  // LocalTunnel and ngrok warning screen bypass headers
+  headers.set("Bypass-Tunnel-Reminder", "true");
   headers.set("bypass-tunnel-reminder", "true");
+  headers.set("ngrok-skip-browser-warning", "true");
 
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
@@ -32,3 +33,4 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
 
   return response;
 }
+

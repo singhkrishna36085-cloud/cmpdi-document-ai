@@ -348,18 +348,18 @@ export default function ValidationCenterPage() {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 text-slate-100">
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <PageHeader
-          title="Validation & Data Quality Center"
+          title="Validation & Quality Command Center"
           description="Detect anomalies, review formatting and completeness rules, inspect cross-document conflicts, and trace original evidence."
         />
-        <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300">
-          <Shield className="w-4 h-4 text-slate-500" />
+        <div className="flex items-center space-x-2 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800 text-xs font-mono font-medium text-slate-300">
+          <Shield className="w-4 h-4 text-cyan-400" />
           <span>Role:</span>
-          <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-            userRole === "HOD" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"
+          <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${
+            userRole === "HOD" ? "bg-amber-500/10 text-amber-300 border-amber-500/30" : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30"
           }`}>
             {userRole}
           </span>
@@ -368,79 +368,84 @@ export default function ValidationCenterPage() {
 
       {/* Overview KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        {/* Error Severity Card */}
+        <div className="bg-slate-900/60 rounded-2xl border border-rose-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-rose-500/50 transition-all group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Errors</p>
-              <h3 className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">
+              <p className="text-[11px] font-mono font-bold text-rose-400 uppercase tracking-wider">ERROR</p>
+              <h3 className="text-2xl font-black text-rose-300 font-mono mt-1">
                 {overviewLoading ? "-" : overview?.total_errors ?? 0}
               </h3>
             </div>
-            <div className="p-3 bg-rose-50 dark:bg-rose-900/30 rounded-xl text-rose-600 dark:text-rose-400">
-              <AlertCircle className="w-5 h-5" />
+            <div className="p-3 bg-rose-500/10 rounded-xl text-rose-400 border border-rose-500/30 group-hover:scale-110 transition-transform">
+              <AlertCircle className="w-5 h-5 animate-pulse" />
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">Critical format/logical errors</p>
+          <p className="text-[11px] text-slate-400 mt-2 font-mono">Critical format/logical errors</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        {/* Warning Severity Card */}
+        <div className="bg-slate-900/60 rounded-2xl border border-amber-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-amber-500/50 transition-all group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Warnings</p>
-              <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+              <p className="text-[11px] font-mono font-bold text-amber-400 uppercase tracking-wider">WARNING</p>
+              <h3 className="text-2xl font-black text-amber-300 font-mono mt-1">
                 {overviewLoading ? "-" : overview?.total_warnings ?? 0}
               </h3>
             </div>
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
+            <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/30 group-hover:scale-110 transition-transform">
               <AlertTriangle className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">Completeness & unit warnings</p>
+          <p className="text-[11px] text-slate-400 mt-2 font-mono">Completeness & unit warnings</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        {/* Conflict Severity Card */}
+        <div className="bg-slate-900/60 rounded-2xl border border-orange-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-orange-500/50 transition-all group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Conflicts</p>
-              <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+              <p className="text-[11px] font-mono font-bold text-orange-400 uppercase tracking-wider">CONFLICT</p>
+              <h3 className="text-2xl font-black text-orange-300 font-mono mt-1">
                 {overviewLoading ? "-" : overview?.total_conflicts ?? 0}
               </h3>
             </div>
-            <div className="p-3 bg-orange-50 dark:bg-orange-900/30 rounded-xl text-orange-600 dark:text-orange-400">
+            <div className="p-3 bg-orange-500/10 rounded-xl text-orange-400 border border-orange-500/30 group-hover:scale-110 transition-transform">
               <GitCompare className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">Cross-document mismatches</p>
+          <p className="text-[11px] text-slate-400 mt-2 font-mono">Cross-document mismatches</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        {/* Affected Docs Card */}
+        <div className="bg-slate-900/60 rounded-2xl border border-purple-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-purple-500/50 transition-all group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Affected Docs</p>
-              <h3 className="text-2xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+              <p className="text-[11px] font-mono font-bold text-purple-400 uppercase tracking-wider">AFFECTED DOCS</p>
+              <h3 className="text-2xl font-black text-purple-300 font-mono mt-1">
                 {overviewLoading ? "-" : overview?.affected_documents_count ?? 0}
               </h3>
             </div>
-            <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-xl text-purple-600 dark:text-purple-400">
+            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400 border border-purple-500/30 group-hover:scale-110 transition-transform">
               <Layers className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">Documents with issues</p>
+          <p className="text-[11px] text-slate-400 mt-2 font-mono">Documents with issues</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
+        {/* Clean Docs Card */}
+        <div className="bg-slate-900/60 rounded-2xl border border-emerald-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-emerald-500/50 transition-all group">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Clean Docs</p>
-              <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              <p className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider">CLEAN</p>
+              <h3 className="text-2xl font-black text-emerald-300 font-mono mt-1">
                 {overviewLoading ? "-" : overview?.clean_documents_count ?? 0}
               </h3>
             </div>
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
+            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/30 group-hover:scale-110 transition-transform">
               <CheckCircle2 className="w-5 h-5" />
             </div>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2">Zero validation issues</p>
+          <p className="text-[11px] text-slate-400 mt-2 font-mono">Zero validation issues</p>
         </div>
       </div>
 

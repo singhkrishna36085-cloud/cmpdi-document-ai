@@ -312,11 +312,11 @@ export default function AuditCenterPage() {
           description="PostgreSQL-backed activity history, system events, compliance records and resource lifecycle traceability."
         />
         {auditData && (
-          <div className="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300">
-            <Shield className="w-4 h-4 text-slate-500" />
+          <div className="flex items-center space-x-2 bg-slate-900 px-3.5 py-2 rounded-xl border border-slate-800 text-xs font-medium text-slate-300">
+            <Shield className="w-4 h-4 text-cyan-400" />
             <span>Role:</span>
-            <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-              auditData.user_role === "HOD" ? "bg-amber-100 text-amber-800" : "bg-blue-100 text-blue-800"
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+              auditData.user_role === "HOD" ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-blue-500/10 text-blue-400 border-blue-500/20"
             }`}>
               {auditData.user_role}
             </span>
@@ -326,64 +326,64 @@ export default function AuditCenterPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Audit Events</p>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">Total Audit Events</p>
+              <h3 className="text-2xl font-bold text-slate-100 font-mono mt-1">
                 {auditData?.metrics.total_events ?? "-"}
               </h3>
             </div>
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl text-blue-600 dark:text-blue-400">
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400">
               <ShieldCheck className="w-6 h-6" />
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-2">Recorded in PostgreSQL DB</p>
+          <p className="text-xs text-slate-400">Recorded in PostgreSQL DB</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Successful Operations</p>
-              <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">Successful Operations</p>
+              <h3 className="text-2xl font-bold text-emerald-400 font-mono mt-1">
                 {auditData?.metrics.successful_events ?? "-"}
               </h3>
             </div>
-            <div className="p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl text-emerald-600 dark:text-emerald-400">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
               <CheckCircle2 className="w-6 h-6" />
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-2">Clean execution status</p>
+          <p className="text-xs text-slate-400">Clean execution status</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Failed / Exceptions</p>
-              <h3 className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">Failed / Exceptions</p>
+              <h3 className="text-2xl font-bold text-rose-400 font-mono mt-1">
                 {auditData?.metrics.failed_events ?? "-"}
               </h3>
             </div>
-            <div className="p-3 bg-rose-50 dark:bg-rose-900/30 rounded-xl text-rose-600 dark:text-rose-400">
+            <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400">
               <XCircle className="w-6 h-6" />
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-2">Failed or missing context</p>
+          <p className="text-xs text-slate-400">Failed or missing context</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm">
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-xl space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Unique Active Users</p>
-              <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+              <p className="text-xs font-mono font-medium text-slate-400 uppercase tracking-wider">Unique Active Users</p>
+              <h3 className="text-2xl font-bold text-amber-400 font-mono mt-1">
                 {auditData?.metrics.unique_users ?? "-"}
               </h3>
             </div>
-            <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
+            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400">
               <Users className="w-6 h-6" />
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-2">Authenticated accounts</p>
+          <p className="text-xs text-slate-400">Authenticated accounts</p>
         </div>
       </div>
 

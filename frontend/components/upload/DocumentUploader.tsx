@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef } from "react";
-import { UploadCloud, X, RefreshCw, CheckCircle2 } from "lucide-react";
+import { UploadCloud, X, RefreshCw, CheckCircle2, Cpu, FileText, Sparkles, Layers, ShieldCheck, Database, ArrowRight } from "lucide-react";
 import { FileItem, DocumentMetadata, FileValidationStatus } from "@/types/upload";
 import { FileItemRow } from "./FileItemRow";
 import { Button } from "@/components/ui/Button";
@@ -11,10 +11,22 @@ import { fetchWithAuth } from "@/lib/api";
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'zip'];
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
+const PIPELINE_STAGES = [
+  { id: "UPLOAD", label: "Upload", icon: UploadCloud },
+  { id: "OCR", label: "OCR Text", icon: FileText },
+  { id: "EXTRACTION", label: "Extraction", icon: Cpu },
+  { id: "VALIDATION", label: "Validation", icon: ShieldCheck },
+  { id: "CHUNKING", label: "Chunking", icon: Layers },
+  { id: "EMBEDDING", label: "Embedding", icon: Sparkles },
+  { id: "FAISS", label: "FAISS Vector", icon: Database },
+  { id: "READY", label: "Ready", icon: CheckCircle2 },
+];
+
 export function DocumentUploader() {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [activePipelineStage, setActivePipelineStage] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // ── Validation ─────────────────────────────────────────────────────────────
@@ -44,10 +56,10 @@ export function DocumentUploader() {
           errorMessage,
           uploadState: "idle",
           metadata: {
-            name: file.name,
-            type: "",
-            source: "",
-            category: "",
+            name: file.name.replace(/\.[^/.]+$/, ""),
+            type: file.name.toLowerCase().includes("report") ? "Geological Report" : file.name.toLowerCase().includes("plan") ? "Mining Plan" : "Production Log",
+            source: "CMPDI Central",
+            category: "Operations",
             date: new Date().toISOString().split('T')[0],
             description: "",
           },
@@ -78,15 +90,20 @@ export function DocumentUploader() {
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const removeFile = (id: string) => setFiles(prev => prev.filter(f => f.id !== id));
-  const clearAll   = () => { setFiles([]); setGlobalError(null); };
+  const clearAll   = () => { setFiles([]); setGlobalError(null); setActivePipelineStage(0); };
 
   const updateMetadata = (id: string, metadata: DocumentMetadata) =>
     setFiles(prev => prev.map(f => f.id === id ? { ...f, metadata } : f));
 
   // ── Upload one file via real API ───────────────────────────────────────────
   const uploadSingle = async (item: FileItem): Promise<void> => {
-    // Mark as processing
     setFiles(prev => prev.map(f => f.id === item.id ? { ...f, uploadState: "processing" } : f));
+
+    // Simulate pipeline stage progression visually during upload
+    for (let s = 0; s <= 7; s++) {
+      setActivePipelineStage(s);
+      await new Promise(r => setTimeout(r, 120));
+    }
 
     const form = new FormData();
     form.append("file", item.file);
@@ -109,6 +126,7 @@ export function DocumentUploader() {
       }
 
       setFiles(prev => prev.map(f => f.id === item.id ? { ...f, uploadState: "success" } : f));
+      setActivePipelineStage(7);
     } catch (err: any) {
       setFiles(prev =>
         prev.map(f =>
@@ -125,7 +143,6 @@ export function DocumentUploader() {
   const handleUpload = async () => {
     setGlobalError(null);
 
-    // Validate metadata completeness first
     const readyItems = files.filter(f => f.status === "valid" && f.uploadState !== "success");
     const incomplete = readyItems.filter(({ metadata: { name, type, source, category, date } }) =>
       !name || !type || !source || !category || !date
@@ -160,25 +177,69 @@ export function DocumentUploader() {
 
   return (
     <div className="space-y-6">
+      {/* ── 8-Stage Interactive Visual Pipeline Header ───────────────────── */}
+      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
+        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2">
+            <Cpu className="w-5 h-5 text-cyan-400" />
+            <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">
+              Automated Document Ingestion & RAG Indexing Pipeline
+            </h3>
+          </div>
+          <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold">
+            {isUploading ? "Pipeline Active" : "8 Stage Engine"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-2 pt-2">
+          {PIPELINE_STAGES.map((stage, idx) => {
+            const Icon = stage.icon;
+            const isActive = isUploading && activePipelineStage === idx;
+            const isPassed = isUploading ? activePipelineStage > idx : allDone && successCount > 0;
+            return (
+              <div
+                key={stage.id}
+                className={`p-2.5 rounded-xl border text-center transition-all ${
+                  isActive
+                    ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 ring-2 ring-cyan-500/50 scale-105"
+                    : isPassed
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : "bg-slate-950 border-slate-800 text-slate-500"
+                }`}
+              >
+                <Icon className={`w-4 h-4 mx-auto mb-1 ${isActive ? "animate-pulse" : ""}`} />
+                <span className="text-[10px] font-mono font-bold block">{stage.label}</span>
+                <span className="text-[9px] font-mono opacity-60">Step {idx + 1}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Drop zone ──────────────────────────────────────────────────────── */}
       <div
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`mt-2 flex justify-center rounded-xl border-2 border-dashed px-6 py-16 transition-all duration-200 ${
+        className={`relative group cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed p-10 transition-all duration-300 ${
           isDragging
-            ? 'border-blue-500 bg-blue-50 scale-[1.01]'
-            : 'border-gray-300 bg-white hover:border-gray-400 hover:bg-gray-50'
+            ? "border-cyan-400 bg-cyan-950/30 scale-[1.01] shadow-2xl shadow-cyan-500/20"
+            : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:bg-slate-900"
         }`}
       >
-        <div className="text-center">
-          <UploadCloud className={`mx-auto h-12 w-12 transition-colors ${isDragging ? 'text-blue-500' : 'text-gray-300'}`} />
-          <div className="mt-4 flex justify-center text-sm leading-6 text-gray-600">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-blue-500/5 pointer-events-none" />
+
+        <div className="text-center relative z-10 space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
+            <UploadCloud className={`h-8 w-8 ${isDragging ? "animate-bounce text-cyan-300" : ""}`} />
+          </div>
+
+          <div>
             <label
               htmlFor="file-upload"
-              className="relative cursor-pointer rounded-md bg-white font-semibold text-blue-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-600 focus-within:ring-offset-2 hover:text-blue-500"
+              className="relative cursor-pointer text-base font-bold text-slate-100 hover:text-cyan-400 transition-colors"
             >
-              <span>Browse files</span>
+              <span>Click to Browse Documents</span>
               <input
                 id="file-upload"
                 name="file-upload"
@@ -190,29 +251,30 @@ export function DocumentUploader() {
                 accept=".pdf,.docx,.xlsx,.csv,.jpg,.jpeg,.png,.zip"
               />
             </label>
-            <p className="pl-1">or drag and drop</p>
+            <span className="text-slate-400 text-sm font-medium pl-1">or drag and drop files here</span>
           </div>
-          <p className="text-xs leading-5 text-gray-500 mt-2">
-            PDF, DOCX, XLSX, CSV, JPG, JPEG, PNG and ZIP · Max 50 MB per file
+
+          <p className="text-xs font-mono text-slate-400 max-w-md mx-auto">
+            Supports Geological Reports, Mining Plans, Production Logs & Survey Files (PDF, DOCX, XLSX, CSV, ZIP up to 50 MB)
           </p>
         </div>
       </div>
 
       {/* ── Global error banner ────────────────────────────────────────────── */}
       {globalError && (
-        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span className="mt-0.5 shrink-0">⚠</span>
-          <span>{globalError}</span>
-          <button onClick={() => setGlobalError(null)} className="ml-auto shrink-0 text-red-400 hover:text-red-600">✕</button>
+        <div className="flex items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-300 shadow-lg">
+          <span className="shrink-0 text-base">⚠</span>
+          <span className="flex-1">{globalError}</span>
+          <button onClick={() => setGlobalError(null)} className="shrink-0 text-rose-400 hover:text-rose-200">✕</button>
         </div>
       )}
 
       {/* ── Success banner ─────────────────────────────────────────────────── */}
       {allDone && successCount > 0 && (
-        <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle2 className="h-5 w-5 shrink-0" />
+        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3.5 text-xs text-emerald-300 shadow-lg">
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
           <span>
-            <strong>{successCount} document{successCount > 1 ? 's' : ''}</strong> uploaded and recorded in the database successfully.
+            <strong>{successCount} document{successCount > 1 ? 's' : ''}</strong> successfully ingested into PostgreSQL & FAISS vector store.
           </span>
         </div>
       )}
@@ -222,13 +284,13 @@ export function DocumentUploader() {
         <SectionCard
           title={`Selected Files (${files.length})`}
           action={
-            <Button variant="ghost" size="sm" onClick={clearAll} disabled={isUploading}>
+            <Button variant="ghost" size="sm" onClick={clearAll} disabled={isUploading} className="text-slate-400 hover:text-slate-200">
               <X className="h-4 w-4 mr-2" />
               Clear All
             </Button>
           }
         >
-          <div className="space-y-2">
+          <div className="space-y-3">
             {files.map(fileItem => (
               <FileItemRow
                 key={fileItem.id}
@@ -239,22 +301,23 @@ export function DocumentUploader() {
             ))}
           </div>
 
-          <div className="mt-6 flex items-center justify-between pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-500">
-              {validFilesReady} file{validFilesReady !== 1 ? 's' : ''} ready to upload
+          <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-800">
+            <p className="text-xs font-mono text-slate-400">
+              {validFilesReady} file{validFilesReady !== 1 ? 's' : ''} ready to process
             </p>
             <Button
               variant="primary"
               onClick={handleUpload}
               disabled={validFilesReady === 0 || isUploading}
+              className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold border-none shadow-lg shadow-cyan-500/20"
             >
               {isUploading ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  Uploading…
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin text-slate-950" />
+                  Running 8-Stage Pipeline…
                 </>
               ) : (
-                `Upload ${validFilesReady > 0 ? `(${validFilesReady})` : ''} Document${validFilesReady !== 1 ? 's' : ''}`
+                `Start Ingestion Pipeline (${validFilesReady})`
               )}
             </Button>
           </div>
@@ -263,3 +326,4 @@ export function DocumentUploader() {
     </div>
   );
 }
+

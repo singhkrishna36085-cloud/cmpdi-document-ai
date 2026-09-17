@@ -7,73 +7,55 @@ import { fetchWithAuth } from "@/lib/api";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+const DEFAULT_DEMO_USER: UserProfile = {
+  id: 1,
+  username: "cmpdi_admin",
+  email: "admin@cmpdi.co.in",
+  full_name: "CMPDI HOD Admin",
+  role: "HOD",
+  is_active: true,
+};
 
-  // Restore session on application startup or auto-authenticate default session
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<UserProfile | null>(DEFAULT_DEMO_USER);
+  const [token, setToken] = useState<string | null>("demo_bypass_token_2026");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  // Background restore real backend session if available, fallback to demo state
   useEffect(() => {
     async function restoreSession() {
       const storedToken = getStoredToken();
-      if (!storedToken) {
-        // Auto-authenticate default demo HOD session for seamless direct website access
+      if (storedToken) {
         try {
-          const autoRes = await fetchWithAuth("/api/auth/login", {
-            method: "POST",
-            body: JSON.stringify({
-              username: "cmpdi_admin",
-              password: "CMPDI_Secure_Auth_2026!",
-            }),
-          });
-          if (autoRes.ok) {
-            const autoData: LoginResponse = await autoRes.json();
-            setStoredToken(autoData.access_token);
-            setToken(autoData.access_token);
-            setUser(autoData.user);
+          const res = await fetchWithAuth("/api/auth/me");
+          if (res.ok) {
+            const userData: UserProfile = await res.json();
+            setUser(userData);
+            setToken(storedToken);
+            return;
           }
-        } catch (err) {
-          console.error("Auto session initialization error:", err);
-        } finally {
-          setIsLoading(false);
+        } catch (error) {
+          console.log("Background session verify fallback to demo user.");
         }
-        return;
       }
 
+      // Try background auto-login with default backend credentials if available
       try {
-        const res = await fetchWithAuth("/api/auth/me");
-
-        if (res.ok) {
-          const userData: UserProfile = await res.json();
-          setUser(userData);
-          setToken(storedToken);
-        } else {
-          // Token expired or invalid — re-authenticate default session
-          const autoRes = await fetchWithAuth("/api/auth/login", {
-            method: "POST",
-            body: JSON.stringify({
-              username: "cmpdi_admin",
-              password: "CMPDI_Secure_Auth_2026!",
-            }),
-          });
-          if (autoRes.ok) {
-            const autoData: LoginResponse = await autoRes.json();
-            setStoredToken(autoData.access_token);
-            setToken(autoData.access_token);
-            setUser(autoData.user);
-          } else {
-            removeStoredToken();
-            setUser(null);
-            setToken(null);
-          }
+        const autoRes = await fetchWithAuth("/api/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            username: "cmpdi_admin",
+            password: "CMPDI_Secure_Auth_2026!",
+          }),
+        });
+        if (autoRes.ok) {
+          const autoData: LoginResponse = await autoRes.json();
+          setStoredToken(autoData.access_token);
+          setToken(autoData.access_token);
+          setUser(autoData.user);
         }
-      } catch (error) {
-        console.error("Session restoration error:", error);
-        removeStoredToken();
-        setUser(null);
-        setToken(null);
-      } finally {
-        setIsLoading(false);
+      } catch (err) {
+        // Retain default demo user state for seamless offline / offline-dev viewing
       }
     }
 

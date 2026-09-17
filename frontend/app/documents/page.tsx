@@ -160,15 +160,15 @@ export default function DocumentsPage() {
 
       {/* Loading state */}
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="h-44 rounded-xl bg-slate-900/50 border border-slate-800/80 animate-pulse p-5 space-y-3"
+              className="h-48 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse p-6 space-y-4 backdrop-blur-xl"
             >
-              <div className="h-5 bg-slate-800 rounded w-3/4" />
-              <div className="h-4 bg-slate-800/60 rounded w-1/2" />
-              <div className="h-10 bg-slate-800/40 rounded w-full mt-4" />
+              <div className="h-5 bg-slate-800 rounded-lg w-3/4" />
+              <div className="h-4 bg-slate-800/60 rounded-lg w-1/2" />
+              <div className="h-12 bg-slate-800/40 rounded-xl w-full mt-4" />
             </div>
           ))}
         </div>
@@ -183,20 +183,20 @@ export default function DocumentsPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredDocs.map((doc) => (
             <div
               key={doc.id}
-              className="group relative flex flex-col justify-between p-5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all hover:shadow-xl hover:shadow-teal-500/5"
+              className="group relative flex flex-col justify-between p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-cyan-500/50 hover:bg-slate-900/80 hover:shadow-2xl hover:shadow-cyan-500/10 cursor-pointer"
             >
               <div>
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-teal-400 font-medium">
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 font-bold border border-cyan-500/30">
                     ID #{doc.id}
                   </span>
                   <div className="flex items-center gap-2">
                     {doc.is_confidential && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
                         <ShieldAlert className="w-3 h-3" /> HOD Only
                       </span>
                     )}
@@ -204,42 +204,42 @@ export default function DocumentsPage() {
                   </div>
                 </div>
 
-                <h3 className="text-base font-semibold text-slate-100 group-hover:text-teal-400 transition-colors line-clamp-1">
+                <h3 className="text-base font-bold text-slate-100 group-hover:text-cyan-300 transition-colors line-clamp-1">
                   {doc.name || doc.original_filename}
                 </h3>
-                <p className="text-xs text-slate-400 font-mono line-clamp-1 mt-0.5">
+                <p className="text-xs text-slate-400 font-mono line-clamp-1 mt-1">
                   {doc.original_filename}
                 </p>
 
-                <div className="mt-4 pt-3 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs text-slate-400">
+                <div className="mt-4 pt-3.5 border-t border-slate-800/80 grid grid-cols-2 gap-3 text-xs text-slate-400">
                   <div>
-                    <span className="block text-slate-500 text-[10px] uppercase font-mono">Category</span>
-                    <span className="text-slate-200 font-medium">{doc.category || "General"}</span>
+                    <span className="block text-slate-500 text-[10px] uppercase font-mono font-semibold">Category</span>
+                    <span className="text-slate-200 font-semibold">{doc.category || "General"}</span>
                   </div>
                   <div>
-                    <span className="block text-slate-500 text-[10px] uppercase font-mono">Source</span>
-                    <span className="text-slate-200 font-medium">{doc.source || "CMPDI"}</span>
+                    <span className="block text-slate-500 text-[10px] uppercase font-mono font-semibold">Source</span>
+                    <span className="text-slate-200 font-semibold">{doc.source || "CMPDI"}</span>
                   </div>
                   <div>
-                    <span className="block text-slate-500 text-[10px] uppercase font-mono">File Size</span>
+                    <span className="block text-slate-500 text-[10px] uppercase font-mono font-semibold">File Size</span>
                     <span className="text-slate-300 font-mono">{formatFileSize(doc.file_size)}</span>
                   </div>
                   <div>
-                    <span className="block text-slate-500 text-[10px] uppercase font-mono">Pages</span>
+                    <span className="block text-slate-500 text-[10px] uppercase font-mono font-semibold">Pages</span>
                     <span className="text-slate-300 font-mono">{doc.page_count ?? "N/A"}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-5 pt-3 border-t border-slate-800/50 flex items-center justify-between">
-                <span className="text-[11px] text-slate-500">
+              <div className="mt-6 pt-3.5 border-t border-slate-800/60 flex items-center justify-between">
+                <span className="text-[11px] text-slate-400 font-mono">
                   {doc.created_at ? new Date(doc.created_at).toLocaleDateString() : ""}
                 </span>
                 <Link
                   href={`/documents/viewer?id=${doc.id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 text-xs font-medium border border-teal-500/20 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold border border-cyan-500/30 transition-all shadow-sm"
                 >
-                  <Eye className="w-3.5 h-3.5" />
+                  <Eye className="w-3.5 h-3.5 text-cyan-400" />
                   View Details
                   <ArrowRight className="w-3 h-3" />
                 </Link>
@@ -251,3 +251,4 @@ export default function DocumentsPage() {
     </div>
   );
 }
+

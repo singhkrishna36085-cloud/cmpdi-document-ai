@@ -26,15 +26,15 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
   const getFileIcon = (name: string) => {
     const ext = name.split('.').pop()?.toLowerCase();
     switch (ext) {
-      case 'pdf': return <FileText className="h-6 w-6 text-red-500" />;
-      case 'docx': return <FileText className="h-6 w-6 text-blue-500" />;
+      case 'pdf': return <FileText className="h-6 w-6 text-rose-400" />;
+      case 'docx': return <FileText className="h-6 w-6 text-blue-400" />;
       case 'xlsx': 
-      case 'csv': return <FileSpreadsheet className="h-6 w-6 text-green-500" />;
+      case 'csv': return <FileSpreadsheet className="h-6 w-6 text-emerald-400" />;
       case 'jpg':
       case 'jpeg':
-      case 'png': return <ImageIcon className="h-6 w-6 text-purple-500" />;
-      case 'zip': return <FileArchive className="h-6 w-6 text-yellow-500" />;
-      default: return <File className="h-6 w-6 text-gray-400" />;
+      case 'png': return <ImageIcon className="h-6 w-6 text-purple-400" />;
+      case 'zip': return <FileArchive className="h-6 w-6 text-amber-400" />;
+      default: return <File className="h-6 w-6 text-slate-400" />;
     }
   };
 
@@ -47,18 +47,18 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
   const missingRequired = !item.metadata.name || !item.metadata.type || !item.metadata.source || !item.metadata.category || !item.metadata.date;
 
   return (
-    <div className={`border rounded-lg mb-4 bg-white overflow-hidden transition-colors ${isInvalid ? 'border-red-300' : 'border-gray-200'}`}>
+    <div className={`border rounded-xl mb-3 bg-slate-900 overflow-hidden transition-all ${isInvalid ? 'border-rose-500/50' : 'border-slate-800'}`}>
       {/* Header Row */}
       <div 
-        className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 ${isExpanded ? 'border-b border-gray-100 bg-gray-50' : ''}`}
+        className={`flex items-center p-4 cursor-pointer hover:bg-slate-800/60 ${isExpanded ? 'border-b border-slate-800 bg-slate-950/80' : ''}`}
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex-shrink-0 mr-4">
+        <div className="flex-shrink-0 mr-4 p-2 rounded-lg bg-slate-950 border border-slate-800">
           {getFileIcon(item.file.name)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">{item.file.name}</p>
-          <p className="text-xs text-gray-500">{formatFileSize(item.file.size)}</p>
+          <p className="text-sm font-semibold text-slate-100 truncate">{item.file.name}</p>
+          <p className="text-xs font-mono text-slate-400">{formatFileSize(item.file.size)}</p>
         </div>
         
         <div className="flex items-center space-x-4 ml-4">
@@ -76,16 +76,17 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
               <StatusBadge status="info" label="Valid" />
             )
           ) : (
-            <div className="flex items-center text-red-600 text-sm">
+            <div className="flex items-center text-rose-400 text-xs font-mono">
               <AlertCircle className="h-4 w-4 mr-1" />
               {item.errorMessage}
             </div>
           )}
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <Button 
               variant="ghost" 
               size="sm" 
+              className="text-slate-400 hover:text-slate-200"
               onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
             >
               {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -93,7 +94,7 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
             <Button 
               variant="ghost" 
               size="sm" 
-              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+              className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10"
               onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
             >
               <Trash2 className="h-4 w-4" />
@@ -104,29 +105,29 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
 
       {/* Accordion Content */}
       {isExpanded && (
-        <div className="p-4 bg-white border-t border-gray-100">
-          <h4 className="text-sm font-medium text-gray-900 mb-4">Document Metadata</h4>
+        <div className="p-5 bg-slate-950 border-t border-slate-800 space-y-4">
+          <h4 className="text-xs font-mono uppercase tracking-wider text-cyan-400 font-bold">Document Metadata Attributes</h4>
           <div className="grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-2">
             <div>
-              <label htmlFor={`name-${item.id}`} className="block text-sm font-medium text-gray-700">Document Name *</label>
+              <label htmlFor={`name-${item.id}`} className="block text-xs font-mono text-slate-400 mb-1">Document Name *</label>
               <input
                 type="text"
                 name="name"
                 id={`name-${item.id}`}
                 value={item.metadata.name}
                 onChange={handleMetadataChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 px-3 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
               />
             </div>
             
             <div>
-              <label htmlFor={`type-${item.id}`} className="block text-sm font-medium text-gray-700">Document Type *</label>
+              <label htmlFor={`type-${item.id}`} className="block text-xs font-mono text-slate-400 mb-1">Document Type *</label>
               <select
                 name="type"
                 id={`type-${item.id}`}
                 value={item.metadata.type}
                 onChange={handleMetadataChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm bg-white"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 px-3 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none cursor-pointer"
               >
                 <option value="">Select Type</option>
                 <option value="Geological Report">Geological Report</option>
@@ -138,25 +139,25 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
             </div>
 
             <div>
-              <label htmlFor={`source-${item.id}`} className="block text-sm font-medium text-gray-700">Source / Department *</label>
+              <label htmlFor={`source-${item.id}`} className="block text-xs font-mono text-slate-400 mb-1">Source / Department *</label>
               <input
                 type="text"
                 name="source"
                 id={`source-${item.id}`}
                 value={item.metadata.source}
                 onChange={handleMetadataChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 px-3 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
               />
             </div>
 
             <div>
-              <label htmlFor={`category-${item.id}`} className="block text-sm font-medium text-gray-700">Category *</label>
+              <label htmlFor={`category-${item.id}`} className="block text-xs font-mono text-slate-400 mb-1">Category *</label>
               <select
                 name="category"
                 id={`category-${item.id}`}
                 value={item.metadata.category}
                 onChange={handleMetadataChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm bg-white"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 px-3 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none cursor-pointer"
               >
                 <option value="">Select Category</option>
                 <option value="Exploration">Exploration</option>
@@ -167,26 +168,26 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
             </div>
 
             <div>
-              <label htmlFor={`date-${item.id}`} className="block text-sm font-medium text-gray-700">Document Date *</label>
+              <label htmlFor={`date-${item.id}`} className="block text-xs font-mono text-slate-400 mb-1">Document Date *</label>
               <input
                 type="date"
                 name="date"
                 id={`date-${item.id}`}
                 value={item.metadata.date}
                 onChange={handleMetadataChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 px-3 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor={`desc-${item.id}`} className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+              <label htmlFor={`desc-${item.id}`} className="block text-xs font-mono text-slate-400 mb-1">Description (Optional)</label>
               <textarea
                 name="description"
                 id={`desc-${item.id}`}
                 rows={2}
                 value={item.metadata.description}
                 onChange={handleMetadataChange}
-                className="mt-1 block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className="w-full rounded-lg border border-slate-800 bg-slate-900 py-2 px-3 text-xs text-slate-100 focus:border-cyan-500 focus:outline-none"
               />
             </div>
           </div>
@@ -195,3 +196,4 @@ export function FileItemRow({ item, onRemove, onUpdateMetadata }: FileItemRowPro
     </div>
   );
 }
+

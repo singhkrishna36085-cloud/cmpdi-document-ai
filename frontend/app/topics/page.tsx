@@ -347,40 +347,40 @@ export default function TopicsPage() {
 
           {/* Topic Identification Cards Section */}
           <SectionCard 
-            title="Extracted Topic Clusters" 
+            title="Extracted Topic Clusters & Floating Keyword Nodes" 
             description="Algorithmic TF-IDF topic themes discovered across CMPDI document text."
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {analysis.topics.map((topic) => (
                 <div
                   key={topic.topic_id}
-                  className="bg-white border border-gray-200 rounded-xl p-5 shadow-xs space-y-4 hover:border-blue-300 transition-colors flex flex-col justify-between"
+                  className="bg-slate-950/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 hover:border-cyan-500/50 transition-all flex flex-col justify-between group backdrop-blur-xl hover:-translate-y-1"
                 >
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                        Topic #{topic.topic_id}
+                      <span className="font-mono text-xs font-bold text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/30">
+                        Cluster #{topic.topic_id}
                       </span>
-                      <span className="text-xs font-semibold text-gray-500">
+                      <span className="text-xs font-mono text-slate-400">
                         {topic.document_count} Document{topic.document_count !== 1 ? "s" : ""}
                       </span>
                     </div>
 
-                    <h4 className="text-sm font-bold text-gray-900 leading-snug">
+                    <h4 className="text-sm font-bold text-slate-100 group-hover:text-cyan-300 transition-colors leading-snug font-mono">
                       {topic.topic_name}
                     </h4>
                   </div>
 
-                  {/* Keywords Badges */}
-                  <div className="space-y-1.5">
-                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
-                      Key Keywords:
+                  {/* Floating Animated Keywords Badges */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                      Floating Keywords:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {topic.keywords.map((kw, kIdx) => (
                         <span
                           key={kIdx}
-                          className="px-2 py-0.5 rounded bg-gray-100 text-gray-800 text-xs font-mono border border-gray-200"
+                          className="px-2.5 py-1 rounded-xl bg-slate-900 text-cyan-300 text-xs font-mono border border-slate-800 hover:border-cyan-500/40 hover:bg-cyan-500/10 transition-all cursor-pointer shadow-sm"
                         >
                           {kw}
                         </span>
@@ -390,12 +390,12 @@ export default function TopicsPage() {
 
                   {/* Source Documents list */}
                   {topic.source_documents && topic.source_documents.length > 0 && (
-                    <div className="pt-3 border-t border-gray-100 space-y-1">
-                      <span className="text-[11px] text-gray-400 font-medium block">Contributing Documents:</span>
+                    <div className="pt-3.5 border-t border-slate-800/80 space-y-1.5">
+                      <span className="text-[11px] text-slate-400 font-mono font-medium block">Contributing Documents:</span>
                       <div className="space-y-1">
                         {topic.source_documents.map((srcDoc, sIdx) => (
-                          <div key={sIdx} className="flex items-center gap-1.5 text-xs text-gray-700 truncate font-mono">
-                            <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <div key={sIdx} className="flex items-center gap-1.5 text-xs text-slate-300 truncate font-mono">
+                            <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                             <span className="truncate">{srcDoc.original_filename}</span>
                           </div>
                         ))}
@@ -414,8 +414,8 @@ export default function TopicsPage() {
               description="Documents evaluated during this topic analysis."
             >
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 text-left text-xs">
-                  <thead className="bg-gray-50 text-gray-600 font-semibold uppercase tracking-wider">
+                <table className="min-w-full divide-y divide-slate-800 text-left text-xs font-mono">
+                  <thead className="bg-slate-950 text-slate-400 uppercase font-bold text-[11px]">
                     <tr>
                       <th scope="col" className="px-4 py-3">Doc ID</th>
                       <th scope="col" className="px-4 py-3">Filename</th>
@@ -424,14 +424,14 @@ export default function TopicsPage() {
                       <th scope="col" className="px-4 py-3 text-right">Chunks Analyzed</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white">
+                  <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
                     {analysis.source_documents.map((sDoc) => (
-                      <tr key={sDoc.document_id} className="hover:bg-gray-50/80 transition-colors">
-                        <td className="px-4 py-3 font-mono font-bold text-gray-500">#{sDoc.document_id}</td>
-                        <td className="px-4 py-3 font-medium text-gray-900">{sDoc.original_filename}</td>
-                        <td className="px-4 py-3 font-mono uppercase text-gray-600">{sDoc.type}</td>
-                        <td className="px-4 py-3 text-gray-500">{sDoc.category || "General"}</td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-blue-700">{sDoc.chunk_count}</td>
+                      <tr key={sDoc.document_id} className="hover:bg-slate-950/60 transition-colors">
+                        <td className="px-4 py-3 font-bold text-cyan-400">#{sDoc.document_id}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-100">{sDoc.original_filename}</td>
+                        <td className="px-4 py-3 uppercase text-slate-400">{sDoc.type}</td>
+                        <td className="px-4 py-3 text-slate-400">{sDoc.category || "General"}</td>
+                        <td className="px-4 py-3 text-right font-bold text-cyan-300">{sDoc.chunk_count}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -445,3 +445,4 @@ export default function TopicsPage() {
     </div>
   );
 }
+

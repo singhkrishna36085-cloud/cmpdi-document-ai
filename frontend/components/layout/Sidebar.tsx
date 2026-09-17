@@ -17,10 +17,10 @@ import {
   CheckCircle,
   History,
   GitCompare,
-  Settings,
   LogOut,
   User,
-  ShieldCheck
+  ShieldCheck,
+  Sparkles
 } from "lucide-react";
 
 export function Sidebar() {
@@ -39,91 +39,85 @@ export function Sidebar() {
     { name: "Word Cloud & Topics", href: "/topics", icon: Cloud },
     { name: "AI Assistant", href: "/assistant", icon: MessageSquare },
     { name: "Cross-Doc Intelligence", href: "/cross-document", icon: GitCompare },
-    { name: "Validation & Traceability", href: "/validation", icon: CheckCircle },
+    { name: "Validation & Quality", href: "/validation", icon: CheckCircle },
     { name: "Audit / History", href: "/audit", icon: History },
   ];
 
-  const displayName = user?.full_name || user?.username || "Authenticated User";
+  const displayName = user?.full_name || user?.username || "CMPDI User";
   const isHOD = user?.role === "HOD";
-  const roleLabel = isHOD ? "Head of Department (HOD)" : "Normal User";
+  const roleLabel = isHOD ? "HOD Administrator" : "Normal User";
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-gray-200 bg-white">
-      {/* Logo Area */}
-      <div className="flex h-16 items-center px-6 border-b border-gray-200 bg-gray-50">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 text-white font-bold">
+    <div className="flex h-full w-64 flex-col border-r border-slate-800/80 bg-slate-950/90 backdrop-blur-2xl text-slate-100 z-30">
+      {/* Brand Header */}
+      <div className="flex h-16 items-center px-5 border-b border-slate-800/80 bg-slate-900/60 justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-700 text-white font-bold text-lg shadow-lg shadow-cyan-500/20">
             C
           </div>
-          <span className="text-sm font-semibold tracking-tight text-gray-900">
-            CMPDI DOCUMENT AI
-          </span>
+          <div>
+            <span className="text-xs font-bold tracking-tight text-white flex items-center gap-1.5">
+              CMPDI AI <Sparkles className="w-3 h-3 text-cyan-400" />
+            </span>
+            <p className="text-[10px] text-slate-400 font-mono">Coal India Enterprise</p>
+          </div>
         </div>
       </div>
 
-      {/* Navigation */}
-      <div className="flex-1 overflow-y-auto py-4">
-        <nav className="space-y-1 px-3">
+      {/* Navigation List */}
+      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+        <div className="text-[10px] font-mono uppercase tracking-widest text-slate-500 px-3 mb-2 font-semibold">
+          Platform Navigation
+        </div>
+
+        <nav className="space-y-1">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`group flex items-center rounded-md px-3 py-2 text-sm font-medium ${
+                className={`group relative flex items-center rounded-xl px-3 py-2.5 text-xs font-semibold transition-all duration-200 ${
                   isActive
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                    ? "bg-gradient-to-r from-cyan-500/20 via-blue-600/15 to-purple-600/10 text-cyan-300 border border-cyan-500/30 shadow-md shadow-cyan-500/10"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-slate-900/60"
                 }`}
               >
+                {/* Active Neon Bar Indicator */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-cyan-400 shadow-lg shadow-cyan-400/80" />
+                )}
+
                 <item.icon
-                  className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                    isActive ? "text-blue-700" : "text-gray-400 group-hover:text-gray-500"
+                  className={`mr-3 h-4 w-4 shrink-0 transition-colors ${
+                    isActive ? "text-cyan-400" : "text-slate-500 group-hover:text-slate-300"
                   }`}
-                  aria-hidden="true"
                 />
-                {item.name}
+                <span className="truncate">{item.name}</span>
               </Link>
             );
           })}
         </nav>
-
-        {/* System Settings Section */}
-        <div className="mt-8">
-          <h3 className="px-6 text-xs font-semibold uppercase tracking-wider text-gray-500">
-            System
-          </h3>
-          <div className="mt-2 space-y-1 px-3">
-            <Link
-              href="#"
-              className="group flex items-center rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-            >
-              <Settings className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-500" />
-              Settings
-            </Link>
-          </div>
-        </div>
       </div>
 
-      {/* User Profile Area */}
-      <div className="border-t border-gray-200 p-4 bg-slate-50/50">
-        <div className="flex items-center group rounded-md p-2 hover:bg-white transition-colors border border-transparent hover:border-gray-200">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold shrink-0">
-            {isHOD ? <ShieldCheck className="h-5 w-5 text-teal-600" /> : <User className="h-5 w-5 text-blue-600" />}
+      {/* User Profile Footer */}
+      <div className="border-t border-slate-800/80 p-3.5 bg-slate-900/40 space-y-3">
+        <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-950/80 border border-slate-800/80">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-500/20 to-purple-500/20 text-cyan-400 shrink-0 border border-cyan-500/30">
+            {isHOD ? <ShieldCheck className="h-4 w-4 text-teal-400" /> : <User className="h-4 w-4 text-cyan-400" />}
           </div>
-          <div className="ml-3 min-w-0 flex-1">
-            <p className="text-sm font-semibold text-gray-900 truncate">
-              {displayName}
-            </p>
-            <p className="text-xs font-medium text-slate-500 truncate flex items-center gap-1">
-              <span className={`inline-block h-1.5 w-1.5 rounded-full ${isHOD ? "bg-teal-500" : "bg-blue-500"}`} />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-slate-100 truncate">{displayName}</p>
+            <span className="text-[10px] font-mono text-cyan-400 flex items-center gap-1">
+              <span className={`inline-block h-1.5 w-1.5 rounded-full ${isHOD ? "bg-teal-400" : "bg-cyan-400"}`} />
               {roleLabel}
-            </p>
+            </span>
           </div>
         </div>
+
         <button
           onClick={logout}
-          className="mt-3 flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 hover:text-red-700 transition-colors border border-red-200/60"
+          className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-all border border-rose-500/20 cursor-pointer"
         >
           <LogOut className="h-3.5 w-3.5" />
           Sign Out
@@ -132,4 +126,3 @@ export function Sidebar() {
     </div>
   );
 }
-

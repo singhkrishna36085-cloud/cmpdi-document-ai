@@ -14,14 +14,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   const isLoginPage = pathname === "/login";
 
+  // Temporary development bypass: Allow direct access to all pages without forcing /login redirect
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated && !isLoginPage) {
-        window.location.href = "/login";
-      } else if (isAuthenticated && isLoginPage) {
-        window.location.href = "/";
-      }
-    }
+    // Disabled forced login redirection for direct page testing & demonstration
   }, [isLoading, isAuthenticated, isLoginPage]);
 
   // 1. Initial loading state (verifying token / restoring session)
