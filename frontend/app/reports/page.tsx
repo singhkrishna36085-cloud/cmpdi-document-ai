@@ -29,7 +29,7 @@ import { ReportItem, DocumentItem, ReportGenerateRequest } from "@/types/reports
 
 import { fetchWithAuth } from "@/lib/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL !== undefined && process.env.NEXT_PUBLIC_API_URL !== "" ? process.env.NEXT_PUBLIC_API_URL : "";
 
 const REPORT_TYPES = [
   { id: "geological_summary", label: "Geological Summary" },

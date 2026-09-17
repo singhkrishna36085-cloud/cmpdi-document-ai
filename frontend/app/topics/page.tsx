@@ -26,7 +26,7 @@ import { TopicAnalysisResponse, TopicCluster, WordFrequency, AnalyzedDocInfo } f
 
 import { fetchWithAuth } from "@/lib/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL !== undefined && process.env.NEXT_PUBLIC_API_URL !== "" ? process.env.NEXT_PUBLIC_API_URL : "";
 
 export default function TopicsPage() {
   // State: Document Selection
