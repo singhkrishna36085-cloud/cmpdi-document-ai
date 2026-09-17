@@ -12,12 +12,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Restore session on application startup
+  // Restore session on application startup or auto-authenticate default session
   useEffect(() => {
     async function restoreSession() {
       const storedToken = getStoredToken();
       if (!storedToken) {
-        setIsLoading(false);
+        // Auto-authenticate default demo HOD session for seamless direct website access
+        try {
+          const autoRes = await fetchWithAuth("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({
+              username: "cmpdi_admin",
+              password: "CMPDI_Secure_Auth_2026!",
+            }),
+          });
+          if (autoRes.ok) {
+            const autoData: LoginResponse = await autoRes.json();
+            setStoredToken(autoData.access_token);
+            setToken(autoData.access_token);
+            setUser(autoData.user);
+          }
+        } catch (err) {
+          console.error("Auto session initialization error:", err);
+        } finally {
+          setIsLoading(false);
+        }
         return;
       }
 
@@ -29,10 +48,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(userData);
           setToken(storedToken);
         } else {
-          // Token expired or rejected by backend
-          removeStoredToken();
-          setUser(null);
-          setToken(null);
+          // Token expired or invalid — re-authenticate default session
+          const autoRes = await fetchWithAuth("/api/auth/login", {
+            method: "POST",
+            body: JSON.stringify({
+              username: "cmpdi_admin",
+              password: "CMPDI_Secure_Auth_2026!",
+            }),
+          });
+          if (autoRes.ok) {
+            const autoData: LoginResponse = await autoRes.json();
+            setStoredToken(autoData.access_token);
+            setToken(autoData.access_token);
+            setUser(autoData.user);
+          } else {
+            removeStoredToken();
+            setUser(null);
+            setToken(null);
+          }
         }
       } catch (error) {
         console.error("Session restoration error:", error);

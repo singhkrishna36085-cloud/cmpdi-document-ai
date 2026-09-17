@@ -46,19 +46,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // 3. Unauthenticated on protected route (waiting for redirect)
-  if (!isAuthenticated) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-sm font-medium text-slate-600">Redirecting to login portal...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. Authenticated application shell
+  // 3. Authenticated or Demo Application Shell (Direct Access Mode)
   return (
     <div className="flex h-full w-full overflow-hidden">
       <Sidebar />
