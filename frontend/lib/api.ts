@@ -10,6 +10,8 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
     headers.set("Authorization", `Bearer ${token}`);
   }
 
+  headers.set("bypass-tunnel-reminder", "true");
+
   if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }

@@ -36,8 +36,10 @@ async def on_startup():
 
 
 # ── CORS: allow environment-configured origins + dev server fallbacks ───────
-raw_origins = os.getenv("ALLOWED_ORIGINS", os.getenv("FRONTEND_PUBLIC_URL", "http://localhost:3000,http://127.0.0.1:3000"))
+raw_origins = os.getenv("ALLOWED_ORIGINS", os.getenv("FRONTEND_PUBLIC_URL", "https://sih-26023-flame.vercel.app,http://localhost:3000,http://127.0.0.1:3000"))
 allowed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+if "https://sih-26023-flame.vercel.app" not in allowed_origins:
+    allowed_origins.append("https://sih-26023-flame.vercel.app")
 
 app.add_middleware(
     CORSMiddleware,
