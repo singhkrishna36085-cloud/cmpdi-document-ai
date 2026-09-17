@@ -2,33 +2,25 @@
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { fetchWithAuth } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { motion } from "framer-motion";
-import { AiOrb } from "@/components/chat/AiOrb";
 import { EvidenceCard } from "@/components/chat/EvidenceCard";
 import { 
   MessageSquare, 
   Send, 
   Trash2, 
-  Sparkles, 
-  FileText, 
   Database, 
   CheckCircle, 
   RefreshCw,
-  FileSpreadsheet,
   ChevronDown,
   ChevronUp,
   AlertCircle,
   ExternalLink,
   ShieldAlert,
   Info,
-  Layers,
-  HelpCircle
+  HelpCircle,
+  Bot
 } from "lucide-react";
 
 export interface SourceReference {
@@ -65,6 +57,8 @@ export interface AssistantQueryResponse {
   model: string;
   status: "success" | "not_found" | "configuration_error" | "provider_error" | "timeout_error" | string;
   error?: string | null;
+  officialUrl?: string;
+  officialTitle?: string;
 }
 
 export interface ChatMessage {
@@ -78,6 +72,8 @@ export interface ChatMessage {
   model?: string;
   status?: string;
   error?: string | null;
+  officialUrl?: string;
+  officialTitle?: string;
 }
 
 const SAMPLE_PROMPTS = [
@@ -151,7 +147,6 @@ function AssistantContent() {
     setIsLoading(true);
     setLoadingStep("Searching authorized documents...");
 
-    // Simulated progress text transition
     const stepTimer = setTimeout(() => {
       setLoadingStep("Generating grounded answer from retrieved evidence...");
     }, 1500);
@@ -159,12 +154,18 @@ function AssistantContent() {
     try {
       const docIdFilter = targetDocId !== undefined ? targetDocId : paramDocId;
 
+      const historyContext = messages.slice(-4).map(m => ({
+        role: m.sender,
+        content: m.content
+      }));
+
       const response = await fetchWithAuth("/api/assistant/query", {
         method: "POST",
         body: JSON.stringify({
           query: textToSubmit,
           top_k: 5,
-          doc_id: docIdFilter || undefined
+          doc_id: docIdFilter || undefined,
+          history: historyContext.length > 0 ? historyContext : undefined
         })
       });
 
@@ -211,7 +212,9 @@ function AssistantContent() {
         provider: data.provider,
         model: data.model,
         status: data.status,
-        error: data.error
+        error: data.error,
+        officialUrl: data.officialUrl,
+        officialTitle: data.officialTitle
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -229,9 +232,8 @@ function AssistantContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, paramDocId]);
+  }, [inputValue, paramDocId, messages]);
 
-  // Initial trigger from URL query parameters (e.g., from Search or Viewer pages)
   useEffect(() => {
     if (!initialTriggeredRef.current && (paramQuery.trim() || paramDocId)) {
       initialTriggeredRef.current = true;
@@ -248,65 +250,65 @@ function AssistantContent() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-8">
+    <div className="space-y-6 pb-12 bg-slate-50 min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 text-slate-900">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
-        <PageHeader 
-          title="AI Document Assistant" 
-          description="Ask natural-language questions across official CMPDI reports with evidence-first grounding and PostgreSQL traceability."
-        />
+      <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">AI Document Assistant</h1>
+          <p className="text-sm text-slate-500 max-w-2xl">
+            Ask natural-language questions across official CMPDI reports with evidence-first grounding and traceability.
+          </p>
+        </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-400 text-xs font-semibold border border-teal-500/20">
-            <Sparkles className="w-3.5 h-3.5" />
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-200">
+            <Bot className="w-3.5 h-3.5" />
             <span>Grounded RAG Mode</span>
           </div>
 
-          <div className="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-800">
-            Role: <span className={isHod ? "text-amber-400 font-bold" : "text-teal-400 font-bold"}>{user?.role || "NORMAL_USER"}</span>
+          <div className="text-xs font-medium px-3 py-1.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
+            Role: <span className={isHod ? "text-amber-700 font-bold" : "text-blue-700 font-bold"}>{user?.role || "NORMAL_USER"}</span>
           </div>
 
           {messages.length > 0 && (
-            <Button
-              variant="secondary"
-              size="sm"
+            <button
               onClick={handleClearChat}
-              className="flex items-center gap-1.5 text-slate-400 hover:text-rose-400 border-slate-800 bg-slate-900"
+              className="px-3 py-1.5 rounded-md border border-slate-300 text-slate-600 hover:bg-slate-50 text-xs font-medium flex items-center gap-1"
             >
-              <Trash2 className="w-4 h-4" />
-              <span>Clear Chat</span>
-            </Button>
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear
+            </button>
           )}
         </div>
       </div>
 
       {/* Security Context Banner */}
-      <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+      <div className="p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 flex flex-wrap items-center justify-between gap-2 shadow-sm">
         <div className="flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-teal-400 shrink-0" />
-          <span>Answers are generated strictly from authorized CMPDI/CIL document evidence. Unsupported claims are rejected.</span>
+          <ShieldAlert className="w-4 h-4 text-slate-400 shrink-0" />
+          <span>Answers are generated strictly from authorized CMPDI/CIL document evidence.</span>
         </div>
         {paramDocId && (
-          <span className="font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+          <span className="font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 text-xs">
             Filtering Context: Doc #{paramDocId}
           </span>
         )}
       </div>
 
       {/* Main Chat Container */}
-      <div className="backdrop-blur-2xl bg-black/40 rounded-2xl border border-white/10 shadow-2xl flex flex-col min-h-[580px] overflow-hidden relative">
+      <div className="bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col min-h-[580px] overflow-hidden relative">
         
         {/* Chat History Messages */}
-        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 max-h-[620px]">
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 max-h-[620px] bg-slate-50/50">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4 space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 mb-2 shadow-lg">
+              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-2">
                 <MessageSquare className="w-8 h-8" />
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-slate-100">CMPDI Intelligent AI Assistant</h3>
-                <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                <h3 className="text-lg font-semibold text-slate-800">CMPDI Intelligent AI Assistant</h3>
+                <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
                   Type a question below to perform dense FAISS vector context retrieval and generate evidence-first answers grounded in PostgreSQL document chunks.
                 </p>
               </div>
@@ -317,11 +319,11 @@ function AssistantContent() {
                   <button
                     key={idx}
                     onClick={() => handleSubmit(prompt)}
-                    className="p-3.5 text-left bg-slate-950 hover:bg-slate-900 border border-slate-800/80 hover:border-teal-500/40 rounded-xl transition-all group cursor-pointer"
+                    className="p-3.5 text-left bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 rounded-lg transition-colors group cursor-pointer shadow-sm"
                   >
                     <div className="flex items-start gap-2.5">
-                      <Sparkles className="w-4 h-4 text-teal-400 mt-0.5 group-hover:scale-110 transition-transform shrink-0" />
-                      <span className="text-xs font-semibold text-slate-300 group-hover:text-teal-300">
+                      <Bot className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                      <span className="text-sm text-slate-700 group-hover:text-blue-800 font-medium">
                         {prompt}
                       </span>
                     </div>
@@ -336,155 +338,117 @@ function AssistantContent() {
               const isExpanded = !!expandedSources[msg.id];
 
               return (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut" }}
-                  key={msg.id}
-                  className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-2 w-full`}
-                >
-                  {/* Sender Header */}
+                <div key={msg.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 w-full`}>
                   <div className={`flex items-center gap-2 px-1 text-xs ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-                    {!isUser && <AiOrb isThinking={false} />}
-                    <span className="font-bold text-slate-400">
-                      {isUser ? "You" : "AI Core"}
+                    <span className="font-semibold text-slate-600">
+                      {isUser ? "You" : "CMPDI AI"}
                     </span>
-                    <span className="text-[11px] font-mono text-slate-500">{msg.timestamp}</span>
+                    <span className="text-[11px] text-slate-400">{msg.timestamp}</span>
                   </div>
 
-                  {/* Message Bubble / Card */}
-                  <div
-                    className={`max-w-3xl rounded-2xl p-4 sm:p-5 shadow-2xl text-xs sm:text-sm leading-relaxed backdrop-blur-md ${
-                      isUser
-                        ? "bg-indigo-900/40 text-indigo-50 border border-indigo-500/30 rounded-tr-none font-medium"
-                        : "bg-black/60 text-slate-100 border border-slate-800 border-l-cyan-500 border-l-4 rounded-tl-none shadow-[0_0_20px_rgba(6,182,212,0.15)]"
-                    }`}
-                  >
-                    {/* Assistant Status Badges */}
+                  <div className={`max-w-3xl rounded-lg p-4 shadow-sm text-sm leading-relaxed border ${
+                    isUser
+                      ? "bg-blue-600 text-white border-blue-700 rounded-tr-none font-medium"
+                      : "bg-white text-slate-800 border-slate-200 rounded-tl-none"
+                  }`}>
                     {!isUser && msg.status && (
                       <div className="mb-3 flex flex-wrap items-center gap-2">
                         {msg.status === "success" && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             <CheckCircle className="w-3 h-3" /> Grounded Evidence Answer
                           </span>
                         )}
                         {msg.status === "not_found" && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700 font-mono">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-300">
                             <HelpCircle className="w-3 h-3" /> Insufficient Context
                           </span>
                         )}
                         {(msg.status === "server_error" || msg.status === "network_error") && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 font-mono">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                             <AlertCircle className="w-3 h-3" /> Error Response
                           </span>
                         )}
                       </div>
                     )}
 
-                    {/* Main Content Text */}
-                    <div className="whitespace-pre-wrap font-sans text-slate-100 leading-relaxed">
+                    <div className="whitespace-pre-wrap">
                       {msg.content}
                     </div>
 
-                    {/* Backend Error Alert Banner */}
                     {!isUser && msg.error && (
-                      <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                        <div>
-                          <strong className="font-bold">Error Detail:</strong> {msg.error}
-                        </div>
+                      <div className="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-md text-rose-700 text-sm flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                        <div><strong>Error Detail:</strong> {msg.error}</div>
                       </div>
                     )}
 
-                    {/* Evidence & Source Citations Section */}
                     {!isUser && hasSources && (
-                      <div className="mt-4 pt-3.5 border-t border-slate-800">
-                        {/* Evidence Traceability Pipeline Visualizer */}
-                        <div className="mb-3 p-3 rounded-xl bg-slate-950 border border-slate-800/80">
-                          <div className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold mb-2 flex items-center gap-1.5">
-                            <Sparkles className="w-3 h-3 text-cyan-400" /> Grounded Evidence Pipeline Flow
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-slate-300">
-                            <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold">Answer</span>
-                            <span className="text-slate-500">→</span>
-                            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/30 font-bold">Source Doc</span>
-                            <span className="text-slate-500">→</span>
-                            <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/30 font-bold">Page</span>
-                            <span className="text-slate-500">→</span>
-                            <span className="px-2 py-0.5 rounded bg-pink-500/10 text-pink-300 border border-pink-500/30 font-bold">Chunk</span>
-                            <span className="text-slate-500">→</span>
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-bold">Verified Evidence</span>
-                          </div>
-                        </div>
-
+                      <div className="mt-4 pt-4 border-t border-slate-100">
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-                            <Database className="w-3.5 h-3.5 text-cyan-400" />
-                            <span>Evidence Citations & Traceability ({msg.sources?.length})</span>
+                          <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+                            <Database className="w-4 h-4 text-blue-600" />
+                            <span>Evidence Citations ({msg.sources?.length})</span>
                           </div>
-
                           <button
                             onClick={() => toggleSourceExpand(msg.id)}
-                            className="text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1 cursor-pointer font-mono"
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 cursor-pointer"
                           >
                             <span>{isExpanded ? "Collapse Details" : "View Retrieved Chunks"}</span>
                             {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                           </button>
                         </div>
-
-                        {/* Source Cards List */}
-                        <div className="space-y-4 mt-4">
-                          {msg.sources?.map((src, idx) => (
-                            <EvidenceCard 
-                              key={idx} 
-                              index={idx} 
-                              source={src as any} 
-                              chunkContent={msg.retrievedChunks?.[idx]?.content} 
-                            />
-                          ))}
-                        </div>
+                        {isExpanded && (
+                          <div className="space-y-3 mt-3">
+                            {msg.sources?.map((src, idx) => (
+                              <div key={idx} className="p-3 bg-slate-50 border border-slate-200 rounded-md">
+                                <div className="text-xs font-semibold text-slate-700 mb-1">
+                                  Doc #{src.document_id} - {src.document_name}
+                                </div>
+                                <div className="text-[11px] font-mono text-slate-500 mb-2">
+                                  {src.source_reference} (Score: {src.relevance_score})
+                                </div>
+                                <div className="text-xs text-slate-600 bg-white p-2 rounded border border-slate-100 whitespace-pre-wrap font-mono">
+                                  {msg.retrievedChunks?.[idx]?.content}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                </motion.div>
+                </div>
               );
             })
           )}
 
-          {/* Loading Animated State */}
           {isLoading && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-start space-y-2"
-            >
+            <div className="flex flex-col items-start space-y-1">
               <div className="flex items-center gap-2 px-1 text-xs">
-                <AiOrb isThinking={true} />
-                <span className="font-bold text-slate-400">AI Core</span>
-                <span className="text-[11px] font-mono text-cyan-400 animate-pulse">{loadingStep}</span>
+                <span className="font-semibold text-slate-600">CMPDI AI</span>
               </div>
-              <div className="bg-black/60 border border-slate-800 border-l-cyan-500 border-l-4 rounded-2xl rounded-tl-none p-4 shadow-[0_0_20px_rgba(6,182,212,0.15)] max-w-md space-y-2 backdrop-blur-md ml-12">
+              <div className="bg-white border border-slate-200 rounded-lg rounded-tl-none p-4 shadow-sm max-w-md space-y-2 ml-1">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
                     <RefreshCw className="w-4 h-4 animate-spin" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-slate-200">Evaluating FAISS Embeddings...</p>
-                    <p className="text-[11px] text-slate-400">{loadingStep}</p>
+                    <p className="text-sm font-semibold text-slate-800">Evaluating Knowledge Base...</p>
+                    <p className="text-xs text-slate-500">{loadingStep}</p>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar Footer */}
-        <div className="p-4 bg-slate-950 border-t border-slate-800 space-y-3">
+        {/* Input Bar */}
+        <div className="p-4 bg-white border-t border-slate-200">
           {validationError && (
-            <div className="px-3 py-2 bg-rose-500/10 text-rose-300 text-xs font-medium rounded-xl border border-rose-500/20 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="mb-3 px-3 py-2 bg-rose-50 text-rose-700 text-sm font-medium rounded-md border border-rose-200 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{validationError}</span>
             </div>
           )}
@@ -499,25 +463,24 @@ function AssistantContent() {
                 }}
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
-                placeholder="Ask a natural language question about CMPDI coal reserves, borehole metrics, core logs..."
+                placeholder="Ask a natural language question about CMPDI documents..."
                 rows={2}
-                className="w-full resize-none rounded-xl border border-slate-800 bg-slate-900 p-3 pr-10 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-500 focus:outline-none disabled:bg-slate-950 disabled:cursor-not-allowed"
+                className="w-full resize-none rounded-md border border-slate-300 bg-white p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500"
               />
             </div>
 
             <button
               onClick={() => handleSubmit()}
               disabled={isLoading || !inputValue.trim()}
-              className="h-[54px] px-6 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 font-bold text-sm transition-colors flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-teal-500/10 cursor-pointer"
+              className="h-[60px] px-6 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm transition-colors flex items-center justify-center gap-2 shrink-0 shadow-sm"
             >
               <span>Send</span>
               <Send className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 font-mono px-1">
+          <div className="mt-2 flex flex-wrap items-center justify-between text-xs text-slate-500">
             <span>Press <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line</span>
-            <span>API: <code className="text-teal-400">POST /api/assistant/query</code></span>
           </div>
         </div>
 
@@ -528,9 +491,8 @@ function AssistantContent() {
 
 export default function AssistantPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading Assistant...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-slate-500">Loading Assistant...</div>}>
       <AssistantContent />
     </Suspense>
   );
 }
-

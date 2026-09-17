@@ -20,6 +20,7 @@ from .routers import auth as auth_router
 from .routers import users as users_router
 from .routers import audit as audit_router
 from .routers import cross_document as cross_doc_router
+from .routers import government_resources as govt_resources_router
 
 logger = logging.getLogger("cmpdi_backend")
 
@@ -73,6 +74,7 @@ app.include_router(auth_router.router)
 app.include_router(users_router.router)
 app.include_router(audit_router.router)
 app.include_router(cross_doc_router.router)
+app.include_router(govt_resources_router.router)
 
 
 # ── Health endpoints ──────────────────────────────────────────────────────────

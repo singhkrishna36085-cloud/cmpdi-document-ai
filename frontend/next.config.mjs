@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const BACKEND_URL = "https://ripe-shoes-sing.loca.lt";
+const BACKEND_URL = "https://bca8978f4f1206.lhr.life";
 
 const nextConfig = {
   async rewrites() {

@@ -12,19 +12,14 @@ import {
   Filter,
   RotateCcw,
   Eye,
-  FileText,
-  Lock,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
   RefreshCw,
   Layers,
   Shield,
-  Check,
-  XCircle,
-  Play
+  XCircle
 } from "lucide-react";
-
 import { PageHeader } from "@/components/ui/PageHeader";
 import { fetchWithAuth } from "@/lib/api";
 
@@ -102,17 +97,12 @@ interface DocumentQualityItem {
 }
 
 export default function ValidationCenterPage() {
-  // Tabs State
   const [activeTab, setActiveTab] = useState<"issues" | "conflicts" | "matrix">("issues");
-
-  // User Role State
   const [userRole, setUserRole] = useState<string>("NORMAL_USER");
 
-  // Overview State
   const [overview, setOverview] = useState<ValidationOverview | null>(null);
   const [overviewLoading, setOverviewLoading] = useState<boolean>(true);
 
-  // Issues State & Filters
   const [issuesData, setIssuesData] = useState<ValidationIssuesResponse | null>(null);
   const [issuesLoading, setIssuesLoading] = useState<boolean>(true);
   const [issuesError, setIssuesError] = useState<string | null>(null);
@@ -125,24 +115,12 @@ export default function ValidationCenterPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [docFilter, setDocFilter] = useState<string>("");
 
-  // Conflicts State
   const [conflicts, setConflicts] = useState<ConflictItem[]>([]);
   const [conflictsLoading, setConflictsLoading] = useState<boolean>(false);
 
-  // Document Quality Matrix State
   const [docMatrix, setDocMatrix] = useState<DocumentQualityItem[]>([]);
   const [docMatrixLoading, setDocMatrixLoading] = useState<boolean>(false);
-  const [revalidatingDocId, setRevalidatingDocId] = useState<number | null>(null);
 
-  // Detail Modal & Review State
-  const [selectedIssue, setSelectedIssue] = useState<ValidationIssue | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [reviewStatus, setReviewStatus] = useState<string>("OPEN");
-  const [reviewNote, setReviewNote] = useState<string>("");
-  const [reviewSubmitting, setReviewSubmitting] = useState<boolean>(false);
-  const [reviewMessage, setReviewMessage] = useState<string | null>(null);
-
-  // Fetch Current User Role
   useEffect(() => {
     async function checkUser() {
       try {
@@ -158,7 +136,6 @@ export default function ValidationCenterPage() {
     checkUser();
   }, []);
 
-  // Fetch Overview Metrics
   const fetchOverview = useCallback(async () => {
     setOverviewLoading(true);
     try {
@@ -174,7 +151,6 @@ export default function ValidationCenterPage() {
     }
   }, []);
 
-  // Fetch Paginated Issues
   const fetchIssues = useCallback(async () => {
     setIssuesLoading(true);
     setIssuesError(null);
@@ -196,7 +172,7 @@ export default function ValidationCenterPage() {
         if (res.status === 403) throw new Error("Access denied: Restricted validation data.");
         throw new Error(`Failed to load issues (Status ${res.status})`);
       }
-      const data: ValidationIssuesResponse = await res.json();
+      const data = await res.json();
       setIssuesData(data);
     } catch (err: any) {
       setIssuesError(err.message || "An error occurred while fetching validation issues.");
@@ -205,7 +181,6 @@ export default function ValidationCenterPage() {
     }
   }, [page, pageSize, searchTerm, severityFilter, ruleTypeFilter, statusFilter, docFilter]);
 
-  // Fetch Conflicts List
   const fetchConflicts = useCallback(async () => {
     setConflictsLoading(true);
     try {
@@ -221,7 +196,6 @@ export default function ValidationCenterPage() {
     }
   }, []);
 
-  // Fetch Document Matrix
   const fetchDocMatrix = useCallback(async () => {
     setDocMatrixLoading(true);
     try {
@@ -268,196 +242,112 @@ export default function ValidationCenterPage() {
     setPage(1);
   };
 
-  // Re-run validation on a specific document
-  const handleRevalidateDoc = async (docId: number) => {
-    setRevalidatingDocId(docId);
-    try {
-      const res = await fetchWithAuth(`/api/documents/${docId}/validate`, { method: "POST" });
-      if (res.ok) {
-        await fetchOverview();
-        if (activeTab === "matrix") fetchDocMatrix();
-        if (activeTab === "issues") fetchIssues();
-        if (activeTab === "conflicts") fetchConflicts();
-      }
-    } catch (e) {
-      console.error("Revalidation failed", e);
-    } finally {
-      setRevalidatingDocId(null);
-    }
-  };
-
-  // Submit Issue Review (HOD role)
-  const handleSaveReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedIssue) return;
-    setReviewSubmitting(true);
-    setReviewMessage(null);
-    try {
-      const res = await fetchWithAuth(`/api/validation/issues/${selectedIssue.id}/review`, {
-        method: "POST",
-        body: JSON.stringify({ status: reviewStatus, note: reviewNote }),
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.detail || "Review submission failed.");
-      }
-      const data = await res.json();
-      setSelectedIssue(data.issue);
-      setReviewMessage("Review status updated successfully.");
-      fetchIssues();
-      fetchOverview();
-    } catch (err: any) {
-      setReviewMessage(`Error: ${err.message}`);
-    } finally {
-      setReviewSubmitting(false);
-    }
-  };
-
-  // Status Badge Component
   const getStatusBadge = (statusStr: string) => {
     switch (statusStr.toUpperCase()) {
       case "RESOLVED":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">
-            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
-            RESOLVED
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" /> RESOLVED
           </span>
         );
       case "DISMISSED":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
-            <XCircle className="w-3 h-3 mr-1 text-slate-500" />
-            DISMISSED
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+            <XCircle className="w-3 h-3 mr-1 text-slate-500" /> DISMISSED
           </span>
         );
       case "UNDER_REVIEW":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">
-            <RefreshCw className="w-3 h-3 mr-1 text-amber-600 animate-spin" />
-            UNDER REVIEW
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+            <RefreshCw className="w-3 h-3 mr-1 text-amber-600 animate-spin" /> UNDER REVIEW
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">
-            <AlertCircle className="w-3 h-3 mr-1 text-rose-600" />
-            OPEN
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+            <AlertCircle className="w-3 h-3 mr-1 text-rose-600" /> OPEN
           </span>
         );
     }
   };
 
   return (
-    <div className="space-y-6 pb-12 text-slate-100">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <PageHeader
-          title="Validation & Quality Command Center"
-          description="Detect anomalies, review formatting and completeness rules, inspect cross-document conflicts, and trace original evidence."
-        />
-        <div className="flex items-center space-x-2 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-800 text-xs font-mono font-medium text-slate-300">
-          <Shield className="w-4 h-4 text-cyan-400" />
+    <div className="space-y-6 pb-12 bg-slate-50 min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 text-slate-900">
+      
+      {/* Header */}
+      <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Validation & Quality Center</h1>
+          <p className="text-sm text-slate-500 max-w-2xl">
+            Detect anomalies, review formatting and completeness rules, inspect cross-document conflicts, and trace original evidence.
+          </p>
+        </div>
+        <div className="flex items-center space-x-2 bg-slate-50 px-4 py-2 rounded-md border border-slate-200 text-sm font-medium text-slate-600 shadow-sm shrink-0">
+          <Shield className="w-4 h-4 text-blue-600" />
           <span>Role:</span>
-          <span className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border ${
-            userRole === "HOD" ? "bg-amber-500/10 text-amber-300 border-amber-500/30" : "bg-cyan-500/10 text-cyan-300 border-cyan-500/30"
-          }`}>
+          <span className="px-2 py-0.5 rounded text-xs font-bold border bg-blue-100 text-blue-800 border-blue-200">
             {userRole}
           </span>
         </div>
       </div>
 
-      {/* Overview KPI Cards */}
+      {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Error Severity Card */}
-        <div className="bg-slate-900/60 rounded-2xl border border-rose-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-rose-500/50 transition-all group">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-mono font-bold text-rose-400 uppercase tracking-wider">ERROR</p>
-              <h3 className="text-2xl font-black text-rose-300 font-mono mt-1">
-                {overviewLoading ? "-" : overview?.total_errors ?? 0}
-              </h3>
-            </div>
-            <div className="p-3 bg-rose-500/10 rounded-xl text-rose-400 border border-rose-500/30 group-hover:scale-110 transition-transform">
-              <AlertCircle className="w-5 h-5 animate-pulse" />
-            </div>
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">ERROR</p>
+            <AlertCircle className="w-5 h-5 text-rose-600" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 font-mono">Critical format/logical errors</p>
+          <h3 className="text-2xl font-bold text-slate-900">{overviewLoading ? "-" : overview?.total_errors ?? 0}</h3>
+          <p className="text-xs text-slate-500 mt-1">Critical logical errors</p>
         </div>
 
-        {/* Warning Severity Card */}
-        <div className="bg-slate-900/60 rounded-2xl border border-amber-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-amber-500/50 transition-all group">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-mono font-bold text-amber-400 uppercase tracking-wider">WARNING</p>
-              <h3 className="text-2xl font-black text-amber-300 font-mono mt-1">
-                {overviewLoading ? "-" : overview?.total_warnings ?? 0}
-              </h3>
-            </div>
-            <div className="p-3 bg-amber-500/10 rounded-xl text-amber-400 border border-amber-500/30 group-hover:scale-110 transition-transform">
-              <AlertTriangle className="w-5 h-5" />
-            </div>
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">WARNING</p>
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 font-mono">Completeness & unit warnings</p>
+          <h3 className="text-2xl font-bold text-slate-900">{overviewLoading ? "-" : overview?.total_warnings ?? 0}</h3>
+          <p className="text-xs text-slate-500 mt-1">Completeness warnings</p>
         </div>
 
-        {/* Conflict Severity Card */}
-        <div className="bg-slate-900/60 rounded-2xl border border-orange-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-orange-500/50 transition-all group">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-mono font-bold text-orange-400 uppercase tracking-wider">CONFLICT</p>
-              <h3 className="text-2xl font-black text-orange-300 font-mono mt-1">
-                {overviewLoading ? "-" : overview?.total_conflicts ?? 0}
-              </h3>
-            </div>
-            <div className="p-3 bg-orange-500/10 rounded-xl text-orange-400 border border-orange-500/30 group-hover:scale-110 transition-transform">
-              <GitCompare className="w-5 h-5" />
-            </div>
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">CONFLICT</p>
+            <GitCompare className="w-5 h-5 text-orange-500" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 font-mono">Cross-document mismatches</p>
+          <h3 className="text-2xl font-bold text-slate-900">{overviewLoading ? "-" : overview?.total_conflicts ?? 0}</h3>
+          <p className="text-xs text-slate-500 mt-1">Cross-doc mismatches</p>
         </div>
 
-        {/* Affected Docs Card */}
-        <div className="bg-slate-900/60 rounded-2xl border border-purple-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-purple-500/50 transition-all group">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-mono font-bold text-purple-400 uppercase tracking-wider">AFFECTED DOCS</p>
-              <h3 className="text-2xl font-black text-purple-300 font-mono mt-1">
-                {overviewLoading ? "-" : overview?.affected_documents_count ?? 0}
-              </h3>
-            </div>
-            <div className="p-3 bg-purple-500/10 rounded-xl text-purple-400 border border-purple-500/30 group-hover:scale-110 transition-transform">
-              <Layers className="w-5 h-5" />
-            </div>
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">AFFECTED DOCS</p>
+            <Layers className="w-5 h-5 text-purple-500" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 font-mono">Documents with issues</p>
+          <h3 className="text-2xl font-bold text-slate-900">{overviewLoading ? "-" : overview?.affected_documents_count ?? 0}</h3>
+          <p className="text-xs text-slate-500 mt-1">Documents with issues</p>
         </div>
 
-        {/* Clean Docs Card */}
-        <div className="bg-slate-900/60 rounded-2xl border border-emerald-500/30 p-5 shadow-xl backdrop-blur-xl hover:border-emerald-500/50 transition-all group">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider">CLEAN</p>
-              <h3 className="text-2xl font-black text-emerald-300 font-mono mt-1">
-                {overviewLoading ? "-" : overview?.clean_documents_count ?? 0}
-              </h3>
-            </div>
-            <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/30 group-hover:scale-110 transition-transform">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">CLEAN DOCS</p>
+            <CheckCircle2 className="w-5 h-5 text-emerald-500" />
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 font-mono">Zero validation issues</p>
+          <h3 className="text-2xl font-bold text-slate-900">{overviewLoading ? "-" : overview?.clean_documents_count ?? 0}</h3>
+          <p className="text-xs text-slate-500 mt-1">Zero validation issues</p>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="border-b border-slate-200 dark:border-slate-800">
-        <nav className="flex space-x-8" aria-label="Tabs">
+      {/* Tabs Nav */}
+      <div className="border-b border-slate-200 bg-white px-2 rounded-t-lg">
+        <nav className="flex space-x-6" aria-label="Tabs">
           <button
             onClick={() => setActiveTab("issues")}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+            className={`py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
               activeTab === "issues"
-                ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400"
-                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             <AlertCircle className="w-4 h-4" />
@@ -466,22 +356,22 @@ export default function ValidationCenterPage() {
 
           <button
             onClick={() => setActiveTab("conflicts")}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+            className={`py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
               activeTab === "conflicts"
-                ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400"
-                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             <GitCompare className="w-4 h-4" />
-            Cross-Document Conflict Center
+            Cross-Document Conflicts
           </button>
 
           <button
             onClick={() => setActiveTab("matrix")}
-            className={`py-3 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+            className={`py-4 px-2 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors ${
               activeTab === "matrix"
-                ? "border-teal-600 text-teal-600 dark:border-teal-400 dark:text-teal-400"
-                : "border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
           >
             <FileCheck2 className="w-4 h-4" />
@@ -490,597 +380,220 @@ export default function ValidationCenterPage() {
         </nav>
       </div>
 
-      {/* Tab 1: Issues List View */}
-      {activeTab === "issues" && (
-        <div className="space-y-4">
-          {/* Filters Bar */}
-          <form onSubmit={handleApplyFilters} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {/* Search */}
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+      {/* Tab Content */}
+      <div className="bg-white rounded-b-lg border border-t-0 border-slate-200 shadow-sm p-4">
+        {activeTab === "issues" && (
+          <div className="space-y-4">
+            <form onSubmit={handleApplyFilters} className="bg-slate-50 rounded-md border border-slate-200 p-4 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search messages..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm rounded border border-slate-300 bg-white outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                </div>
+                <select
+                  value={severityFilter}
+                  onChange={(e) => setSeverityFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded border border-slate-300 bg-white outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">All Severities</option>
+                  <option value="error">Error</option>
+                  <option value="warning">Warning</option>
+                </select>
+                <select
+                  value={ruleTypeFilter}
+                  onChange={(e) => setRuleTypeFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded border border-slate-300 bg-white outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">All Rule Types</option>
+                  <option value="completeness">completeness</option>
+                  <option value="format">format</option>
+                  <option value="conflict">conflict</option>
+                </select>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded border border-slate-300 bg-white outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="OPEN">OPEN</option>
+                  <option value="RESOLVED">RESOLVED</option>
+                </select>
                 <input
                   type="text"
-                  placeholder="Search field, value, message..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-teal-500"
+                  placeholder="Doc ID (e.g. 11)"
+                  value={docFilter}
+                  onChange={(e) => setDocFilter(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded border border-slate-300 bg-white outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
-
-              {/* Severity Filter */}
-              <select
-                value={severityFilter}
-                onChange={(e) => setSeverityFilter(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-teal-500"
-              >
-                <option value="">All Severities</option>
-                <option value="error">Error</option>
-                <option value="warning">Warning</option>
-              </select>
-
-              {/* Rule Type Filter */}
-              <select
-                value={ruleTypeFilter}
-                onChange={(e) => setRuleTypeFilter(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-teal-500"
-              >
-                <option value="">All Rule Types</option>
-                <option value="completeness">completeness</option>
-                <option value="format">format</option>
-                <option value="unit">unit</option>
-                <option value="logical">logical</option>
-                <option value="conflict">conflict</option>
-              </select>
-
-              {/* Status Filter */}
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-teal-500"
-              >
-                <option value="">All Review Statuses</option>
-                <option value="OPEN">OPEN</option>
-                <option value="UNDER_REVIEW">UNDER REVIEW</option>
-                <option value="RESOLVED">RESOLVED</option>
-                <option value="DISMISSED">DISMISSED</option>
-              </select>
-
-              {/* Document ID Filter */}
-              <input
-                type="text"
-                placeholder="Doc ID (e.g. 11)"
-                value={docFilter}
-                onChange={(e) => setDocFilter(e.target.value)}
-                className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                onClick={handleClearFilters}
-                className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg flex items-center gap-1.5"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Clear Filters
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-1.5 text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-teal-600 dark:hover:bg-teal-500 rounded-lg flex items-center gap-1.5 shadow-sm"
-              >
-                <Filter className="w-3.5 h-3.5" />
-                Apply Filters
-              </button>
-            </div>
-          </form>
-
-          {/* Error Banner */}
-          {issuesError && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 p-4 rounded-xl flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
-                <p className="text-xs font-medium">{issuesError}</p>
+              <div className="flex items-center justify-end space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded shadow-sm hover:bg-slate-50"
+                >
+                  Clear
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 border border-blue-600 rounded shadow-sm hover:bg-blue-700"
+                >
+                  Apply Filters
+                </button>
               </div>
-              <button
-                onClick={fetchIssues}
-                className="px-3 py-1 bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs rounded font-medium"
-              >
-                Retry
-              </button>
-            </div>
-          )}
+            </form>
 
-          {/* Table Container */}
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            {issuesLoading ? (
-              <div className="p-12 text-center">
-                <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto mb-3" />
-                <p className="text-xs text-slate-500">Querying validation results from PostgreSQL...</p>
-              </div>
-            ) : !issuesData || issuesData.items.length === 0 ? (
-              <div className="p-12 text-center">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Validation Issues Found</h3>
-                <p className="text-xs text-slate-500 mt-1">All extracted records passed validation rules or matched your filter criteria.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      <th className="py-3 px-4">Severity</th>
-                      <th className="py-3 px-4">Rule Type</th>
-                      <th className="py-3 px-4">Document</th>
-                      <th className="py-3 px-4">Field / Invalid Value</th>
-                      <th className="py-3 px-4">Message</th>
-                      <th className="py-3 px-4">Source Ref</th>
-                      <th className="py-3 px-4">Status</th>
-                      <th className="py-3 px-4 text-right">Action</th>
+            <div className="overflow-x-auto border border-slate-200 rounded-md">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600 uppercase tracking-wider font-semibold">
+                  <tr>
+                    <th className="py-3 px-4">Severity</th>
+                    <th className="py-3 px-4">Rule Type</th>
+                    <th className="py-3 px-4">Document</th>
+                    <th className="py-3 px-4">Field</th>
+                    <th className="py-3 px-4">Message</th>
+                    <th className="py-3 px-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {issuesData?.items?.map(issue => (
+                    <tr key={issue.id} className="hover:bg-slate-50">
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {issue.severity === "error" ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">ERROR</span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">WARNING</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="px-2 py-0.5 text-xs bg-slate-100 border border-slate-200 rounded font-mono text-slate-600">{issue.rule_type}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-slate-900">{issue.document_name}</div>
+                        <div className="text-xs text-slate-500 font-mono">ID: {issue.document_id}</div>
+                      </td>
+                      <td className="py-3 px-4 text-xs font-mono text-slate-700 max-w-[150px] truncate" title={issue.field_name || ""}>
+                        {issue.field_name || "-"}
+                      </td>
+                      <td className="py-3 px-4 text-slate-600 max-w-xs truncate" title={issue.message}>
+                        {issue.message}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        {getStatusBadge(issue.status)}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
-                    {issuesData.items.map((issue) => (
-                      <tr key={issue.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          {issue.severity === "error" ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-100 text-rose-800 border border-rose-200">
-                              <AlertCircle className="w-3 h-3 mr-1 text-rose-600" />
-                              ERROR
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                              <AlertTriangle className="w-3 h-3 mr-1 text-amber-600" />
-                              WARNING
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                          <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
-                            {issue.rule_type}
-                          </span>
-                        </td>
-
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className="font-semibold text-slate-900 dark:text-slate-100">{issue.document_name}</span>
-                          <span className="text-[11px] text-slate-400 ml-1">(Doc #{issue.document_id})</span>
-                        </td>
-
-                        <td className="py-3.5 px-4 max-w-xs font-mono text-[11px]">
-                          <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">{issue.field_name || "-"}</div>
-                          <div className="text-slate-500 truncate">{issue.invalid_value ? `"${issue.invalid_value}"` : ""}</div>
-                        </td>
-
-                        <td className="py-3.5 px-4 max-w-xs truncate text-slate-600 dark:text-slate-300">
-                          {issue.message}
-                        </td>
-
-                        <td className="py-3.5 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
-                          {issue.source_reference || `Page ${issue.page_number || 1}`}
-                        </td>
-
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          {getStatusBadge(issue.status)}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                          <button
-                            onClick={() => {
-                              setSelectedIssue(issue);
-                              setReviewStatus(issue.status || "OPEN");
-                              setReviewNote(issue.review_note || "");
-                              setReviewMessage(null);
-                              setIsModalOpen(true);
-                            }}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-medium text-xs inline-flex items-center gap-1"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                            Inspect
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Pagination Controls */}
-            {issuesData && issuesData.total_pages > 1 && (
-              <div className="px-4 py-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
-                <div>
-                  Showing <span className="font-semibold text-slate-900 dark:text-slate-100">{(page - 1) * pageSize + 1}</span> to{" "}
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">{Math.min(page * pageSize, issuesData.total)}</span> of{" "}
-                  <span className="font-semibold text-slate-900 dark:text-slate-100">{issuesData.total}</span> issues
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="p-1.5 border border-slate-300 dark:border-slate-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    Page {page} of {issuesData.total_pages}
-                  </span>
-                  <button
-                    disabled={page >= issuesData.total_pages}
-                    onClick={() => setPage((p) => Math.min(issuesData.total_pages, p + 1))}
-                    className="p-1.5 border border-slate-300 dark:border-slate-700 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 dark:hover:bg-slate-800"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Tab 2: Cross-Document Conflicts View */}
-      {activeTab === "conflicts" && (
-        <div className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <GitCompare className="w-4 h-4 text-orange-600" />
-              Cross-Document Conflict Matrix
-            </h3>
-            <p className="text-xs text-slate-500">
-              Side-by-side comparison of parameter values extracted across different documents that mismatch.
-              Original extracted values are preserved exactly from PostgreSQL.
-            </p>
-          </div>
-
-          {conflictsLoading ? (
-            <div className="p-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
-              <RefreshCw className="w-8 h-8 text-orange-600 animate-spin mx-auto mb-3" />
-              <p className="text-xs text-slate-500">Fetching detected cross-document conflicts...</p>
+                  ))}
+                  {(!issuesData?.items || issuesData.items.length === 0) && !issuesLoading && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-500">
+                        No validation issues found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
-          ) : conflicts.length === 0 ? (
-            <div className="p-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-center">
-              <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-              <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">No Cross-Document Conflicts Detected</h3>
-              <p className="text-xs text-slate-500 mt-1">All extracted key figures are consistent across processed documents.</p>
-            </div>
-          ) : (
+          </div>
+        )}
+
+        {activeTab === "conflicts" && (
+          <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {conflicts.map((conf) => (
-                <div key={conf.id} className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                <div key={conf.id} className="border border-slate-200 rounded-md p-4 shadow-sm bg-white">
+                  <div className="flex justify-between items-start mb-2">
                     <div>
-                      <span className="text-[10px] font-bold tracking-wider uppercase text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
+                      <span className="text-[10px] font-bold uppercase text-orange-700 bg-orange-50 px-2 py-0.5 rounded border border-orange-200">
                         {conf.entity_type} Conflict
                       </span>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100 mt-1">
-                        {conf.field_name}: <span className="font-normal text-slate-600">{conf.entity_identifier}</span>
-                      </h4>
+                      <h4 className="text-sm font-semibold text-slate-900 mt-1">{conf.field_name}: {conf.entity_identifier}</h4>
                     </div>
-                    <span className="font-mono text-[11px] text-slate-400">Conflict #{conf.id}</span>
                   </div>
-
-                  <p className="text-xs text-slate-600 dark:text-slate-300 bg-amber-50 dark:bg-amber-950/40 p-2.5 rounded-lg border border-amber-200 dark:border-amber-800">
-                    {conf.message}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-3 pt-1">
-                    {/* Document A Side */}
-                    <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">Doc A (ID #{conf.doc_a_id})</span>
-                      </div>
-                      <div className="text-base font-bold font-mono text-rose-600 dark:text-rose-400">
-                        {conf.val_a || "N/A"}
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-mono truncate">
-                        Source: {conf.source_ref_a || "N/A"}
-                      </div>
-                      <Link
-                        href={`/documents/viewer?id=${conf.doc_a_id}`}
-                        className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-medium inline-flex items-center gap-1 pt-1"
-                      >
-                        <ExternalLink className="w-3 h-3" /> View Source A
-                      </Link>
+                  <p className="text-xs text-slate-600 bg-slate-50 p-2 rounded mb-3 border border-slate-100">{conf.message}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                      <div className="text-xs font-semibold text-slate-700 mb-1">Doc A (ID #{conf.doc_a_id})</div>
+                      <div className="text-sm font-bold text-rose-600 font-mono break-all">{conf.val_a || "N/A"}</div>
+                      <div className="text-[10px] text-slate-500 mt-1 truncate" title={conf.source_ref_a || ""}>{conf.source_ref_a}</div>
                     </div>
-
-                    {/* Document B Side */}
-                    <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-200 dark:border-slate-700 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">Doc B (ID #{conf.doc_b_id})</span>
-                      </div>
-                      <div className="text-base font-bold font-mono text-rose-600 dark:text-rose-400">
-                        {conf.val_b || "N/A"}
-                      </div>
-                      <div className="text-[11px] text-slate-500 font-mono truncate">
-                        Source: {conf.source_ref_b || "N/A"}
-                      </div>
-                      <Link
-                        href={`/documents/viewer?id=${conf.doc_b_id}`}
-                        className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-medium inline-flex items-center gap-1 pt-1"
-                      >
-                        <ExternalLink className="w-3 h-3" /> View Source B
-                      </Link>
+                    <div className="bg-slate-50 p-3 rounded border border-slate-200">
+                      <div className="text-xs font-semibold text-slate-700 mb-1">Doc B (ID #{conf.doc_b_id})</div>
+                      <div className="text-sm font-bold text-rose-600 font-mono break-all">{conf.val_b || "N/A"}</div>
+                      <div className="text-[10px] text-slate-500 mt-1 truncate" title={conf.source_ref_b || ""}>{conf.source_ref_b}</div>
                     </div>
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Tab 3: Document Quality Matrix */}
-      {activeTab === "matrix" && (
-        <div className="space-y-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-sm space-y-2">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-              <FileCheck2 className="w-4 h-4 text-teal-600" />
-              Document Data Quality Matrix
-            </h3>
-            <p className="text-xs text-slate-500">
-              Overview of document quality statuses determined deterministically from PostgreSQL validation results and conflict checks.
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            {docMatrixLoading ? (
-              <div className="p-12 text-center">
-                <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto mb-3" />
-                <p className="text-xs text-slate-500">Loading document quality matrix...</p>
-              </div>
-            ) : docMatrix.length === 0 ? (
-              <div className="p-12 text-center">
-                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <h3 className="text-sm font-semibold text-slate-700">No Documents Uploaded</h3>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                      <th className="py-3 px-4">Document</th>
-                      <th className="py-3 px-4">Type</th>
-                      <th className="py-3 px-4 text-center">Errors</th>
-                      <th className="py-3 px-4 text-center">Warnings</th>
-                      <th className="py-3 px-4 text-center">Conflicts</th>
-                      <th className="py-3 px-4">Quality Status</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-xs">
-                    {docMatrix.map((doc) => (
-                      <tr key={doc.document_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition">
-                        <td className="py-3.5 px-4 font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
-                          {doc.name} <span className="text-[11px] text-slate-400 font-normal">(#{doc.document_id})</span>
-                          {doc.is_confidential && (
-                            <span className="ml-2 px-1.5 py-0.2 rounded text-[10px] bg-rose-100 text-rose-800 font-bold">
-                              CONFIDENTIAL
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-slate-500 uppercase font-mono text-[11px]">
-                          {doc.type}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-center font-bold font-mono text-rose-600">
-                          {doc.errors_count}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-center font-bold font-mono text-amber-600">
-                          {doc.warnings_count}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-center font-bold font-mono text-orange-600">
-                          {doc.conflicts_count}
-                        </td>
-
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          {doc.quality_status === "Clean" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">
-                              <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" /> Clean
-                            </span>
-                          ) : doc.quality_status === "Conflicts" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-orange-100 text-orange-800">
-                              <GitCompare className="w-3.5 h-3.5 mr-1 text-orange-600" /> Conflicts
-                            </span>
-                          ) : doc.quality_status === "Errors" ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">
-                              <AlertCircle className="w-3.5 h-3.5 mr-1 text-rose-600" /> Errors
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-amber-100 text-amber-800">
-                              <AlertTriangle className="w-3.5 h-3.5 mr-1 text-amber-600" /> Warnings
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="py-3.5 px-4 text-right whitespace-nowrap space-x-2">
-                          <button
-                            disabled={revalidatingDocId === doc.document_id}
-                            onClick={() => handleRevalidateDoc(doc.document_id)}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-medium text-xs inline-flex items-center gap-1"
-                          >
-                            {revalidatingDocId === doc.document_id ? (
-                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Play className="w-3.5 h-3.5" />
-                            )}
-                            Re-Validate
-                          </button>
-
-                          <Link
-                            href={`/documents/viewer?id=${doc.document_id}`}
-                            className="px-2.5 py-1 bg-teal-50 hover:bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300 rounded font-medium text-xs inline-flex items-center gap-1"
-                          >
-                            <ExternalLink className="w-3.5 h-3.5" />
-                            Viewer
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Issue Detail & Review Modal */}
-      {isModalOpen && selectedIssue && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center space-x-2">
-                {selectedIssue.severity === "error" ? (
-                  <AlertCircle className="w-5 h-5 text-rose-600" />
-                ) : (
-                  <AlertTriangle className="w-5 h-5 text-amber-600" />
-                )}
-                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                  Validation Finding #{selectedIssue.id}
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1"
-              >
-                &times;
-              </button>
-            </div>
-
-            {/* Finding Details */}
-            <div className="grid grid-cols-2 gap-4 text-xs">
-              <div>
-                <span className="text-slate-500">Document:</span>
-                <p className="font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
-                  {selectedIssue.document_name} <span className="font-normal text-slate-400">(Doc #{selectedIssue.document_id})</span>
-                </p>
-              </div>
-
-              <div>
-                <span className="text-slate-500">Rule Type:</span>
-                <p className="font-mono font-semibold text-slate-800 dark:text-slate-200 mt-0.5">
-                  {selectedIssue.rule_type}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-slate-500">Affected Field:</span>
-                <p className="font-mono text-slate-900 dark:text-slate-100 mt-0.5">
-                  {selectedIssue.field_name || "N/A"}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-slate-500">Extracted Invalid Value:</span>
-                <p className="font-mono text-rose-600 dark:text-rose-400 mt-0.5">
-                  {selectedIssue.invalid_value ? `"${selectedIssue.invalid_value}"` : "N/A"}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-slate-500">Source Reference:</span>
-                <p className="font-mono text-slate-900 dark:text-slate-100 mt-0.5">
-                  {selectedIssue.source_reference || `Page ${selectedIssue.page_number || 1}`}
-                </p>
-              </div>
-
-              <div>
-                <span className="text-slate-500">Review Status:</span>
-                <div className="mt-0.5">{getStatusBadge(selectedIssue.status)}</div>
-              </div>
-            </div>
-
-            {/* Message Alert */}
-            <div className="p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300">
-              <span className="font-bold text-slate-900 dark:text-slate-100 block mb-1">Validation Engine Finding Message:</span>
-              {selectedIssue.message}
-            </div>
-
-            {/* HOD Review Controls */}
-            {userRole === "HOD" ? (
-              <form onSubmit={handleSaveReview} className="bg-slate-50 dark:bg-slate-800/80 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
-                <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                  <Shield className="w-4 h-4 text-teal-600" /> HOD Governance Review Action
-                </h4>
-
-                {reviewMessage && (
-                  <div className={`p-2 rounded text-xs font-medium ${
-                    reviewMessage.startsWith("Error") ? "bg-rose-100 text-rose-800" : "bg-emerald-100 text-emerald-800"
-                  }`}>
-                    {reviewMessage}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Set Status:</label>
-                    <select
-                      value={reviewStatus}
-                      onChange={(e) => setReviewStatus(e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-                    >
-                      <option value="OPEN">OPEN</option>
-                      <option value="UNDER_REVIEW">UNDER REVIEW</option>
-                      <option value="RESOLVED">RESOLVED</option>
-                      <option value="DISMISSED">DISMISSED</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 block mb-1">Review Note:</label>
-                    <input
-                      type="text"
-                      placeholder="Optional notes for audit log..."
-                      value={reviewNote}
-                      onChange={(e) => setReviewNote(e.target.value)}
-                      className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-                    />
-                  </div>
+              {conflicts.length === 0 && !conflictsLoading && (
+                <div className="col-span-2 py-12 text-center text-slate-500 border border-slate-200 rounded-md bg-slate-50">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                  <p className="text-sm font-medium">No cross-document conflicts detected.</p>
                 </div>
-
-                <div className="flex justify-end pt-1">
-                  <button
-                    type="submit"
-                    disabled={reviewSubmitting}
-                    className="px-4 py-1.5 text-xs font-medium text-white bg-teal-600 hover:bg-teal-500 rounded-lg flex items-center gap-1.5 shadow-sm"
-                  >
-                    {reviewSubmitting && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                    Save Review Status
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl text-xs text-slate-500 flex items-center gap-2">
-                <Lock className="w-4 h-4 text-slate-400" />
-                Review status changes are restricted to HOD governance role.
-              </div>
-            )}
-
-            {/* Navigation & Close */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs">
-              <Link
-                href={`/documents/viewer?id=${selectedIssue.document_id}&page=${selectedIssue.page_number || 1}${selectedIssue.chunk_id ? `&chunk_id=${selectedIssue.chunk_id}` : ""}`}
-                className="px-3.5 py-1.5 bg-teal-600 hover:bg-teal-500 text-white rounded-lg font-medium flex items-center gap-1.5 shadow-sm"
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                View Source Evidence in Viewer
-              </Link>
-
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium"
-              >
-                Close
-              </button>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {activeTab === "matrix" && (
+          <div className="overflow-x-auto border border-slate-200 rounded-md">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-xs text-slate-600 uppercase tracking-wider font-semibold">
+                <tr>
+                  <th className="py-3 px-4">Document</th>
+                  <th className="py-3 px-4 text-center">Errors</th>
+                  <th className="py-3 px-4 text-center">Warnings</th>
+                  <th className="py-3 px-4 text-center">Conflicts</th>
+                  <th className="py-3 px-4">Quality Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {docMatrix.map(doc => (
+                  <tr key={doc.document_id} className="hover:bg-slate-50">
+                    <td className="py-3 px-4">
+                      <div className="font-medium text-slate-900">{doc.name || doc.original_filename}</div>
+                      <div className="text-xs text-slate-500 font-mono">ID: {doc.document_id}</div>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {doc.errors_count > 0 ? (
+                        <span className="inline-flex px-2 py-0.5 bg-rose-50 text-rose-700 border border-rose-200 rounded font-bold">{doc.errors_count}</span>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {doc.warnings_count > 0 ? (
+                        <span className="inline-flex px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded font-bold">{doc.warnings_count}</span>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      {doc.conflicts_count > 0 ? (
+                        <span className="inline-flex px-2 py-0.5 bg-orange-50 text-orange-700 border border-orange-200 rounded font-bold">{doc.conflicts_count}</span>
+                      ) : (
+                        <span className="text-slate-400">0</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4">
+                      {doc.quality_status === "CLEAN" ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-700 text-xs font-semibold"><CheckCircle2 className="w-3.5 h-3.5" /> Clean</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-rose-700 text-xs font-semibold"><AlertCircle className="w-3.5 h-3.5" /> Action Req</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

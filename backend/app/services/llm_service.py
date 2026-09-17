@@ -39,6 +39,16 @@ CRITICAL INSTRUCTIONS FOR ANSWERING:
 """
 
 
+def get_system_prompt_for_mode(mode: str) -> str:
+    if mode == "GENERAL":
+        return "You are a helpful and knowledgeable AI Assistant. Answer the user's question clearly and accurately."
+    elif mode == "MIXED":
+        return "You are an AI Document Assistant. First, provide a clear general explanation for the concept asked. Then, if CMPDI context is provided below, summarize the specific evidence related to the user's question. If CMPDI context is insufficient for the specific part, state that."
+    elif mode == "CALCULATION":
+        return "You are an AI Assistant. Perform the requested calculation accurately step-by-step. If CMPDI context is provided, first extract the stated values exactly as they appear, then perform the calculation."
+    else:
+        return SYSTEM_PROMPT
+
 def generate_llm_answer(
     query: str,
     formatted_context: str,
@@ -46,26 +56,18 @@ def generate_llm_answer(
     model: Optional[str] = None,
     api_key: Optional[str] = None,
     base_url: Optional[str] = None,
-    timeout: int = 25
+    timeout: int = 25,
+    mode: str = "RAG"
 ) -> Dict[str, Any]:
     """
     Calls configured LLM provider to generate a grounded answer from retrieved context.
-
-    :param query: Original natural-language question
-    :param formatted_context: Formatted context blocks from STEP 9.1 retrieval
-    :param provider: LLM provider (groq, gemini, ollama, openai, custom)
-    :param model: Model identifier string
-    :param api_key: Provider API key
-    :param base_url: Optional custom API endpoint base URL
-    :param timeout: Request timeout in seconds
-    :return: Dict containing answer, provider, model, status, and optional error message
     """
     provider_name = (provider or os.getenv("LLM_PROVIDER") or DEFAULT_PROVIDER).lower()
     model_name = model or os.getenv("LLM_MODEL") or DEFAULT_MODEL
     key = api_key or os.getenv("LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or DEFAULT_API_KEY
     url = base_url or os.getenv("LLM_BASE_URL") or DEFAULT_BASE_URL
 
-    if not formatted_context or not formatted_context.strip():
+    if mode == "RAG" and (not formatted_context or not formatted_context.strip()):
         return {
             "answer": "The requested information was not found in the available CMPDI documents.",
             "provider": provider_name,
@@ -73,15 +75,20 @@ def generate_llm_answer(
             "status": "not_found"
         }
 
-    user_prompt = (
-        f"User Question: {query}\n\n"
-        f"Retrieved CMPDI Document Context Blocks:\n{formatted_context}\n\n"
-        f"Task:\n"
-        f"Answer the user question based strictly on the context blocks above.\n"
-        f"- If relevant coal, seam, geological, or report details are present, summarize them clearly.\n"
-        f"- If exact figures (like annual production tonnages) are missing, state that exact numbers are not specified in these documents, but summarize what IS present.\n"
-        f"- Follow all system grounding rules."
-    )
+    sys_prompt = get_system_prompt_for_mode(mode)
+    
+    if mode == "GENERAL":
+        user_prompt = f"User Question: {query}"
+    else:
+        user_prompt = (
+            f"User Question: {query}\n\n"
+            f"Retrieved CMPDI Document Context Blocks:\n{formatted_context}\n\n"
+            f"Task:\n"
+            f"Answer the user question based strictly on the context blocks above (or provide general explanation if MIXED/CALCULATION).\n"
+            f"- If relevant coal, seam, geological, or report details are present, summarize them clearly.\n"
+            f"- If exact figures (like annual production tonnages) are missing or if the context blocks are empty, state that exact numbers are not found in the current knowledge base, but summarize what IS present or provide the general explanation.\n"
+            f"- Follow all system grounding rules."
+        )
 
     # Validate cloud provider API keys
     if provider_name in ["groq", "gemini", "openai", "huggingface"] and not key:
@@ -96,13 +103,13 @@ def generate_llm_answer(
 
     try:
         if provider_name == "groq":
-            return _call_groq(user_prompt, model_name, key, timeout)
+            return _call_groq(user_prompt, model_name, key, timeout, sys_prompt)
         elif provider_name == "gemini":
-            return _call_gemini(user_prompt, model_name, key, timeout)
+            return _call_gemini(user_prompt, model_name, key, timeout, sys_prompt)
         elif provider_name == "ollama":
-            return _call_ollama(user_prompt, model_name, url or "http://localhost:11434", timeout)
+            return _call_ollama(user_prompt, model_name, url or "http://localhost:11434", timeout, sys_prompt)
         elif provider_name in ["openai", "custom", "huggingface"]:
-            return _call_openai_compatible(user_prompt, model_name, key, url, timeout)
+            return _call_openai_compatible(user_prompt, model_name, key, url, timeout, sys_prompt)
         else:
             return {
                 "answer": None,
@@ -131,7 +138,7 @@ def generate_llm_answer(
         }
 
 
-def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int) -> Dict[str, Any]:
+def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_prompt: str) -> Dict[str, Any]:
     endpoint = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -140,7 +147,7 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int) -> Dict
     payload = {
         "model": model or "llama-3.1-8b-instant",
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt}
         ],
         "temperature": 0.1
@@ -165,14 +172,14 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int) -> Dict
         }
 
 
-def _call_gemini(user_prompt: str, model: str, api_key: str, timeout: int) -> Dict[str, Any]:
+def _call_gemini(user_prompt: str, model: str, api_key: str, timeout: int, sys_prompt: str) -> Dict[str, Any]:
     model_name = model or "gemini-1.5-flash"
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
     payload = {
         "contents": [
             {
                 "parts": [
-                    {"text": f"{SYSTEM_PROMPT}\n\n{user_prompt}"}
+                    {"text": f"{sys_prompt}\n\n{user_prompt}"}
                 ]
             }
         ],
@@ -202,12 +209,12 @@ def _call_gemini(user_prompt: str, model: str, api_key: str, timeout: int) -> Di
     }
 
 
-def _call_ollama(user_prompt: str, model: str, base_url: str, timeout: int) -> Dict[str, Any]:
+def _call_ollama(user_prompt: str, model: str, base_url: str, timeout: int, sys_prompt: str) -> Dict[str, Any]:
     model_name = model or "llama3"
     url = f"{base_url.rstrip('/')}/api/generate"
     payload = {
         "model": model_name,
-        "prompt": f"{SYSTEM_PROMPT}\n\n{user_prompt}",
+        "prompt": f"{sys_prompt}\n\n{user_prompt}",
         "stream": False,
         "options": {"temperature": 0.1}
     }
@@ -229,7 +236,7 @@ def _call_ollama(user_prompt: str, model: str, base_url: str, timeout: int) -> D
     }
 
 
-def _call_openai_compatible(user_prompt: str, model: str, api_key: str, base_url: str, timeout: int) -> Dict[str, Any]:
+def _call_openai_compatible(user_prompt: str, model: str, api_key: str, base_url: str, timeout: int, sys_prompt: str) -> Dict[str, Any]:
     url = f"{(base_url or 'https://api.openai.com/v1').rstrip('/')}/chat/completions"
     headers = {"Content-Type": "application/json"}
     if api_key:
@@ -238,7 +245,7 @@ def _call_openai_compatible(user_prompt: str, model: str, api_key: str, base_url
     payload = {
         "model": model or "gpt-4o-mini",
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": sys_prompt},
             {"role": "user", "content": user_prompt}
         ],
         "temperature": 0.1

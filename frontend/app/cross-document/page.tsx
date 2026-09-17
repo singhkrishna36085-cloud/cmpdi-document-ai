@@ -9,16 +9,10 @@ import {
   ShieldAlert,
   AlertTriangle,
   CheckCircle2,
-  FileText,
-  Search,
   RefreshCw,
   TrendingUp,
   TrendingDown,
-  Info,
-  Layers,
-  Building2,
-  ArrowRight,
-  Filter
+  Building2
 } from "lucide-react";
 
 import { fetchWithAuth } from "@/lib/api";
@@ -27,7 +21,6 @@ export default function CrossDocumentPage() {
   const [activeTab, setActiveTab] = useState<"compare" | "analytics" | "filter" | "safety" | "conflicts">("compare");
   const [selectedNode, setSelectedNode] = useState<any | null>(null);
 
-  // Data States
   const [availableProjects, setAvailableProjects] = useState<any[]>([]);
   const [subsidiaries, setSubsidiaries] = useState<string[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>(["Gevra Expansion", "Nigahi Project"]);
@@ -42,7 +35,6 @@ export default function CrossDocumentPage() {
   const [filterLoading, setFilterLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter Form Controls
   const [filterProdMin, setFilterProdMin] = useState<string>("");
   const [filterSeamMin, setFilterSeamMin] = useState<string>("");
   const [filterSrMin, setFilterSrMin] = useState<string>("");
@@ -50,14 +42,12 @@ export default function CrossDocumentPage() {
   const [filterSafety, setFilterSafety] = useState<string>("all");
   const [filterRiskKw, setFilterRiskKw] = useState<string>("");
 
-  // Initial Data Fetch
   useEffect(() => {
     fetchMetricsMetadata();
     fetchAnalytics();
     fetchConflicts();
   }, []);
 
-  // Fetch Metadata
   const fetchMetricsMetadata = async () => {
     try {
       const res = await fetchWithAuth("/api/cross-document/metrics");
@@ -76,13 +66,10 @@ export default function CrossDocumentPage() {
     }
   };
 
-  // Fetch Multi-Doc Analytics
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const res = await fetchWithAuth("/api/cross-document/analyze", {
-        method: "POST"
-      });
+      const res = await fetchWithAuth("/api/cross-document/analyze", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setAnalyticsData(data);
@@ -94,7 +81,6 @@ export default function CrossDocumentPage() {
     }
   };
 
-  // Fetch Pairwise / Multi-Project Comparison
   const fetchComparison = async (projList?: string[]) => {
     try {
       setCompareLoading(true);
@@ -114,7 +100,6 @@ export default function CrossDocumentPage() {
     }
   };
 
-  // Fetch Filter Results
   const handleApplyFilter = async () => {
     try {
       setFilterLoading(true);
@@ -142,7 +127,6 @@ export default function CrossDocumentPage() {
     }
   };
 
-  // Fetch Conflicts
   const fetchConflicts = async () => {
     try {
       const res = await fetchWithAuth("/api/cross-document/conflicts");
@@ -170,56 +154,53 @@ export default function CrossDocumentPage() {
 
   return (
     <AuthGuard>
-      <div className="p-6 sm:p-8 max-w-7xl mx-auto space-y-8 bg-[#030712] min-h-screen text-slate-100">
-        {/* Header Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 backdrop-blur-xl shadow-xl">
+      <div className="space-y-6 pb-12 bg-slate-50 min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 text-slate-900">
+        
+        {/* Header */}
+        <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400">
-              <GitCompare className="h-6 w-6" />
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-md text-blue-600">
+              <GitCompare className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white tracking-tight">
-                Cross-Document Intelligence & Graph Matrix
-              </h1>
-              <p className="text-xs text-slate-400">
+              <h1 className="text-xl font-bold text-slate-900">Cross-Document Intelligence</h1>
+              <p className="text-sm text-slate-500">
                 Connected node graph, metric variance analysis, threshold intelligence, and real cross-document conflicts.
               </p>
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                fetchMetricsMetadata();
-                fetchAnalytics();
-                fetchComparison();
-                fetchConflicts();
-              }}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-mono font-bold text-slate-200 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700 transition-all cursor-pointer"
-            >
-              <RefreshCw className="h-3.5 w-3.5 text-cyan-400" />
-              Refresh Intelligence
-            </button>
-          </div>
+          <button
+            onClick={() => {
+              fetchMetricsMetadata();
+              fetchAnalytics();
+              fetchComparison();
+              fetchConflicts();
+            }}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 rounded-md border border-slate-300 transition-colors shadow-sm"
+          >
+            <RefreshCw className="h-4 w-4 text-blue-600" />
+            Refresh Data
+          </button>
         </div>
 
-        {/* ── INTERACTIVE CONNECTED NODE VISUALIZER (SECTION 12) ── */}
-        <div className="p-6 rounded-2xl bg-slate-900/80 border border-cyan-500/30 backdrop-blur-xl shadow-2xl relative overflow-hidden space-y-4">
-          <div className="flex items-center justify-between">
+        {/* Node Graph Concept Banner */}
+        <div className="p-6 rounded-lg bg-white border border-slate-200 shadow-sm relative overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse shadow-sm shadow-cyan-400" />
-              <h3 className="text-sm font-bold font-mono text-cyan-300 uppercase tracking-wider">
-                Interactive Connected Node Relationship Graph
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
+              <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wider">
+                Relationship Graph Matrix
               </h3>
             </div>
-            <span className="text-[11px] font-mono text-slate-400">
-              Click node to reveal real PostgreSQL document evidence
-            </span>
           </div>
 
-          {/* Node Connections Flow Diagram */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center py-4 relative">
-            {/* Node 1: Document A */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center py-4 relative z-10">
+            {/* Connection line placeholder */}
+            <div className="absolute inset-0 pointer-events-none hidden md:block z-0 flex items-center justify-center">
+              <div className="h-0.5 w-3/4 bg-slate-200"></div>
+            </div>
+            
+            {/* Node 1 */}
             <button
               onClick={() => setSelectedNode({
                 type: "Document A",
@@ -229,24 +210,22 @@ export default function CrossDocumentPage() {
                 source: "Sheet: Operations_Summary, Row #14",
                 page: "Page 1"
               })}
-              className="p-4 rounded-xl bg-slate-950 border border-cyan-500/40 hover:border-cyan-400 text-left transition-all hover:scale-105 cursor-pointer shadow-lg shadow-cyan-500/10 group"
+              className="p-4 rounded-md bg-white border border-slate-200 text-left transition-colors hover:border-blue-400 shadow-sm relative z-10"
             >
-              <span className="text-[10px] font-mono text-cyan-400 font-bold block">Document Node A</span>
-              <h4 className="text-xs font-bold text-slate-100 mt-1 line-clamp-1 group-hover:text-cyan-300">
+              <span className="text-[10px] text-blue-600 font-bold block uppercase tracking-wider">Document Node A</span>
+              <h4 className="text-sm font-bold text-slate-900 mt-1 line-clamp-1">
                 {selectedProjects[0] || "Gevra Expansion"}
               </h4>
-              <p className="text-[11px] text-slate-400 font-mono mt-2">Source: CIL Operations Report</p>
+              <p className="text-xs text-slate-500 mt-1">Source: CIL Operations Report</p>
             </button>
 
             {/* Parameter Node */}
-            <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
-              <span className="text-[10px] font-mono text-purple-400 uppercase font-bold">Extracted Parameter</span>
-              <span className="text-xs font-bold text-slate-200">Raw Coal vs Stripping Ratio</span>
-              <div className="w-full h-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-rose-500 my-1 animate-pulse" />
-              <span className="text-[10px] font-mono text-slate-400">Cross-Validated Parameter</span>
+            <div className="flex flex-col items-center justify-center p-3 rounded-md bg-slate-50 border border-slate-200 text-center relative z-10">
+              <span className="text-[10px] text-slate-500 uppercase font-bold">Extracted Parameter</span>
+              <span className="text-sm font-bold text-slate-800">Raw Coal vs Stripping Ratio</span>
             </div>
 
-            {/* Conflict / Discrepancy Node */}
+            {/* Conflict Node */}
             <button
               onClick={() => setSelectedNode({
                 type: "Conflict Node",
@@ -256,16 +235,16 @@ export default function CrossDocumentPage() {
                 source: "Cross-Document Conflict Engine",
                 page: "Multi-Source Extraction"
               })}
-              className="p-4 rounded-xl bg-slate-950 border border-amber-500/40 hover:border-amber-400 text-left transition-all hover:scale-105 cursor-pointer shadow-lg shadow-amber-500/10 group"
+              className="p-4 rounded-md bg-orange-50 border border-orange-200 text-left transition-colors hover:border-orange-400 shadow-sm relative z-10"
             >
-              <span className="text-[10px] font-mono text-amber-400 font-bold block">Conflict / Variance Node</span>
-              <h4 className="text-xs font-bold text-slate-100 mt-1 line-clamp-1 group-hover:text-amber-300">
+              <span className="text-[10px] text-orange-700 font-bold block uppercase tracking-wider">Variance Node</span>
+              <h4 className="text-sm font-bold text-slate-900 mt-1 line-clamp-1">
                 Stripping Ratio Delta (+14.2%)
               </h4>
-              <p className="text-[11px] text-slate-400 font-mono mt-2 font-bold text-amber-300">Conflict Flag Active</p>
+              <p className="text-xs text-orange-600 mt-1 font-semibold">Conflict Flag Active</p>
             </button>
 
-            {/* Node 2: Document B */}
+            {/* Node 2 */}
             <button
               onClick={() => setSelectedNode({
                 type: "Document B",
@@ -275,53 +254,52 @@ export default function CrossDocumentPage() {
                 source: "Mine_Production_Stats, Page 4",
                 page: "Page 4"
               })}
-              className="p-4 rounded-xl bg-slate-950 border border-blue-500/40 hover:border-blue-400 text-left transition-all hover:scale-105 cursor-pointer shadow-lg shadow-blue-500/10 group"
+              className="p-4 rounded-md bg-white border border-slate-200 text-left transition-colors hover:border-blue-400 shadow-sm relative z-10"
             >
-              <span className="text-[10px] font-mono text-blue-400 font-bold block">Document Node B</span>
-              <h4 className="text-xs font-bold text-slate-100 mt-1 line-clamp-1 group-hover:text-blue-300">
+              <span className="text-[10px] text-blue-600 font-bold block uppercase tracking-wider">Document Node B</span>
+              <h4 className="text-sm font-bold text-slate-900 mt-1 line-clamp-1">
                 {selectedProjects[1] || "Nigahi Project"}
               </h4>
-              <p className="text-[11px] text-slate-400 font-mono mt-2">Source: CMPDI Geological Archives</p>
+              <p className="text-xs text-slate-500 mt-1">Source: CMPDI Archives</p>
             </button>
           </div>
 
-          {/* Node Selection Drawer Details */}
           {selectedNode && (
-            <div className="p-4 rounded-xl bg-slate-950 border border-cyan-500/30 space-y-2 text-xs font-mono animate-fade-in">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                <span className="font-bold text-cyan-300 uppercase">{selectedNode.type} Details</span>
-                <button onClick={() => setSelectedNode(null)} className="text-slate-400 hover:text-white text-xs">Close [✕]</button>
+            <div className="p-4 mt-2 rounded-md bg-slate-50 border border-slate-200 text-sm">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
+                <span className="font-bold text-slate-700 uppercase tracking-wider">{selectedNode.type} Details</span>
+                <button onClick={() => setSelectedNode(null)} className="text-slate-500 hover:text-slate-700 text-xs font-semibold">Close ✕</button>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-300 pt-1">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-slate-800">
                 <div>
-                  <span className="text-slate-500 text-[10px] block">Actual Document</span>
-                  <span className="font-bold text-white">{selectedNode.title}</span>
+                  <span className="text-slate-500 text-[10px] block uppercase font-semibold">Document</span>
+                  <span className="font-semibold">{selectedNode.title}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] block">Actual Parameter</span>
-                  <span className="font-bold text-cyan-400">{selectedNode.parameter}</span>
+                  <span className="text-slate-500 text-[10px] block uppercase font-semibold">Parameter</span>
+                  <span className="font-semibold text-blue-700">{selectedNode.parameter}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] block">Actual Value</span>
-                  <span className="font-bold text-emerald-400">{selectedNode.value}</span>
+                  <span className="text-slate-500 text-[10px] block uppercase font-semibold">Value</span>
+                  <span className="font-semibold">{selectedNode.value}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 text-[10px] block">Actual Source / Page</span>
-                  <span className="font-bold text-purple-300">{selectedNode.source}</span>
+                  <span className="text-slate-500 text-[10px] block uppercase font-semibold">Source</span>
+                  <span className="font-semibold text-slate-600">{selectedNode.source}</span>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="flex border-b border-slate-800 space-x-4 bg-slate-900/60 px-6 pt-3 rounded-t-2xl border border-b-0 border-slate-800 backdrop-blur-xl">
+        {/* Tabs */}
+        <div className="flex border-b border-slate-200 space-x-6 px-2">
           {[
             { id: "compare", label: "Document Comparison", icon: GitCompare },
             { id: "analytics", label: "Multi-Doc Analytics", icon: BarChart3 },
             { id: "filter", label: "Threshold Intelligence", icon: Sliders },
             { id: "safety", label: "Safety & Risk Matrix", icon: ShieldAlert },
-            { id: "conflicts", label: `Cross-Doc Conflicts (${conflictsData?.total_conflicts || 0})`, icon: AlertTriangle }
+            { id: "conflicts", label: `Conflicts (${conflictsData?.total_conflicts || 0})`, icon: AlertTriangle }
           ].map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -332,10 +310,10 @@ export default function CrossDocumentPage() {
                   setActiveTab(tab.id as any);
                   if (tab.id === "filter" && !filterResults) handleApplyFilter();
                 }}
-                className={`flex items-center gap-2 pb-3 text-xs sm:text-sm font-bold font-mono border-b-2 transition-all cursor-pointer ${
+                className={`flex items-center gap-2 pb-4 text-sm font-semibold border-b-2 transition-colors ${
                   isActive
-                    ? "border-cyan-400 text-cyan-300"
-                    : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700"
+                    ? "border-blue-600 text-blue-600"
+                    : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -345,14 +323,13 @@ export default function CrossDocumentPage() {
           })}
         </div>
 
-        {/* Tab 1: Document Comparison */}
+        {/* Tab Content: Compare */}
         {activeTab === "compare" && (
           <div className="space-y-6">
-            {/* Project Selection Selector */}
-            <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-4 backdrop-blur-xl">
-              <h2 className="text-xs font-mono font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-cyan-400" />
-                Select Mine Projects to Compare Side-by-Side
+            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+              <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider flex items-center gap-2 mb-4">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                Select Projects for Comparison
               </h2>
               <div className="flex flex-wrap gap-2">
                 {availableProjects.map((p) => {
@@ -361,10 +338,10 @@ export default function CrossDocumentPage() {
                     <button
                       key={p.name}
                       onClick={() => toggleProjectSelection(p.name)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-md text-xs font-semibold border transition-colors ${
                         isSelected
-                          ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/10"
-                          : "bg-slate-950 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200"
+                          ? "bg-blue-50 text-blue-700 border-blue-200 shadow-sm"
+                          : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
                       }`}
                     >
                       {p.name} ({p.subsidiary})
@@ -374,22 +351,21 @@ export default function CrossDocumentPage() {
               </div>
             </div>
 
-            {/* Metric Comparisons Side-by-Side Table */}
             {comparisonData && (
-              <div className="bg-slate-900/60 rounded-2xl border border-slate-800 shadow-xl overflow-hidden backdrop-blur-xl">
-                <div className="px-6 py-4 border-b border-slate-800 bg-slate-900/80 flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-100 font-mono">
+              <div className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-slate-800">
                     Pairwise Metric Variance & Delta Analysis
                   </h3>
-                  <span className="text-xs text-cyan-400 font-mono">
+                  <span className="text-xs font-medium text-slate-500">
                     Comparing: {comparisonData.compared_projects?.join(" vs ")}
                   </span>
                 </div>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-950 border-b border-slate-800 text-[11px] font-mono font-bold uppercase text-slate-400">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-white border-b border-slate-200 text-xs font-semibold uppercase text-slate-500">
+                      <tr>
                         <th className="p-4">Operational Metric</th>
                         <th className="p-4 text-right">{comparisonData.project_a?.Project || "Project A"}</th>
                         <th className="p-4 text-right">{comparisonData.project_b?.Project || "Project B"}</th>
@@ -398,31 +374,31 @@ export default function CrossDocumentPage() {
                         <th className="p-4">Baseline Reference</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 text-xs font-mono">
+                    <tbody className="divide-y divide-slate-100">
                       {comparisonData.metric_comparisons?.map((m: any, idx: number) => {
                         const delta = m.delta;
                         const isHigher = delta.direction === "higher";
                         const isLower = delta.direction === "lower";
                         return (
-                          <tr key={idx} className="hover:bg-slate-950/60 transition-colors">
-                            <td className="p-4 font-bold text-slate-100">{m.metric_label}</td>
-                            <td className="p-4 text-right text-slate-200">
+                          <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                            <td className="p-4 font-semibold text-slate-800">{m.metric_label}</td>
+                            <td className="p-4 text-right text-slate-600">
                               {m.val_a !== null ? m.val_a.toLocaleString() : "N/A"} {m.unit !== "ratio" ? m.unit : ""}
                             </td>
-                            <td className="p-4 text-right text-slate-200">
+                            <td className="p-4 text-right text-slate-600">
                               {m.val_b !== null ? m.val_b.toLocaleString() : "N/A"} {m.unit !== "ratio" ? m.unit : ""}
                             </td>
-                            <td className="p-4 text-right font-bold text-slate-100">
+                            <td className="p-4 text-right font-semibold text-slate-800">
                               {delta.abs_diff !== null ? (delta.abs_diff > 0 ? `+${delta.abs_diff.toLocaleString()}` : delta.abs_diff.toLocaleString()) : "N/A"}
                             </td>
                             <td className="p-4 text-right">
                               <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border ${
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${
                                   isHigher
-                                    ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                     : isLower
-                                    ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-                                    : "bg-slate-800 text-slate-300 border-slate-700"
+                                    ? "bg-orange-50 text-orange-700 border border-orange-200"
+                                    : "bg-slate-100 text-slate-600 border border-slate-200"
                                 }`}
                               >
                                 {isHigher && <TrendingUp className="h-3 w-3" />}
@@ -430,7 +406,7 @@ export default function CrossDocumentPage() {
                                 {delta.pct_diff_formatted}
                               </span>
                             </td>
-                            <td className="p-4 text-xs text-slate-400 font-sans">{delta.baseline}</td>
+                            <td className="p-4 text-xs text-slate-500">{delta.baseline}</td>
                           </tr>
                         );
                       })}
@@ -442,15 +418,15 @@ export default function CrossDocumentPage() {
           </div>
         )}
 
-        {/* Tab 5: Cross-Doc Conflicts */}
+        {/* Tab 5: Conflicts */}
         {activeTab === "conflicts" && (
-          <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 shadow-xl space-y-6 backdrop-blur-xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <h3 className="text-base font-bold text-slate-100 flex items-center gap-2 font-mono">
-                <AlertTriangle className="h-5 w-5 text-rose-400" />
-                Cross-Document Conflicts & Metric Discrepancies
+          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <h3 className="text-base font-semibold text-slate-800 flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-rose-600" />
+                Cross-Document Conflicts & Discrepancies
               </h3>
-              <span className="px-3 py-1 bg-rose-500/10 text-rose-300 font-mono font-bold text-xs rounded-xl border border-rose-500/30">
+              <span className="px-3 py-1 bg-rose-50 text-rose-700 font-semibold text-xs rounded border border-rose-200">
                 {conflictsData?.total_conflicts || 0} Conflicts Found
               </span>
             </div>
@@ -458,30 +434,30 @@ export default function CrossDocumentPage() {
             {conflictsData?.conflicts?.length > 0 ? (
               <div className="space-y-4">
                 {conflictsData.conflicts.map((c: any, idx: number) => (
-                  <div key={idx} className="p-4 border border-rose-500/30 bg-rose-500/10 rounded-2xl space-y-2 text-xs">
-                    <div className="flex justify-between font-bold text-slate-100 font-mono">
+                  <div key={idx} className="p-4 border border-rose-200 bg-rose-50 rounded-md space-y-2 text-sm">
+                    <div className="flex justify-between font-semibold text-slate-900">
                       <span>{c.entity_identifier} ({c.field_name})</span>
-                      <span className="text-rose-400">Conflict #{c.id}</span>
+                      <span className="text-rose-600">Conflict #{c.id}</span>
                     </div>
-                    <p className="text-slate-200">{c.message}</p>
-                    <div className="grid grid-cols-2 gap-4 font-mono pt-1 text-[11px]">
-                      <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <span className="text-slate-400 font-sans block text-[10px]">Doc #{c.doc_a_id} ({c.source_ref_a}):</span>
-                        <span className="font-bold text-cyan-300">{c.val_a}</span>
+                    <p className="text-slate-700">{c.message}</p>
+                    <div className="grid grid-cols-2 gap-4 pt-2 text-xs">
+                      <div className="bg-white p-3 rounded border border-slate-200">
+                        <span className="text-slate-500 font-semibold block mb-1">Doc #{c.doc_a_id} ({c.source_ref_a}):</span>
+                        <span className="font-bold text-slate-900 text-sm">{c.val_a}</span>
                       </div>
-                      <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                        <span className="text-slate-400 font-sans block text-[10px]">Doc #{c.doc_b_id} ({c.source_ref_b}):</span>
-                        <span className="font-bold text-purple-300">{c.val_b}</span>
+                      <div className="bg-white p-3 rounded border border-slate-200">
+                        <span className="text-slate-500 font-semibold block mb-1">Doc #{c.doc_b_id} ({c.source_ref_b}):</span>
+                        <span className="font-bold text-slate-900 text-sm">{c.val_b}</span>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center bg-slate-950/60 rounded-2xl border border-dashed border-slate-800">
-                <CheckCircle2 className="h-8 w-8 text-emerald-400 mx-auto mb-2" />
-                <h4 className="font-bold text-slate-100 text-sm font-mono">Zero Cross-Document Conflicts Detected</h4>
-                <p className="text-xs text-slate-400 mt-1">
+              <div className="p-8 text-center bg-slate-50 rounded-md border border-slate-200">
+                <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
+                <h4 className="font-semibold text-slate-800 text-sm">Zero Cross-Document Conflicts Detected</h4>
+                <p className="text-sm text-slate-500 mt-1">
                   All extracted mine records and metrics are consistent across uploaded authorized documents.
                 </p>
               </div>
@@ -492,4 +468,3 @@ export default function CrossDocumentPage() {
     </AuthGuard>
   );
 }
-

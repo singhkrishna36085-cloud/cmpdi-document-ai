@@ -1,0 +1,875 @@
+[
+  {
+    "title": "Home",
+    "category": "Home",
+    "parent": "Home",
+    "officialUrl": "https://coal.gov.in/",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "About Ministry",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/about-ministry",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Vision",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/vision",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Mission",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/mission",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "History/Background",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/history-background",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Functions and Responsibilities",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/functions-and-responsibilities",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Ministers Profile",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/meet-minister",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Senior Officials Details",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/details-senior-officials",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Organization Chart",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/organization-chart",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Agencies under Ministry",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/agencies-under-ministry",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Who's Who",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/whos-who",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Standard Notes",
+    "category": "About Us",
+    "parent": "About Us",
+    "officialUrl": "https://coal.gov.in/about-us/standard-notes",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Coal \u2013 Indian Energy Choice",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/coal-indian-energy-choice",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Monthly Statistics at a glance",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/public-information/monthly-statistics-at-glance",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Production and Supplies",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/production-and-supplies",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Statistical Report",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/public-information/statistical-report",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Quarterly Report",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/quarterly-booklet",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Estimated Coal Projection",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/coal-demand-projections",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Over burden Removal (OBR)",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/obr",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Output per Man Shift (OMS)",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/output-per-man-shift",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Import and Export",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/import-and-export",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Generation of Thermal Power from Raw Coal",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/generation-of-thermal-power-from-raw-coal",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Coal & Lignite Resource",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/coal-reserves",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Coal Grades",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/coal-grades",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Mission Coking Coal",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/mission-coking-coal",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Grading of Coal",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/grading-coal",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Coal Evacuation Plan",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/coal-evacuation-plan",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "RSR Report",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/rsr-report",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Coal Statistics",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/coal-statistics",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Clearances (EC/FC/WLC/GWC)",
+    "category": "Major Statistics",
+    "parent": "Major Statistics",
+    "officialUrl": "https://coal.gov.in/major-statistics/Clearances",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Organisations",
+    "category": "Organisations",
+    "parent": "Organisations",
+    "officialUrl": "https://coal.gov.in/organisations",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "About SDC",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/about-sdc",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Mine Water Utilization",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/mine-water-utilization",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Greening Initiatives",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/greening-initiatives",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Promoting Renewable - Moving towards net zero carbon",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/promoting-renewable",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Eco - Tourism in mining area",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/eco-tourism-in-mining-area",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Air Quality Management",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/air-quality-management",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Gainful Utilization of Overburden",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/gainful-utilization",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Energy Efficiency Measures",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/energy-efficiency",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Guidelines & Report",
+    "category": "Sustainability",
+    "parent": "Sustainability",
+    "officialUrl": "https://coal.gov.in/sustainable-development-cell/report",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "About NA",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/about-na",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Auction/Allotment",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/auction-allotment",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Allocation Tranche-Wise",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/allocation-tranche-wise",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Compensation Orders",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/sanction-order-notice",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Termination Order",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/termination-order",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Scrutiny Committee",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/review-meeting-scrutiny-committee",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Production Reviews",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/production-reviews",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Operationalisation  Reviews",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/operationalisation-reviews",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Single Window System",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/single-window-system",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "National Coal Index",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/national-coal-index",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "National Lignite Index",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/national-lignite",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Coal Block Information",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/coal-block-information",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Vacancy",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/vacancy",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Tender",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/tender-na",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Technical Help Desk",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/technical-help-desk",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Energy Cell",
+    "category": "Nominated Authority",
+    "parent": "Nominated Authority",
+    "officialUrl": "https://coal.gov.in/nominated-authority/energy-cell",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Monthly Summary for Cabinet",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/monthly-summary-cabinets",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Standing Linkage Committee (LT)",
+    "category": "Minutes of Meetings",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/standing-linkage-committee1",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Annual Reports",
+    "category": "Reports",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/reports/annual-reports",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Budget Reports",
+    "category": "Reports",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/reports/budget-reports",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Critical and Super Critical Coal Stocks",
+    "category": "Reports",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/critical-and-Super-critical-coal-stocks",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Other Reports",
+    "category": "Reports",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/reports/other-reports",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Public Grievance Cell",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/public-grievance-cell",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Success Stories",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/success-storie",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Mines summary",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/mine-summary",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Advertisements",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/advertisements",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Citizen Charter",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/citizen-charters",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Action Plan",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/action-plan",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Grant-in-Aid",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/grant-in-aid",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Monthly Reports for Cabinet",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/monthly-report-cabinet",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Paper Laid on the Table",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/paper-laid-table",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Standard Operating Procedure",
+    "category": "Public Information",
+    "parent": "Public Information",
+    "officialUrl": "https://coal.gov.in/public-information/sop",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Right To Information Portal",
+    "category": "RTI",
+    "parent": "RTI",
+    "officialUrl": "https://rti.gov.in/",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "PIO Details of Ministry of Coal",
+    "category": "RTI",
+    "parent": "RTI",
+    "officialUrl": "https://coal.gov.in/rti/pio-details-of-ministry-coal",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Proactive disclosures on RTI Act from Ministry of Coal",
+    "category": "RTI",
+    "parent": "RTI",
+    "officialUrl": "https://coal.gov.in/rti/proactive-disclosures-rti-act-ministry-of-coal",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Open Tenders",
+    "category": "Tenders",
+    "parent": "Tenders",
+    "officialUrl": "https://coal.gov.in/tenders/open-tender",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Past Tenders",
+    "category": "Tenders",
+    "parent": "Tenders",
+    "officialUrl": "https://coal.gov.in/tenders/past-tender",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Press Releases (PIB)",
+    "category": "Media",
+    "parent": "Media",
+    "officialUrl": "https://www.pib.gov.in/allRel.aspx?reg=48&lang=1",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Press Releases  (MOC)",
+    "category": "Media",
+    "parent": "Media",
+    "officialUrl": "https://coal.gov.in/media/press-release",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Photo Gallery",
+    "category": "Media",
+    "parent": "Media",
+    "officialUrl": "https://coal.gov.in/media/photo-gallery",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Lok Sabha",
+    "category": "Parliament Q&A",
+    "parent": "Parliament Q&A",
+    "officialUrl": "https://sansad.in/ls/questions/questions-and-answers",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Rajya Sabha",
+    "category": "Parliament Q&A",
+    "parent": "Parliament Q&A",
+    "officialUrl": "https://sansad.in/rs/questions/questions-and-answers",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Contact Us",
+    "category": "Contact Us",
+    "parent": "Contact Us",
+    "officialUrl": "https://coal.gov.in/contact-us",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Acts & Policies",
+    "category": "Acts & Policies",
+    "parent": "Acts & Policies",
+    "officialUrl": "https://coal.gov.in/acts-rules-policies",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Coal Gasification",
+    "category": "Coal Gasification",
+    "parent": "Coal Gasification",
+    "officialUrl": "https://coal.gov.in/major-statistics/national-coal-gasification-mission",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "About Safety",
+    "category": "Safety in Coal Mines",
+    "parent": "Safety in Coal Mines",
+    "officialUrl": "https://coal.gov.in/major-statistics/safety-coal-mines",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Safety Staistics",
+    "category": "Safety in Coal Mines",
+    "parent": "Safety in Coal Mines",
+    "officialUrl": "https://coal.gov.in/safety-coal-mines/safety-staistics",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Accident Portal",
+    "category": "Safety in Coal Mines",
+    "parent": "Safety in Coal Mines",
+    "officialUrl": "https://coal.gov.in/safety-coal-mines/accident-portal",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Safety Initiatives",
+    "category": "Safety in Coal Mines",
+    "parent": "Safety in Coal Mines",
+    "officialUrl": "https://coal.gov.in/safety-coal-mines/safety-initiatives",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Technology Roadmap",
+    "category": "Technology Roadmap",
+    "parent": "Technology Roadmap",
+    "officialUrl": "https://coal.gov.in/techno-roadmap-coal-sector",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Achievements Flipbook",
+    "category": "Achievements Flipbook",
+    "parent": "Achievements Flipbook",
+    "officialUrl": "https://coal.gov.in/achievements-flipbook",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "About CSR",
+    "category": "CSR",
+    "parent": "CSR",
+    "officialUrl": "https://coal.gov.in/CSR/about-csr",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Guidelines",
+    "category": "CSR",
+    "parent": "CSR",
+    "officialUrl": "https://coal.gov.in/CSR/guidelines",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Photo Gallery",
+    "category": "CSR",
+    "parent": "CSR",
+    "officialUrl": "https://coal.gov.in/sites/default/files/2024-03/15-03-2024csr.pdf",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Central Sector Schemes",
+    "category": "Central Sector Schemes",
+    "parent": "Central Sector Schemes",
+    "officialUrl": "https://coal.gov.in/central-sector-schemes",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Chintan Shivir",
+    "category": "Chintan Shivir",
+    "parent": "Chintan Shivir",
+    "officialUrl": "https://coal.gov.in/chintan-shivir",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  },
+  {
+    "title": "Procurement Projection",
+    "category": "Procurement Projection",
+    "parent": "Procurement Projection",
+    "officialUrl": "https://coal.gov.in/procurement-projection",
+    "type": "official_external",
+    "sourceName": "Ministry of Coal",
+    "verified": true
+  }
+]

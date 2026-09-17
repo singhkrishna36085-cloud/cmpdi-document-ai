@@ -3,26 +3,20 @@
 import { useEffect, useState, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { fetchWithAuth } from "@/lib/api";
 import { 
   Search as SearchIcon, 
-  Sparkles, 
   FileText, 
   Eye, 
   Bot, 
   ArrowRight, 
-  ShieldAlert, 
-  CheckCircle2, 
+  ShieldAlert,
   Clock, 
   ChevronDown, 
   ChevronUp, 
-  Database, 
-  Filter, 
-  SlidersHorizontal,
   Info,
-  Layers,
-  RefreshCw
+  RefreshCw,
+  Filter
 } from "lucide-react";
 
 interface SearchResultItem {
@@ -57,10 +51,8 @@ function SearchContent() {
   const [searchResults, setSearchResults] = useState<SearchResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [errorCode, setErrorCode] = useState<number | null>(null);
   const [expandedChunkId, setExpandedChunkId] = useState<number | null>(null);
 
-  // Suggested quick search query chips
   const sampleQueries = [
     "coal production",
     "geological coal seam",
@@ -68,7 +60,6 @@ function SearchContent() {
     "ash content and GCV",
   ];
 
-  // Core Search API execution
   const executeSearch = useCallback(async (searchQuery: string, limit: number) => {
     if (!searchQuery || !searchQuery.trim()) {
       setSearchResults(null);
@@ -77,7 +68,6 @@ function SearchContent() {
 
     setLoading(true);
     setError(null);
-    setErrorCode(null);
 
     try {
       const res = await fetchWithAuth("/api/search", {
@@ -89,7 +79,6 @@ function SearchContent() {
       });
 
       if (!res.ok) {
-        setErrorCode(res.status);
         if (res.status === 401) {
           setError("Session expired. Please log in again.");
         } else if (res.status === 403) {
@@ -111,7 +100,6 @@ function SearchContent() {
     }
   }, []);
 
-  // Execute initial search on page load if query param exists
   useEffect(() => {
     if (initialQuery.trim()) {
       executeSearch(initialQuery, topK);
@@ -132,7 +120,6 @@ function SearchContent() {
     executeSearch(chipQuery, topK);
   };
 
-  // Filter search results by file format if user selected format filter
   const filteredResults = useMemo(() => {
     if (!searchResults || !searchResults.results) return [];
     if (selectedFormat === "all") return searchResults.results;
@@ -150,47 +137,47 @@ function SearchContent() {
     const percentage = (score * 100).toFixed(1);
     if (score >= 0.5) {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-          <Sparkles className="w-3 h-3" /> {percentage}% Match
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-50 text-emerald-700 text-[11px] font-bold border border-emerald-200">
+          {percentage}% Match
         </span>
       );
     }
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-500/10 text-teal-400 border border-teal-500/20 font-mono">
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-blue-50 text-blue-700 text-[11px] font-bold border border-blue-200">
         {percentage}% Match
       </span>
     );
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Global Semantic Search"
-        description="Query CMPDI geological exploration reports, borehole logs, core samples, and operational metrics using natural language AI search."
-      />
+    <div className="space-y-6 pb-12 bg-slate-50 min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 text-slate-900">
+      
+      {/* Header */}
+      <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm">
+        <h1 className="text-2xl font-bold text-slate-900 mb-1">Global Semantic Search</h1>
+        <p className="text-sm text-slate-500 max-w-2xl">
+          Query CMPDI geological exploration reports, borehole logs, core samples, and operational metrics using natural language AI search.
+        </p>
+      </div>
 
-      {/* Prominent Glowing Glass Search Form & Controls */}
-      <div className="p-8 rounded-3xl bg-slate-900/80 border border-cyan-500/30 backdrop-blur-2xl shadow-2xl space-y-6 relative overflow-hidden">
-        {/* Background Ambient Flare */}
-        <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-cyan-500/10 blur-2xl pointer-events-none" />
-
+      {/* Search Form */}
+      <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm flex flex-col space-y-4">
         <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400" />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
-              placeholder="Enter a natural language search query (e.g. 'coal seam thickness', 'borehole depth')..."
+              placeholder="Enter a search query (e.g. 'coal seam thickness', 'borehole depth')..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 rounded-2xl bg-slate-950/80 border border-slate-800 text-slate-100 placeholder:text-slate-500 text-xs sm:text-sm font-mono focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/60 transition-all shadow-inner"
+              className="w-full pl-12 pr-4 py-3 rounded-md bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-inner"
             />
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Top-K Selector Control */}
-            <div className="flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs font-mono text-slate-300">
-              <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
-              <span>Top K:</span>
+            <div className="flex items-center gap-2 px-3 py-3 rounded-md bg-slate-50 border border-slate-300 text-sm text-slate-600">
+              <Filter className="w-4 h-4" />
+              <span>Results:</span>
               <select
                 value={topK}
                 onChange={(e) => {
@@ -198,23 +185,23 @@ function SearchContent() {
                   setTopK(newK);
                   if (query.trim()) executeSearch(query, newK);
                 }}
-                className="bg-transparent text-cyan-300 font-bold focus:outline-none cursor-pointer"
+                className="bg-transparent text-slate-900 font-semibold focus:outline-none cursor-pointer"
               >
-                <option value={5} className="bg-slate-900 text-slate-100">5</option>
-                <option value={10} className="bg-slate-900 text-slate-100">10</option>
-                <option value={20} className="bg-slate-900 text-slate-100">20</option>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
               </select>
             </div>
 
             <button
               type="submit"
               disabled={loading || !query.trim()}
-              className="px-8 py-3.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 disabled:opacity-50 text-white font-bold text-xs sm:text-sm transition-all shadow-lg shadow-cyan-500/20 shrink-0 flex items-center gap-2 cursor-pointer"
+              className="px-8 py-3 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold text-sm transition-all shadow-sm shrink-0 flex items-center justify-center gap-2 cursor-pointer h-full"
             >
               {loading ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                  <span>Searching...</span>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <span>Searching</span>
                 </>
               ) : (
                 <>
@@ -226,14 +213,13 @@ function SearchContent() {
           </div>
         </form>
 
-        {/* Sample Search Query Chips */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
-          <span className="text-xs text-slate-400 font-mono">Suggested Queries:</span>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-slate-500 font-medium">Suggested:</span>
           {sampleQueries.map((sample) => (
             <button
               key={sample}
               onClick={() => handleChipClick(sample)}
-              className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/40 text-slate-300 hover:text-cyan-300 text-xs font-mono transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded bg-slate-100 border border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 text-slate-600 text-xs font-medium transition-all cursor-pointer"
             >
               "{sample}"
             </button>
@@ -241,160 +227,156 @@ function SearchContent() {
         </div>
       </div>
 
-      {/* Format Filter Bar (if search results present) */}
+      {/* Format Filter Bar */}
       {searchResults && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 bg-slate-900/60 p-1.5 rounded-2xl border border-slate-800 backdrop-blur-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-1.5">
             {["all", "pdf", "docx", "xlsx", "csv"].map((fmt) => (
               <button
                 key={fmt}
                 onClick={() => setSelectedFormat(fmt)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold uppercase transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-md text-xs font-bold uppercase transition-all cursor-pointer ${
                   selectedFormat === fmt
-                    ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm shadow-cyan-500/10"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-sm"
+                    : "text-slate-600 hover:bg-slate-50 border border-transparent"
                 }`}
               >
                 {fmt}
               </button>
             ))}
           </div>
-
-          <span className="text-xs text-slate-400 font-mono">
-            Showing {filteredResults.length} of {searchResults.total_results} matching vector chunks for "{searchResults.query}"
+          <span className="text-sm text-slate-500 font-medium px-2">
+            Showing {filteredResults.length} of {searchResults.total_results} matching chunks
           </span>
         </div>
       )}
 
       {/* Error state */}
       {error && (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-mono flex items-center gap-3">
-          <ShieldAlert className="w-5 h-5 shrink-0 text-rose-400 animate-pulse" />
+        <div className="p-4 rounded-md bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-3">
+          <ShieldAlert className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Loading state with AI processing animation */}
+      {/* Results */}
       {loading ? (
         <div className="space-y-4">
-          <div className="p-6 rounded-2xl bg-slate-900/40 border border-cyan-500/30 text-center space-y-3 backdrop-blur-xl">
-            <RefreshCw className="w-8 h-8 text-cyan-400 animate-spin mx-auto" />
-            <p className="text-xs font-mono font-bold text-cyan-300">Performing FAISS Dense Vector Match...</p>
-            <p className="text-[11px] text-slate-400 font-mono">Searching 384-dimensional embeddings across CMPDI geological archives</p>
+          <div className="p-12 rounded-lg bg-white border border-slate-200 text-center shadow-sm">
+            <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+            <p className="text-sm font-semibold text-slate-900">Querying Knowledge Base...</p>
+            <p className="text-xs text-slate-500 mt-1">Searching embeddings across CMPDI geological archives</p>
           </div>
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 rounded-2xl bg-slate-900/40 border border-slate-800 animate-pulse p-6 space-y-3 backdrop-blur-xl" />
-          ))}
         </div>
       ) : !searchResults ? (
-        <div className="p-12 rounded-3xl bg-slate-900/40 border border-slate-800 text-center text-slate-400 text-xs font-mono space-y-3 backdrop-blur-xl">
-          <SearchIcon className="w-10 h-10 text-slate-600 mx-auto" />
-          <h3 className="text-base font-bold text-slate-200">Ready for Semantic Search</h3>
-          <p className="text-xs max-w-md mx-auto text-slate-400">
-            Enter a question or search term above to perform dense vector search against FAISS embeddings across all uploaded CMPDI reports.
+        <div className="p-12 rounded-lg bg-white border border-slate-200 text-center shadow-sm">
+          <SearchIcon className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-slate-900">Ready for Semantic Search</h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mt-2">
+            Enter a search term above to perform dense vector search against FAISS embeddings across all uploaded CMPDI reports.
           </p>
         </div>
       ) : filteredResults.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-slate-900/40 border border-slate-800 text-center text-slate-400 text-xs font-mono space-y-3 backdrop-blur-xl">
-          <Info className="w-10 h-10 text-slate-600 mx-auto" />
-          <h3 className="text-base font-bold text-slate-200">No Relevant Documents Found</h3>
-          <p className="text-xs max-w-md mx-auto text-slate-400">
+        <div className="p-12 rounded-lg bg-white border border-slate-200 text-center shadow-sm">
+          <Info className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+          <h3 className="text-sm font-semibold text-slate-900">No Relevant Documents Found</h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto mt-2">
             No document chunks in the knowledge base matched your query "{searchResults.query}". Try rephrasing your search terms.
           </p>
         </div>
       ) : (
-        /* Search Results List */
         <div className="space-y-4">
           {filteredResults.map((item, index) => {
             const isExpanded = expandedChunkId === item.chunk_id;
-
             return (
               <div
                 key={`${item.document_id}-${item.chunk_id}-${index}`}
-                className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-cyan-500/40 transition-all space-y-4 shadow-xl backdrop-blur-xl group"
+                className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden flex flex-col"
               >
-                {/* Result Card Header */}
-                <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800/80 pb-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 font-bold border border-cyan-500/30">
+                {/* Header */}
+                <div className="p-4 border-b border-slate-100 bg-slate-50 flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-semibold border border-blue-200">
                         Doc #{item.document_id}
                       </span>
-                      <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-purple-500/10 text-purple-300 font-bold border border-purple-500/30">
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-semibold border border-indigo-200">
                         Chunk #{item.chunk_id}
                       </span>
                       {item.page_number && (
-                        <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-300 font-semibold">
+                        <span className="text-[11px] px-2 py-0.5 rounded bg-slate-200 text-slate-800 font-medium">
                           Page {item.page_number}
                         </span>
                       )}
                       {item.sheet_name && (
-                        <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-amber-500/10 text-amber-300 font-bold border border-amber-500/30">
+                        <span className="text-[11px] px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold border border-amber-200">
                           Sheet: {item.sheet_name}
                         </span>
                       )}
-                      <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-400 font-bold uppercase">
+                      <span className="text-[11px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-bold uppercase border border-slate-200">
                         {item.chunk_type}
                       </span>
                     </div>
 
-                    <h3 className="text-base font-bold text-slate-100 group-hover:text-cyan-300 transition-colors">
+                    <h3 className="text-base font-semibold text-slate-900">
                       {item.document_name || item.original_filename}
                     </h3>
-                    <p className="text-xs font-mono text-slate-400">{item.original_filename}</p>
+                    <p className="text-xs text-slate-500 font-mono mt-0.5">{item.original_filename}</p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="shrink-0">
                     {formatRelevanceBadge(item.relevance_score)}
                   </div>
                 </div>
 
-                {/* Extracted Content Snippet / Full Text */}
-                <div className="space-y-2">
-                  <span className="text-[10px] font-mono text-cyan-400 uppercase font-bold block">
-                    Retrieved Content (Source: {item.source_reference})
-                  </span>
-                  <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed bg-slate-950 p-4 rounded-xl border border-slate-800/80 overflow-x-auto">
-                    {isExpanded ? item.content : (item.content.length > 300 ? item.content.slice(0, 300) + "..." : item.content)}
-                  </pre>
+                {/* Content */}
+                <div className="p-4 bg-white">
+                  <div className="text-[11px] font-semibold text-slate-500 uppercase mb-2">
+                    Extracted Passage (Source: {item.source_reference})
+                  </div>
+                  <div className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-md border border-slate-100 font-mono">
+                    {isExpanded ? item.content : (item.content.length > 350 ? item.content.slice(0, 350) + "..." : item.content)}
+                  </div>
                 </div>
 
-                {/* Expanded Details Section */}
+                {/* Details Section */}
                 {isExpanded && (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-2 font-mono">
-                    <span className="text-cyan-300 font-bold block uppercase tracking-wider text-[10px]">Vector Match Technical Details:</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-slate-300">
-                      <div>Document ID: <strong className="text-cyan-400">#{item.document_id}</strong></div>
-                      <div>Chunk ID: <strong className="text-purple-300">#{item.chunk_id}</strong></div>
-                      <div>Similarity Score: <strong className="text-emerald-400">{item.relevance_score}</strong></div>
-                      <div>Source Ref: <strong className="text-amber-300">{item.source_reference}</strong></div>
+                  <div className="px-4 pb-4">
+                    <div className="p-3 bg-slate-50 border border-slate-100 rounded-md text-xs">
+                      <div className="font-semibold text-slate-700 mb-2">Vector Match Details:</div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-slate-600">
+                        <div>Document ID: <strong className="text-slate-900">{item.document_id}</strong></div>
+                        <div>Chunk ID: <strong className="text-slate-900">{item.chunk_id}</strong></div>
+                        <div>Score: <strong className="text-slate-900">{item.relevance_score}</strong></div>
+                        <div className="truncate" title={item.source_reference}>Source: <strong className="text-slate-900">{item.source_reference}</strong></div>
+                      </div>
                     </div>
                   </div>
                 )}
 
-                {/* Footer Action Bar */}
-                <div className="pt-2 flex flex-wrap items-center justify-between gap-3 border-t border-slate-800/60">
+                {/* Actions */}
+                <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                   <button
                     onClick={() => setExpandedChunkId(isExpanded ? null : item.chunk_id)}
-                    className="text-xs font-mono text-slate-400 hover:text-slate-200 flex items-center gap-1 transition-colors cursor-pointer"
+                    className="text-xs font-medium text-slate-600 hover:text-slate-900 flex items-center gap-1 transition-colors"
                   >
-                    {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                    {isExpanded ? "Show Less" : "Expand Full Content"}
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    {isExpanded ? "Show Less" : "Expand Full Text"}
                   </button>
 
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/assistant?doc_id=${item.document_id}&query=${encodeURIComponent(query)}`}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-300 text-xs font-mono font-bold border border-cyan-500/30 transition-all shadow-sm"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-white border border-slate-300 text-slate-700 text-xs font-medium hover:bg-slate-50 transition-colors shadow-sm"
                     >
-                      <Bot className="w-3.5 h-3.5 text-cyan-400" /> Ask AI About This
+                      <Bot className="w-4 h-4 text-blue-600" /> Ask AI
                     </Link>
 
                     <Link
                       href={`/documents/viewer?id=${item.document_id}`}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-200 text-xs font-mono font-bold border border-slate-800 transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600 border border-blue-600 text-white text-xs font-medium hover:bg-blue-700 transition-colors shadow-sm"
                     >
-                      <Eye className="w-3.5 h-3.5 text-cyan-400" /> View Document
+                      <Eye className="w-4 h-4" /> View Document
                     </Link>
                   </div>
                 </div>
@@ -403,14 +385,6 @@ function SearchContent() {
           })}
         </div>
       )}
-
-      {/* Real Search History Section */}
-      <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3 backdrop-blur-xl">
-        <h4 className="text-xs font-mono font-bold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
-          <Clock className="w-4 h-4 text-cyan-400" /> System Search History
-        </h4>
-        <p className="text-xs text-slate-400 font-mono italic">No search history available.</p>
-      </div>
     </div>
   );
 }
@@ -422,5 +396,3 @@ export default function SearchPage() {
     </Suspense>
   );
 }
-
-

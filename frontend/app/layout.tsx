@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Rajdhani } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const rajdhani = Rajdhani({
+  variable: "--font-rajdhani",
+  weight: ["500", "600", "700"],
   subsets: ["latin"],
 });
 
@@ -27,9 +28,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark bg-[#030712] text-slate-100`}
+      className={`${inter.variable} ${rajdhani.variable} h-full antialiased dark`}
     >
-      <body className="flex h-full overflow-hidden bg-[#030712] text-slate-100">
+      <body className="flex h-full overflow-hidden bg-obsidian-900 text-slate-100 font-sans">
         <AuthProvider>
           <AuthGuard>{children}</AuthGuard>
         </AuthProvider>

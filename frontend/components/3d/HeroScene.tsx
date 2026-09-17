@@ -1,32 +1,33 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { ParticleVortex } from "./ParticleVortex";
-import { IntelligenceCore } from "./IntelligenceCore";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { FluidDigitalMatter } from "./FluidDigitalMatter";
+import { IntelligenceCore } from "./IntelligenceCore";
+import { Suspense } from "react";
 
-export function HeroScene() {
+export function HeroScene({ scrollYProgress }: { scrollYProgress?: any }) {
   return (
-    <div className="absolute inset-0 z-0 h-full w-full pointer-events-auto bg-[#03050A]">
+    <div className="absolute inset-0 z-0 h-full w-full pointer-events-auto">
       <Canvas 
-        camera={{ position: [0, 5, 25], fov: 45 }} 
-        gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}
-        dpr={[1, 2]} // limit device pixel ratio for performance
+        camera={{ position: [0, 0, 30], fov: 45 }} 
+        gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
+        dpr={[1, 2]}
       >
-        <ambientLight intensity={0.2} />
-        <directionalLight position={[10, 10, 10]} intensity={1} color="#06b6d4" />
+        <ambientLight intensity={0.5} />
+        <pointLight position={[10, 10, 10]} intensity={1} color="#ffffff" />
         
-        {/* The flowing digital sand/vortex */}
-        <ParticleVortex />
+        <Suspense fallback={null}>
+          <FluidDigitalMatter scrollYProgress={scrollYProgress} />
+          {/* Hide IntelligenceCore for now to focus on the fluid matter, or we can keep it as a subtle element in the center */}
+        </Suspense>
         
-        {/* The floating intelligence core */}
-        <IntelligenceCore />
-
-        <EffectComposer>
+        <EffectComposer multisampling={0}>
           <Bloom 
-            luminanceThreshold={0.2} 
-            mipmapBlur 
-            intensity={1.5} 
+            luminanceThreshold={0.2}
+            luminanceSmoothing={0.9}
+            intensity={1.5}
+            mipmapBlur
           />
         </EffectComposer>
       </Canvas>

@@ -42,16 +42,13 @@ export function EvidenceCard({ index, source, chunkContent }: EvidenceCardProps)
         delay: index * 0.1,
       }}
       whileHover={{ scale: 1.02 }}
-      className="relative bg-slate-950/80 backdrop-blur-md border border-slate-700/50 hover:border-emerald-500/60 rounded-xl p-4 text-xs space-y-3 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.5)] overflow-hidden group cursor-pointer"
+      className="data-extraction-panel w-full p-4 space-y-3 text-xs group cursor-pointer"
       onClick={() => setIsExpanded(!isExpanded)}
     >
-      {/* Glowing Top Edge */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 opacity-50 group-hover:opacity-100 transition-opacity" />
-
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 relative z-10">
         <div className="flex items-center gap-2 font-bold text-slate-200 truncate">
           <Database className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span className="truncate text-sm">
+          <span className="truncate text-sm font-heading tracking-wide">
             {source.original_filename || source.document_name || "Verified Source"}
           </span>
         </div>
@@ -90,10 +87,10 @@ export function EvidenceCard({ index, source, chunkContent }: EvidenceCardProps)
         animate={{ height: isExpanded ? "auto" : 0, opacity: isExpanded ? 1 : 0 }}
         className="overflow-hidden"
       >
-        <div className="mt-2 pt-3 border-t border-slate-700/50 text-slate-300 text-[11px] font-mono bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 shadow-inner">
-          <div className="text-emerald-400 font-sans font-bold text-[10px] uppercase tracking-wider mb-2 flex items-center gap-2">
+        <div className="mt-2 pt-3 border-t border-white/5 text-slate-300 text-[11px] font-mono bg-black/40 p-3 rounded-lg border-l-2 border-l-emerald-500 shadow-inner">
+          <div className="text-emerald-400 font-heading font-bold text-[10px] uppercase tracking-wider mb-2 flex items-center gap-2">
             <FileText className="w-3 h-3" />
-            Context Chunk
+            Extracted Telemetry Data
           </div>
           <div className="leading-relaxed">
             {chunkContent || "No detailed chunk content available."}
