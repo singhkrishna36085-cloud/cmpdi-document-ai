@@ -14,10 +14,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   const isLoginPage = pathname === "/login";
 
-  // Temporary development bypass: Allow direct access to all pages without forcing /login redirect
+  // =========================================================
+  // FRONTEND AUTH BYPASS FLAG
+  // Set to true to temporarily disable the /login redirect.
+  // This DOES NOT disable backend JWT security or RBAC.
+  // =========================================================
+  const DEMO_AUTH_BYPASS = true;
+
   useEffect(() => {
-    // Disabled forced login redirection for direct page testing & demonstration
-  }, [isLoading, isAuthenticated, isLoginPage]);
+    if (DEMO_AUTH_BYPASS) {
+      return; // Bypass the login redirect completely
+    }
+
+    if (!isLoading && !isAuthenticated && !isLoginPage) {
+      router.push("/login");
+    } else if (!isLoading && isAuthenticated && isLoginPage) {
+      router.push("/");
+    }
+  }, [isLoading, isAuthenticated, isLoginPage, router]);
 
   // 1. Initial loading state (verifying token / restoring session)
   if (isLoading) {

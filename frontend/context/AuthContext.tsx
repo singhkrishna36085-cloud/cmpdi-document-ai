@@ -7,18 +7,9 @@ import { fetchWithAuth } from "@/lib/api";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DEFAULT_DEMO_USER: UserProfile = {
-  id: 1,
-  username: "cmpdi_admin",
-  email: "admin@cmpdi.co.in",
-  full_name: "CMPDI HOD Admin",
-  role: "HOD",
-  is_active: true,
-};
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<UserProfile | null>(DEFAULT_DEMO_USER);
-  const [token, setToken] = useState<string | null>("demo_bypass_token_2026");
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Background restore real backend session if available, fallback to demo state
