@@ -3,7 +3,6 @@
 import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNavbar } from "@/components/layout/TopNavbar";
 import { Loader2 } from "lucide-react";
 
@@ -50,21 +49,18 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 2. Login page mode (no sidebar/navbar wrapper)
-  if (isLoginPage) {
+  // 2. Login or Landing page mode (no navbar wrapper)
+  if (isLoginPage || pathname === "/") {
     return <>{children}</>;
   }
 
   // 3. Authenticated or Demo Application Shell (Direct Access Mode)
   return (
-    <div className="flex h-full w-full overflow-hidden">
-      <Sidebar />
-      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <TopNavbar />
-        <main className="flex-1 overflow-y-auto px-4 py-8 sm:px-6 lg:px-8">
-          {children}
-        </main>
-      </div>
+    <div className="flex h-full w-full overflow-hidden flex-col bg-obsidian-900 text-slate-100">
+      <TopNavbar />
+      <main className="flex-1 overflow-y-auto px-4 pt-24 pb-8 sm:px-6 lg:px-8 w-full">
+        {children}
+      </main>
     </div>
   );
 }
