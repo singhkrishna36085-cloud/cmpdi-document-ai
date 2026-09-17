@@ -7,7 +7,7 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 export function HeroScene() {
   return (
-    <div className="absolute inset-0 z-0 h-full w-full pointer-events-auto bg-[#020617]">
+    <div className="absolute inset-0 z-0 h-full w-full pointer-events-auto bg-[#03050A]">
       <Canvas 
         camera={{ position: [0, 5, 25], fov: 45 }} 
         gl={{ antialias: true, alpha: false, powerPreference: "high-performance" }}

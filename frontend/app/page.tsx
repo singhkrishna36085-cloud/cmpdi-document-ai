@@ -7,7 +7,7 @@ import { ArrowRight, MessageSquare, ShieldAlert, Cpu, FileText, Database, Layers
 
 export default function CinematicLandingPage() {
   return (
-    <div className="relative min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden selection:bg-cyan-500/30 selection:text-white">
+    <div className="relative min-h-screen bg-[#03050A] text-white font-sans overflow-x-hidden selection:bg-[#06B6D4]/30 selection:text-white">
       {/* ── GLOBAL 3D BACKGROUND (Stays fixed as user scrolls) ── */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <HeroScene />
@@ -62,7 +62,7 @@ export default function CinematicLandingPage() {
               transition={{ duration: 1, delay: 0.2 }}
               className="px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-sm"
             >
-              <span className="text-xs sm:text-sm font-medium tracking-[0.2em] text-cyan-300 uppercase">
+              <span className="text-xs sm:text-sm font-medium tracking-[0.2em] text-[#67E8F9] uppercase">
                 AI-Powered Document Intelligence
               </span>
             </motion.div>
@@ -72,11 +72,11 @@ export default function CinematicLandingPage() {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.3 }}
-              className="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tighter"
+              className="text-6xl sm:text-7xl lg:text-8xl font-black tracking-tighter text-[#F8FAFC]"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               CMPDI{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-cyan-500">
+              <span className="text-[#F8FAFC] drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                 Document AI
               </span>
             </motion.h1>
@@ -86,7 +86,7 @@ export default function CinematicLandingPage() {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.5 }}
-              className="text-2xl sm:text-3xl lg:text-4xl font-light text-slate-200 max-w-3xl leading-snug drop-shadow-lg"
+              className="text-2xl sm:text-3xl lg:text-4xl font-light text-[#CBD5E1] max-w-3xl leading-snug drop-shadow-lg"
             >
               Turn Complex Mining Data Into Intelligent Decisions.
             </motion.h2>
@@ -96,9 +96,9 @@ export default function CinematicLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.6 }}
-              className="text-base sm:text-lg text-slate-400 max-w-2xl leading-relaxed"
+              className="text-base sm:text-lg text-[#94A3B8] max-w-2xl leading-relaxed"
             >
-              Process documents, extract structured knowledge, validate information and ask AI questions with evidence-backed answers.
+              AI-powered document intelligence for geological, mining, production and technical reporting.
             </motion.p>
 
             {/* CTA Buttons */}
