@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || "https://ripe-shoes-sing.loca.lt";
+const BACKEND_URL = "https://ripe-shoes-sing.loca.lt";
 
 const nextConfig = {
   async rewrites() {
