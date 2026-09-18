@@ -218,40 +218,47 @@ export function DocumentUploader() {
 
       {/* ── Drop zone ──────────────────────────────────────────────────────── */}
       <div
+        onClick={() => fileInputRef.current?.click()}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
         className={`relative group cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed p-10 transition-all duration-300 ${
           isDragging
             ? "border-cyan-400 bg-cyan-950/30 scale-[1.01] shadow-2xl shadow-cyan-500/20"
-            : "border-slate-800 bg-slate-900/90 hover:border-slate-700 hover:bg-slate-900"
+            : "border-slate-800 bg-slate-900/90 hover:border-cyan-500/50 hover:bg-slate-900/95"
         }`}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-blue-500/5 pointer-events-none" />
 
         <div className="text-center relative z-10 space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mx-auto group-hover:scale-110 transition-transform">
-            <UploadCloud className={`h-8 w-8 ${isDragging ? "animate-bounce text-cyan-300" : ""}`} />
-          </div>
+          {/* Cloud Upload Icon Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+            aria-label="Upload files"
+            className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto group-hover:scale-110 group-hover:bg-cyan-500/20 group-hover:border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all cursor-pointer"
+          >
+            <UploadCloud className={`h-8 w-8 transition-transform ${isDragging ? "animate-bounce text-cyan-300" : "group-hover:-translate-y-0.5"}`} />
+          </button>
 
           <div>
-            <label
-              htmlFor="file-upload"
-              className="relative cursor-pointer text-base font-bold text-slate-100 hover:text-cyan-400 transition-colors"
-            >
-              <span>Click to Browse Documents</span>
-              <input
-                id="file-upload"
-                name="file-upload"
-                type="file"
-                multiple
-                className="sr-only"
-                ref={fileInputRef}
-                onChange={onFileInputChange}
-                accept=".pdf,.docx,.xlsx,.csv,.jpg,.jpeg,.png,.zip"
-              />
-            </label>
-            <span className="text-slate-400 text-sm font-medium pl-1">or drag and drop files here</span>
+            <span className="text-base font-bold text-slate-100 group-hover:text-cyan-300 transition-colors">
+              Click to Browse Documents
+            </span>
+            <span className="text-slate-400 text-sm font-medium pl-1.5">or drag and drop files here</span>
+            <input
+              id="file-upload"
+              name="file-upload"
+              type="file"
+              multiple
+              className="sr-only"
+              ref={fileInputRef}
+              onChange={onFileInputChange}
+              accept=".pdf,.docx,.xlsx,.csv,.jpg,.jpeg,.png,.zip"
+            />
           </div>
 
           <p className="text-xs font-mono text-slate-400 max-w-md mx-auto">
