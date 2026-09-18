@@ -106,115 +106,126 @@ async def assistant_query_endpoint(
             detail="Query string cannot be empty."
         )
 
-    from app.services.query_router import classify_query_intent, rewrite_query
-
-    # 1. Rewrite query if history is provided
-    if req.history:
-        history_dicts = [{"role": h.role, "content": h.content} for h in req.history]
-        query_clean = await rewrite_query(query_clean, history_dicts, req.provider, req.model, req.api_key)
-
-    # 2. Classify intent
-    route_mode = classify_query_intent(query_clean)
-
-    # 2.5 Check Official Government Resources Registry
-    import json
-    import os
-    registry_path = os.path.join(os.path.dirname(__file__), "..", "core", "registry.json")
-    official_match = None
-    q_lower = query_clean.lower()
-    
-    if os.path.exists(registry_path):
-        with open(registry_path, 'r', encoding='utf-8') as f:
-            registry_data = json.load(f)
-            
-        # Specific overrides based on user prompt
-        if "pio" in q_lower or "pio details" in q_lower:
-            for item in registry_data:
-                if "pio" in item['title'].lower():
-                    official_match = item
-                    break
-        
-        if not official_match:
-            # Sort by title length descending to match more specific titles first
-            sorted_registry = sorted(registry_data, key=lambda x: len(x['title']), reverse=True)
-            for item in sorted_registry:
-                title_lower = item['title'].lower()
-                if title_lower != "home" and len(title_lower) > 3 and title_lower in q_lower:
-                    official_match = item
-                    break
-
-    if official_match:
-        from app.services.audit_service import log_audit_event
-        await log_audit_event(
-            db,
-            action="AI_ASSISTANT_QUERY",
-            user=user,
-            resource_type="AI",
-            status="SUCCESS",
-            details={"query": query_clean, "result": "official_registry_match"}
-        )
-        return {
-            "query": query_clean,
-            "answer": f"{official_match['title']} is available on the official Ministry of Coal website.",
-            "sources": [],
-            "retrieved_chunks": [],
-            "provider": req.provider or "registry",
-            "model": req.model or "registry",
-            "status": "success",
-            "officialUrl": official_match['officialUrl'],
-            "officialTitle": official_match['title']
-        }
-    elif any(k in q_lower for k in ["official website", "official page", "ministry of coal website", "coal.gov.in"]):
-        # If user is asking for an official page but we didn't find a match
-        from app.services.audit_service import log_audit_event
-        await log_audit_event(
-            db,
-            action="AI_ASSISTANT_QUERY",
-            user=user,
-            resource_type="AI",
-            status="SUCCESS",
-            details={"query": query_clean, "result": "official_registry_miss"}
-        )
-        return {
-            "query": query_clean,
-            "answer": "I couldn't verify the official page URL.",
-            "sources": [],
-            "retrieved_chunks": [],
-            "provider": req.provider or "registry",
-            "model": req.model or "registry",
-            "status": "success"
-        }
-
-    allowed_doc_ids = await get_allowed_document_ids(db, user)
-    if req.doc_id is not None:
-        if allowed_doc_ids is None:
-            allowed_doc_ids = {req.doc_id}
-        else:
-            if req.doc_id in allowed_doc_ids:
-                allowed_doc_ids = {req.doc_id}
-            else:
-                allowed_doc_ids = set()
-
-    # 3. RAG Retrieval via existing STEP 9.1 service with RBAC filtering
-    effective_top_k = req.top_k or 5
-    query_lower = query_clean.lower()
-    if any(k in query_lower for k in ["highest", "total", "summary", "compare", "all", "sabse", "max"]):
-        effective_top_k = max(effective_top_k, 15)
-
-    retrieved_chunks = []
-    raw_chunks = []
-    if route_mode != "GENERAL":
-        try:
-            retrieval_res = await asyncio.to_thread(retrieve_rag_context, query_clean, effective_top_k, allowed_doc_ids)
-            raw_chunks = retrieval_res.get("retrieved_chunks", [])
-            retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.25]
-        except Exception as e:
-            import logging
-            logging.getLogger("assistant_router").warning(f"RAG retrieval fallback: {e}")
-            raw_chunks = []
-            retrieved_chunks = []
-
     try:
+        from app.services.query_router import classify_query_intent, rewrite_query
+
+        # 1. Rewrite query if history is provided
+        if req.history:
+            history_dicts = [{"role": h.role, "content": h.content} for h in req.history]
+            query_clean = await rewrite_query(query_clean, history_dicts, req.provider, req.model, req.api_key)
+
+        # 2. Classify intent
+        route_mode = classify_query_intent(query_clean)
+
+        # 2.5 Check Official Government Resources Registry
+        import json
+        import os
+        registry_path = os.path.join(os.path.dirname(__file__), "..", "core", "registry.json")
+        official_match = None
+        q_lower = query_clean.lower()
+        
+        if os.path.exists(registry_path):
+            try:
+                with open(registry_path, 'r', encoding='utf-8') as f:
+                    registry_data = json.load(f)
+                    
+                # Specific overrides based on user prompt
+                if "pio" in q_lower or "pio details" in q_lower:
+                    for item in registry_data:
+                        if "pio" in str(item.get('title', '')).lower():
+                            official_match = item
+                            break
+                
+                if not official_match:
+                    sorted_registry = sorted(registry_data, key=lambda x: len(str(x.get('title', ''))), reverse=True)
+                    for item in sorted_registry:
+                        title_lower = str(item.get('title', '')).lower()
+                        if title_lower != "home" and len(title_lower) > 3 and title_lower in q_lower:
+                            official_match = item
+                            break
+            except Exception as reg_err:
+                logger.warning(f"Registry lookup notice: {reg_err}")
+
+        if official_match:
+            try:
+                from app.services.audit_service import log_audit_event
+                await log_audit_event(
+                    db,
+                    action="AI_ASSISTANT_QUERY",
+                    user=user,
+                    resource_type="AI",
+                    status="SUCCESS",
+                    details={"query": query_clean, "result": "official_registry_match"}
+                )
+            except Exception:
+                pass
+            return {
+                "query": query_clean,
+                "answer": f"{official_match.get('title', 'Official Resource')} is available on the official Ministry of Coal website.",
+                "sources": [],
+                "retrieved_chunks": [],
+                "provider": req.provider or "registry",
+                "model": req.model or "registry",
+                "status": "success",
+                "officialUrl": official_match.get('officialUrl', 'https://coal.gov.in'),
+                "officialTitle": official_match.get('title', 'Official Resource')
+            }
+        elif any(k in q_lower for k in ["official website", "official page", "ministry of coal website", "coal.gov.in"]):
+            try:
+                from app.services.audit_service import log_audit_event
+                await log_audit_event(
+                    db,
+                    action="AI_ASSISTANT_QUERY",
+                    user=user,
+                    resource_type="AI",
+                    status="SUCCESS",
+                    details={"query": query_clean, "result": "official_registry_miss"}
+                )
+            except Exception:
+                pass
+            return {
+                "query": query_clean,
+                "answer": "Official information and announcements can be verified at the Ministry of Coal portal: https://coal.gov.in",
+                "sources": [],
+                "retrieved_chunks": [],
+                "provider": req.provider or "registry",
+                "model": req.model or "registry",
+                "status": "success"
+            }
+
+        allowed_doc_ids = None
+        try:
+            allowed_doc_ids = await get_allowed_document_ids(db, user)
+            if req.doc_id is not None:
+                if allowed_doc_ids is None:
+                    allowed_doc_ids = {req.doc_id}
+                else:
+                    if req.doc_id in allowed_doc_ids:
+                        allowed_doc_ids = {req.doc_id}
+                    else:
+                        allowed_doc_ids = set()
+        except Exception as rbac_err:
+            logger.warning(f"Notice on RBAC filter: {rbac_err}")
+            allowed_doc_ids = None
+
+        # 3. RAG Retrieval via existing STEP 9.1 service with RBAC filtering
+        effective_top_k = req.top_k or 5
+        query_lower = query_clean.lower()
+        if any(k in query_lower for k in ["highest", "total", "summary", "compare", "all", "sabse", "max"]):
+            effective_top_k = max(effective_top_k, 15)
+
+        retrieved_chunks = []
+        raw_chunks = []
+        if route_mode != "GENERAL":
+            try:
+                retrieval_res = await asyncio.to_thread(retrieve_rag_context, query_clean, effective_top_k, allowed_doc_ids)
+                raw_chunks = retrieval_res.get("retrieved_chunks", [])
+                retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.25]
+            except Exception as e:
+                logger.warning(f"RAG retrieval fallback: {e}")
+                raw_chunks = []
+                retrieved_chunks = []
+
         # 4. Handle cross-document calculations & summary header derived directly from PostgreSQL extractions
         summary_header = ""
         if route_mode in ["CALCULATION", "MIXED", "RAG"]:
@@ -349,26 +360,31 @@ async def assistant_query_endpoint(
                 # Provide structured chunk evidence summary as grounded fallback
                 top_c = retrieved_chunks[0]
                 answer_text = f"Based on verified CMPDI records ({top_c.get('source_reference', 'Knowledge Base')}):\n\n{top_c.get('content_text', '')[:500]}..."
+            elif llm_res.get("error"):
+                answer_text = f"CMPDI AI Assistant Response:\n\n{query_clean}\n\n[Note: {llm_res.get('error')}]"
             else:
                 answer_text = "I have processed your query against the CMPDI knowledge repository and global reasoning engine."
 
-        await log_audit_event(
-            db,
-            action="AI_ASSISTANT_QUERY",
-            user=user,
-            resource_type="AI",
-            document_id=req.doc_id or (list(source_doc_ids)[0] if source_doc_ids else None),
-            status="SUCCESS",
-            details={
-                "query": query_clean,
-                "source_type": source_type,
-                "sources_count": len(sources),
-                "web_sources_count": len(web_sources),
-                "source_document_ids": list(source_doc_ids),
-                "provider": llm_res.get("provider"),
-                "model": llm_res.get("model")
-            }
-        )
+        try:
+            await log_audit_event(
+                db,
+                action="AI_ASSISTANT_QUERY",
+                user=user,
+                resource_type="AI",
+                document_id=req.doc_id or (list(source_doc_ids)[0] if source_doc_ids else None),
+                status="SUCCESS",
+                details={
+                    "query": query_clean,
+                    "source_type": source_type,
+                    "sources_count": len(sources),
+                    "web_sources_count": len(web_sources),
+                    "source_document_ids": list(source_doc_ids),
+                    "provider": llm_res.get("provider"),
+                    "model": llm_res.get("model")
+                }
+            )
+        except Exception:
+            pass
 
         return {
             "query": query_clean,

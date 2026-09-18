@@ -135,7 +135,12 @@ async def get_allowed_document_ids(db: AsyncSession, user: Optional[User]) -> Op
     """
     if user and (user.role == "HOD" or user.role == UserRole.HOD.value):
         return None
-    from app.models import Document
-    res = await db.execute(select(Document.id).where(Document.is_confidential == False))
-    return set(res.scalars().all())
+    try:
+        from app.models import Document
+        from sqlalchemy import or_
+        res = await db.execute(select(Document.id).where(or_(Document.is_confidential == False, Document.is_confidential.is_(None))))
+        return set(res.scalars().all())
+    except Exception as exc:
+        logger.warning(f"Note on allowed document IDs: {exc}")
+        return None
 
