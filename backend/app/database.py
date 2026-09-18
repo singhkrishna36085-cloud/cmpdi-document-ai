@@ -24,16 +24,23 @@ else:
     elif DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
 
-    # Clean query string for asyncpg (translate sslmode -> connect_args)
+    # Clean query string for asyncpg (translate sslmode/channel_binding -> connect_args)
     try:
         parsed = urllib.parse.urlparse(DATABASE_URL)
         qs = urllib.parse.parse_qs(parsed.query)
         if "sslmode" in qs or "ssl" in qs:
             connect_args["ssl"] = True
-            clean_query = "&".join(
-                [f"{k}={v[0]}" for k, v in qs.items() if k not in ("sslmode", "ssl")]
-            )
-            DATABASE_URL = urllib.parse.urlunparse(parsed._replace(query=clean_query))
+        if "channel_binding" in qs:
+            connect_args["channel_binding"] = qs["channel_binding"][0]
+        
+        channel_binding_env = os.getenv("DB_CHANNEL_BINDING")
+        if channel_binding_env and "channel_binding" not in connect_args:
+            connect_args["channel_binding"] = channel_binding_env
+
+        clean_query = "&".join(
+            [f"{k}={v[0]}" for k, v in qs.items() if k not in ("sslmode", "ssl", "channel_binding")]
+        )
+        DATABASE_URL = urllib.parse.urlunparse(parsed._replace(query=clean_query))
     except Exception:
         pass
 
