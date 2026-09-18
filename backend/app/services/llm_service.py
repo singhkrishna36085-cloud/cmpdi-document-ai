@@ -140,28 +140,39 @@ CRITICAL INSTRUCTIONS:
 """
 
 
+FORMATTING_RULES = """
+PRESENTATION & TYPOGRAPHY RULES:
+1. USE CLEAR HEADINGS: Divide your response into clear thematic sections using `### Heading Title`. Always leave a blank line before and after every heading.
+2. USE CLEAN TABLES: When presenting comparisons, categories, metrics, or counts, present them in clean standard Markdown tables (`| Col 1 | Col 2 |`). Put empty lines before and after every table.
+3. SPACIOUS READABILITY: Keep paragraphs short (2 to 3 sentences). Separate paragraphs with an empty line. Never produce dense, unbroken walls of text.
+4. BULLET POINTS WITH BOLD KEYWORDS: Use `- ` bullet points with clear spacing. Bold (**word**) important numbers, regulations, company names, and metrics.
+"""
+
 def get_system_prompt_for_mode(mode: str) -> str:
+    base = ""
     if mode in ["GENERAL", "WEB"]:
-        return (
+        base = (
             "You are an advanced, knowledgeable AI Assistant for CMPDI / Coal India Limited and global industry. "
             "You have deep expertise in mining engineering, geology, environmental policy, science, technology, mathematics, and world knowledge. "
             "Provide a thorough, accurate, and structured answer. Use Markdown formatting, clear headings, bullet points, and step-by-step logic."
         )
     elif mode in ["MIXED", "HYBRID"]:
-        return (
+        base = (
             "You are an advanced AI Document & Intelligence Assistant. "
             "First, address the broader conceptual or global aspects of the user's inquiry thoroughly. "
             "Then, synthesize any specific evidence, figures, and verified details from the provided CMPDI document context blocks below. "
             "Clearly distinguish general industry principles from verified document findings."
         )
     elif mode == "CALCULATION":
-        return (
+        base = (
             "You are an advanced analytical AI Assistant. "
             "Perform all calculations step-by-step with mathematical precision. "
             "State all formulas, intermediate steps, units, and assumptions clearly."
         )
     else:
-        return SYSTEM_PROMPT
+        base = SYSTEM_PROMPT
+
+    return base + "\n\n" + FORMATTING_RULES
 
 def generate_llm_answer(
     query: str,
