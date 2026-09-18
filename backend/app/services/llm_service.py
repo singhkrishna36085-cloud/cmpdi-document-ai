@@ -15,7 +15,94 @@ load_dotenv()
 
 logger = logging.getLogger("llm_service")
 
-# Default Environment Configuration
+import time
+
+_GROQ_MODELS_CACHE: List[str] = []
+_GROQ_MODELS_CACHE_TIME: float = 0.0
+_GROQ_LAST_WORKING_MODEL: Optional[str] = None
+
+# High-quality verified Groq fallback models in preference order
+_STATIC_GROQ_FALLBACKS = [
+    "openai/gpt-oss-120b",
+    "groq/compound",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-20b",
+    "groq/compound-mini",
+    "allam-2-7b",
+]
+
+_DEPRECATED_OR_INVALID_GROQ_MODELS = {
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
+    "llama3-70b-8192",
+    "llama3-8b-8192",
+    "mixtral-8x7b-32768",
+    "qwen-2.5-32b",
+    "gemma2-9b-it",
+    "llama-3.1-70b-versatile"
+}
+
+def get_live_groq_models(api_key: str) -> List[str]:
+    """
+    Dynamically discover active chat models from Groq's /v1/models endpoint using the API key.
+    Filters out non-chat models (whisper, guard, embed, etc.) and caches for 1 hour.
+    """
+    global _GROQ_MODELS_CACHE, _GROQ_MODELS_CACHE_TIME
+    now = time.time()
+    if _GROQ_MODELS_CACHE and (now - _GROQ_MODELS_CACHE_TIME < 3600):
+        return _GROQ_MODELS_CACHE
+
+    clean_key = (api_key or "").strip().strip('"\'')
+    if not clean_key:
+        return _STATIC_GROQ_FALLBACKS
+
+    try:
+        resp = requests.get(
+            "https://api.groq.com/openai/v1/models",
+            headers={"Authorization": f"Bearer {clean_key}"},
+            timeout=8
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            models_data = data.get("data", [])
+            valid_chat_models = []
+            for item in models_data:
+                mid = item.get("id", "")
+                mid_lower = mid.lower()
+                # Skip non-chat/audio/guard/moderation models
+                if any(skip in mid_lower for skip in ["whisper", "guard", "safeguard", "embed", "tts", "orpheus-arabic"]):
+                    continue
+                # Skip known deprecated models
+                if mid in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+                    continue
+                valid_chat_models.append(mid)
+            
+            # Prioritize top-tier models (120b, compound, 27b, 20b, compound-mini)
+            def model_priority(m: str) -> int:
+                m_low = m.lower()
+                if "120b" in m_low:
+                    return 0
+                if "compound" in m_low and "mini" not in m_low:
+                    return 1
+                if "qwen3.8" in m_low or "27b" in m_low:
+                    return 2
+                if "20b" in m_low:
+                    return 3
+                if "compound-mini" in m_low:
+                    return 4
+                return 10
+
+            valid_chat_models.sort(key=model_priority)
+            if valid_chat_models:
+                _GROQ_MODELS_CACHE = valid_chat_models
+                _GROQ_MODELS_CACHE_TIME = now
+                logger.info(f"Dynamically discovered {len(valid_chat_models)} active Groq models: {valid_chat_models}")
+                return valid_chat_models
+    except Exception as e:
+        logger.warning(f"Failed to fetch live Groq models via API: {e}")
+
+    return _STATIC_GROQ_FALLBACKS
+
 # Default Environment Configuration
 def get_default_provider() -> str:
     return os.getenv("LLM_PROVIDER", "groq").lower()
@@ -23,19 +110,22 @@ def get_default_provider() -> str:
 def get_default_model() -> str:
     provider = get_default_provider()
     if provider == "groq":
-        return os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
+        return os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
     elif provider == "gemini":
         return os.getenv("LLM_MODEL", "gemini-1.5-flash")
-    return os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
+    return os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
 
 def get_default_api_key(provider_name: str) -> str:
+    key = ""
     if provider_name == "groq":
-        return os.getenv("GROQ_API_KEY") or os.getenv("LLM_API_KEY") or ""
+        key = os.getenv("GROQ_API_KEY") or os.getenv("LLM_API_KEY") or ""
     elif provider_name == "gemini":
-        return os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY") or ""
+        key = os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY") or ""
     elif provider_name == "openai":
-        return os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY") or ""
-    return os.getenv("LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+        key = os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY") or ""
+    else:
+        key = os.getenv("LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+    return key.strip().strip('"\'')
 
 
 SYSTEM_PROMPT = """You are an Advanced AI Document & Knowledge Assistant for CMPDI (Central Mine Planning & Design Institute) / Coal India Limited and global industry.
@@ -112,6 +202,23 @@ def generate_llm_answer(
             f"- Cite source document references where available."
         )
 
+    # Auto-route between Groq and Gemini if chosen provider key is absent
+    if provider_name == "gemini" and not key:
+        alt_groq_key = get_default_api_key("groq")
+        if alt_groq_key:
+            logger.info("GEMINI_API_KEY missing, auto-routing to available GROQ_API_KEY provider.")
+            provider_name = "groq"
+            model_name = os.getenv("LLM_MODEL") or "openai/gpt-oss-120b"
+            key = alt_groq_key
+
+    if provider_name == "groq" and not key:
+        alt_gemini_key = get_default_api_key("gemini")
+        if alt_gemini_key:
+            logger.info("GROQ_API_KEY missing, auto-routing to available GEMINI_API_KEY provider.")
+            provider_name = "gemini"
+            model_name = "gemini-1.5-flash"
+            key = alt_gemini_key
+
     # Validate cloud provider API keys
     if provider_name in ["groq", "gemini", "openai", "huggingface"] and not key:
         logger.warning(f"LLM_API_KEY missing for provider '{provider_name}'.")
@@ -124,10 +231,27 @@ def generate_llm_answer(
         }
 
     try:
+        res = None
         if provider_name == "groq":
-            return _call_groq(user_prompt, model_name, key, timeout, sys_prompt)
+            res = _call_groq(user_prompt, model_name, key, timeout, sys_prompt)
+            # If Groq failed completely and Gemini key is configured, fallback to Gemini
+            if res.get("status") != "success" and os.getenv("GEMINI_API_KEY"):
+                gem_key = get_default_api_key("gemini")
+                logger.info("Groq call failed; attempting fallback to Gemini...")
+                res_gem = _call_gemini(user_prompt, "gemini-1.5-flash", gem_key, timeout, sys_prompt)
+                if res_gem.get("status") == "success":
+                    return res_gem
+            return res
         elif provider_name == "gemini":
-            return _call_gemini(user_prompt, model_name, key, timeout, sys_prompt)
+            res = _call_gemini(user_prompt, model_name, key, timeout, sys_prompt)
+            # If Gemini failed and Groq key is configured, fallback to Groq
+            if res.get("status") != "success" and os.getenv("GROQ_API_KEY"):
+                groq_k = get_default_api_key("groq")
+                logger.info("Gemini call failed; attempting fallback to Groq...")
+                res_groq = _call_groq(user_prompt, "openai/gpt-oss-120b", groq_k, timeout, sys_prompt)
+                if res_groq.get("status") == "success":
+                    return res_groq
+            return res
         elif provider_name == "ollama":
             return _call_ollama(user_prompt, model_name, url or "http://localhost:11434", timeout, sys_prompt)
         elif provider_name in ["openai", "custom", "huggingface"]:
@@ -161,19 +285,45 @@ def generate_llm_answer(
 
 
 def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_prompt: str) -> Dict[str, Any]:
+    global _GROQ_LAST_WORKING_MODEL
+    clean_key = (api_key or "").strip().strip('"\'')
+    if not clean_key:
+        return {
+            "answer": None,
+            "provider": "groq",
+            "model": model or "openai/gpt-oss-120b",
+            "status": "configuration_error",
+            "error": "GROQ_API_KEY is empty or missing. Please configure GROQ_API_KEY."
+        }
+
     endpoint = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "Authorization": f"Bearer {clean_key}",
         "Content-Type": "application/json"
     }
 
-    # Build candidate model list with stable, universal models as immediate fallbacks
-    candidate_models = []
-    if model and model.strip():
-        candidate_models.append(model.strip())
-    for standard_model in ["llama-3.1-8b-instant", "llama3-8b-8192", "mixtral-8x7b-32768", "llama3-70b-8192"]:
-        if standard_model not in candidate_models:
-            candidate_models.append(standard_model)
+    # Build prioritized candidate model list
+    candidate_models: List[str] = []
+
+    # 1. Last known working model for fast execution
+    if _GROQ_LAST_WORKING_MODEL and _GROQ_LAST_WORKING_MODEL not in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+        candidate_models.append(_GROQ_LAST_WORKING_MODEL)
+
+    # 2. User-requested model if provided and not explicitly deprecated
+    req_model = (model or "").strip()
+    if req_model and req_model not in _DEPRECATED_OR_INVALID_GROQ_MODELS and req_model not in candidate_models:
+        candidate_models.insert(0, req_model)
+
+    # 3. Discovered live models from Groq API
+    live_models = get_live_groq_models(clean_key)
+    for lm in live_models:
+        if lm not in candidate_models and lm not in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+            candidate_models.append(lm)
+
+    # 4. Static verified fallbacks
+    for sm in _STATIC_GROQ_FALLBACKS:
+        if sm not in candidate_models and sm not in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+            candidate_models.append(sm)
 
     last_error = ""
     for candidate in candidate_models:
@@ -190,6 +340,7 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
             if resp.status_code == 200:
                 data = resp.json()
                 answer = data["choices"][0]["message"]["content"].strip()
+                _GROQ_LAST_WORKING_MODEL = candidate
                 return {
                     "answer": answer,
                     "provider": "groq",
@@ -199,16 +350,18 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
                 }
             else:
                 last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
-                logger.warning(f"Groq model '{candidate}' returned {resp.status_code} -> trying next available model...")
+                logger.warning(f"Groq model '{candidate}' returned {resp.status_code} -> trying next candidate...")
+                if resp.status_code in [400, 404]:
+                    _DEPRECATED_OR_INVALID_GROQ_MODELS.add(candidate)
         except requests.exceptions.Timeout:
-            last_error = f"Groq request for '{candidate}' timed out."
+            last_error = f"Groq request for '{candidate}' timed out after {timeout}s."
         except Exception as exc:
             last_error = f"Groq request error on '{candidate}': {str(exc)}"
 
     return {
         "answer": None,
         "provider": "groq",
-        "model": candidate_models[0] if candidate_models else "llama-3.1-8b-instant",
+        "model": candidate_models[0] if candidate_models else "openai/gpt-oss-120b",
         "status": "provider_error",
         "error": last_error or "All Groq candidate models failed."
     }
