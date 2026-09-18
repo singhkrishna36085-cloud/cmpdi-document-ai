@@ -11,4 +11,9 @@ pyjwt
 requests
 pydantic
 email-validator>=2.0.0
-
+PyMuPDF>=1.23.0
+pypdf>=3.17.0
+python-docx>=1.1.0
+pandas>=2.0.0
+openpyxl>=3.1.0
+Pillow>=10.0.0

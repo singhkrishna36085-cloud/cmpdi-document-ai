@@ -33,55 +33,95 @@ def get_ocr_engine():
 
 
 def process_pdf(file_path: str) -> Dict[str, Any]:
-    import fitz  # PyMuPDF
-    
-    doc = fitz.open(file_path)
-    page_count = len(doc)
-    chunks = []
-    full_text_list = []
-    
-    for page_idx in range(page_count):
-        page_num = page_idx + 1
-        page = doc[page_idx]
-        text = page.get_text("text").strip()
+    fitz_module = None
+    try:
+        import fitz  # PyMuPDF
+        fitz_module = fitz
+    except ImportError:
+        logger.warning("PyMuPDF (fitz) not available, falling back to pypdf parser.")
+        fitz_module = None
+
+    if fitz_module is not None:
+        doc = fitz_module.open(file_path)
+        page_count = len(doc)
+        chunks = []
+        full_text_list = []
         
-        # If page has minimal digital text, attempt OCR via PaddleOCR
-        if len(text) < 10:
-            ocr_engine = get_ocr_engine()
-            if ocr_engine:
-                try:
-                    pix = page.get_pixmap(dpi=150)
-                    img_bytes = pix.tobytes("png")
-                    result = ocr_engine.ocr(img_bytes, cls=False)
-                    ocr_lines = []
-                    if result and result[0]:
-                        for line in result[0]:
-                            if line and len(line) >= 2 and line[1]:
-                                ocr_lines.append(line[1][0])
-                    ocr_text = "\n".join(ocr_lines).strip()
-                    if ocr_text:
-                        text = f"[OCR Extracted Page {page_num}]\n" + ocr_text
-                except Exception as e:
-                    logger.warning(f"OCR processing failed for PDF page {page_num}: {e}")
+        for page_idx in range(page_count):
+            page_num = page_idx + 1
+            page = doc[page_idx]
+            text = page.get_text("text").strip()
+            
+            # If page has minimal digital text, attempt OCR via PaddleOCR
+            if len(text) < 10:
+                ocr_engine = get_ocr_engine()
+                if ocr_engine:
+                    try:
+                        pix = page.get_pixmap(dpi=150)
+                        img_bytes = pix.tobytes("png")
+                        result = ocr_engine.ocr(img_bytes, cls=False)
+                        ocr_lines = []
+                        if result and result[0]:
+                            for line in result[0]:
+                                if line and len(line) >= 2 and line[1]:
+                                    ocr_lines.append(line[1][0])
+                        ocr_text = "\n".join(ocr_lines).strip()
+                        if ocr_text:
+                            text = f"[OCR Extracted Page {page_num}]\n" + ocr_text
+                    except Exception as e:
+                        logger.warning(f"OCR processing failed for PDF page {page_num}: {e}")
+            
+            if text:
+                chunks.append({
+                    "page_number": page_num,
+                    "sheet_name": None,
+                    "chunk_type": "text",
+                    "content": text
+                })
+                full_text_list.append(f"--- Page {page_num} ---\n{text}")
         
-        if text:
-            chunks.append({
-                "page_number": page_num,
-                "sheet_name": None,
-                "chunk_type": "text",
-                "content": text
-            })
-            full_text_list.append(f"--- Page {page_num} ---\n{text}")
-    
-    doc.close()
-    
-    full_text = "\n\n".join(full_text_list)
-    return {
-        "page_count": page_count,
-        "meta_info": json.dumps({"pages": page_count, "format": "PDF"}),
-        "full_text": full_text,
-        "chunks": chunks
-    }
+        doc.close()
+        full_text = "\n\n".join(full_text_list)
+        return {
+            "page_count": page_count,
+            "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "PyMuPDF"}),
+            "full_text": full_text,
+            "chunks": chunks
+        }
+    else:
+        try:
+            import pypdf
+        except ImportError:
+            raise RuntimeError("Neither 'PyMuPDF' (fitz) nor 'pypdf' is installed. Please install PyMuPDF or pypdf.")
+
+        reader = pypdf.PdfReader(file_path)
+        page_count = len(reader.pages)
+        chunks = []
+        full_text_list = []
+        for idx, page in enumerate(reader.pages):
+            page_num = idx + 1
+            try:
+                text = (page.extract_text() or "").strip()
+            except Exception as pe:
+                logger.warning(f"pypdf extraction error on page {page_num}: {pe}")
+                text = ""
+
+            if text:
+                chunks.append({
+                    "page_number": page_num,
+                    "sheet_name": None,
+                    "chunk_type": "text",
+                    "content": text
+                })
+                full_text_list.append(f"--- Page {page_num} ---\n{text}")
+
+        full_text = "\n\n".join(full_text_list)
+        return {
+            "page_count": page_count,
+            "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "pypdf"}),
+            "full_text": full_text,
+            "chunks": chunks
+        }
 
 
 def process_docx(file_path: str) -> Dict[str, Any]:
@@ -290,9 +330,15 @@ def process_image(file_path: str) -> Dict[str, Any]:
 
 
 def process_document_file(file_path: str, filename: str) -> Dict[str, Any]:
-    if not os.path.exists(file_path):
+    actual_path = file_path if os.path.exists(file_path) else None
+    if not actual_path:
+        from app.core.storage import find_file_on_disk
+        actual_path = find_file_on_disk(file_path)
+
+    if not actual_path or not os.path.exists(actual_path):
         raise FileNotFoundError(f"Uploaded document file not found: {file_path}")
-        
+
+    file_path = actual_path
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
     
     if ext == "pdf":

@@ -14,7 +14,8 @@ import {
   CheckCircle2, 
   AlertTriangle, 
   Clock,
-  Download
+  Download,
+  Trash2
 } from "lucide-react";
 
 export default function DocumentsPage() {
@@ -23,6 +24,22 @@ export default function DocumentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
+  const handleDeleteDocument = async (docId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm("Are you sure you want to permanently delete this document and its records?")) return;
+    try {
+      const res = await fetchWithAuth(`/api/documents/${docId}`, { method: "DELETE" });
+      if (res.ok) {
+        setDocuments((prev) => prev.filter((d) => d.id !== docId));
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to delete document: ${err.detail || "Server error"}`);
+      }
+    } catch (err: any) {
+      alert(`Error deleting document: ${err.message}`);
+    }
+  };
 
   useEffect(() => {
     async function loadDocuments() {
@@ -222,9 +239,12 @@ export default function DocumentsPage() {
                         >
                           <Eye className="w-4 h-4" /> View
                         </Link>
-                        {/* Download mocked link for UI completeness */}
-                        <button className="text-slate-400 hover:text-slate-600 transition-colors">
-                          <Download className="w-4 h-4" />
+                        <button 
+                          onClick={(e) => handleDeleteDocument(doc.id, e)}
+                          className="text-slate-400 hover:text-rose-600 transition-colors p-1"
+                          title="Delete Document"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

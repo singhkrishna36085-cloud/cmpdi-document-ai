@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, Suspense } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -31,7 +31,10 @@ import {
   ChevronRight,
   Info,
   RefreshCw,
-  FolderOpen
+  FolderOpen,
+  UploadCloud,
+  Trash2,
+  Loader2
 } from "lucide-react";
 
 function DocumentViewerContent() {
@@ -75,88 +78,167 @@ function DocumentViewerContent() {
     loadDocList();
   }, []);
 
-  // Fetch real document details when docId changes
-  useEffect(() => {
+  // File management states
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [reuploading, setReuploading] = useState<boolean>(false);
+  const [reuploadError, setReuploadError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<boolean>(false);
+
+  // Fetch real document details
+  const fetchDocumentData = useCallback(async () => {
     if (!docId || isNaN(docId)) {
       setDocument(null);
       setLoading(false);
       return;
     }
 
-    async function fetchDocumentData() {
-      setLoading(true);
-      setError(null);
-      setErrorCode(null);
+    setLoading(true);
+    setError(null);
+    setErrorCode(null);
 
-      try {
-        // 1. Fetch Document Metadata
-        const docRes = await fetchWithAuth(`/api/documents/${docId}`);
-        if (!docRes.ok) {
-          setErrorCode(docRes.status);
-          if (docRes.status === 403) {
-            setError("Access Denied: Confidential document restricted to HOD role.");
-          } else if (docRes.status === 404) {
-            setError(`Document ID #${docId} was not found in PostgreSQL.`);
-          } else if (docRes.status === 401) {
-            setError("Session expired. Please log in again.");
-          } else {
-            setError(`Failed to retrieve document metadata (${docRes.status}).`);
-          }
-          setLoading(false);
-          return;
+    try {
+      // 1. Fetch Document Metadata
+      const docRes = await fetchWithAuth(`/api/documents/${docId}`);
+      if (!docRes.ok) {
+        setErrorCode(docRes.status);
+        if (docRes.status === 403) {
+          setError("Access Denied: Confidential document restricted to HOD role.");
+        } else if (docRes.status === 404) {
+          setError(`Document ID #${docId} was not found in PostgreSQL.`);
+        } else if (docRes.status === 401) {
+          setError("Session expired. Please log in again.");
+        } else {
+          setError(`Failed to retrieve document metadata (${docRes.status}).`);
         }
-        const docData: DocumentDetail = await docRes.json();
-        setDocument(docData);
-
-        // 2. Fetch Content & Chunks in parallel with Structured Data, Validation, Conflicts, Processing
-        const [contentRes, structuredRes, valRes, confRes, procRes] = await Promise.allSettled([
-          fetchWithAuth(`/api/documents/${docId}/content`),
-          fetchWithAuth(`/api/documents/${docId}/structured`),
-          fetchWithAuth(`/api/documents/${docId}/validation`),
-          fetchWithAuth(`/api/documents/${docId}/conflicts`),
-          fetchWithAuth(`/api/documents/${docId}/processing`),
-        ]);
-
-        // Process Content response
-        if (contentRes.status === "fulfilled" && contentRes.value.ok) {
-          const cData = await contentRes.value.json();
-          setChunks(cData.chunks || []);
-          setFullText(cData.extracted_text || "");
-        }
-
-        // Process Structured Data response
-        if (structuredRes.status === "fulfilled" && structuredRes.value.ok) {
-          const sData = await structuredRes.value.json();
-          setStructuredData(sData.structured_data || []);
-        }
-
-        // Process Validation response
-        if (valRes.status === "fulfilled" && valRes.value.ok) {
-          const vData = await valRes.value.json();
-          setValidationResults(vData.validation_results || []);
-        }
-
-        // Process Conflicts response
-        if (confRes.status === "fulfilled" && confRes.value.ok) {
-          const confData = await confRes.value.json();
-          setConflicts(confData.conflicts || []);
-        }
-
-        // Process Processing details response
-        if (procRes.status === "fulfilled" && procRes.value.ok) {
-          const pData = await procRes.value.json();
-          setProcessingDetails(pData);
-        }
-
-      } catch (err: any) {
-        setError("Unable to connect to CMPDI backend server.");
-      } finally {
         setLoading(false);
+        return;
       }
-    }
+      const docData: DocumentDetail = await docRes.json();
+      setDocument(docData);
 
-    fetchDocumentData();
+      // 2. Fetch Content & Chunks in parallel with Structured Data, Validation, Conflicts, Processing
+      const [contentRes, structuredRes, valRes, confRes, procRes] = await Promise.allSettled([
+        fetchWithAuth(`/api/documents/${docId}/content`),
+        fetchWithAuth(`/api/documents/${docId}/structured`),
+        fetchWithAuth(`/api/documents/${docId}/validation`),
+        fetchWithAuth(`/api/documents/${docId}/conflicts`),
+        fetchWithAuth(`/api/documents/${docId}/processing`),
+      ]);
+
+      // Process Content response
+      if (contentRes.status === "fulfilled" && contentRes.value.ok) {
+        const cData = await contentRes.value.json();
+        setChunks(cData.chunks || []);
+        setFullText(cData.extracted_text || "");
+      }
+
+      // Process Structured Data response
+      if (structuredRes.status === "fulfilled" && structuredRes.value.ok) {
+        const sData = await structuredRes.value.json();
+        setStructuredData(sData.structured_data || []);
+      }
+
+      // Process Validation response
+      if (valRes.status === "fulfilled" && valRes.value.ok) {
+        const vData = await valRes.value.json();
+        setValidationResults(vData.validation_results || []);
+      }
+
+      // Process Conflicts response
+      if (confRes.status === "fulfilled" && confRes.value.ok) {
+        const confData = await confRes.value.json();
+        setConflicts(confData.conflicts || []);
+      }
+
+      // Process Processing details response
+      if (procRes.status === "fulfilled" && procRes.value.ok) {
+        const pData = await procRes.value.json();
+        setProcessingDetails(pData);
+      }
+
+    } catch (err: any) {
+      setError("Unable to connect to CMPDI backend server.");
+    } finally {
+      setLoading(false);
+    }
   }, [docId]);
+
+  // Trigger load when docId changes
+  useEffect(() => {
+    fetchDocumentData();
+  }, [fetchDocumentData]);
+
+  // Handle file re-upload to replace or restore missing file
+  const handleReupload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !docId) return;
+    setReuploading(true);
+    setReuploadError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetchWithAuth(`/api/documents/${docId}/reupload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Re-upload failed on backend.");
+      }
+      await fetchDocumentData();
+    } catch (err: any) {
+      setReuploadError(err.message || "Failed to re-upload file.");
+    } finally {
+      setReuploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  // Handle document deletion
+  const handleDelete = async () => {
+    if (!docId) return;
+    const docName = document?.name || document?.original_filename || `#${docId}`;
+    if (!window.confirm(`Are you sure you want to permanently delete document "${docName}"? This will remove all chunks, structured extractions, and file references.`)) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      const res = await fetchWithAuth(`/api/documents/${docId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        router.push("/documents");
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(`Failed to delete document: ${errData.detail || "Server error"}`);
+        setDeleting(false);
+      }
+    } catch (err: any) {
+      alert(`Network error deleting document: ${err.message}`);
+      setDeleting(false);
+    }
+  };
+
+  // Handle retry processing
+  const handleRetryProcess = async () => {
+    if (!docId) return;
+    setLoading(true);
+    try {
+      const res = await fetchWithAuth(`/api/documents/${docId}/process`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        await fetchDocumentData();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(`Process retry: ${errData.detail || "File still missing or invalid."}`);
+        await fetchDocumentData();
+      }
+    } catch (err: any) {
+      alert(`Network error: ${err.message}`);
+      setLoading(false);
+    }
+  };
 
   // Derived counts for KPI cards
   const valErrorsCount = useMemo(
@@ -396,6 +478,34 @@ function DocumentViewerContent() {
             </select>
           )}
 
+          {/* Re-upload File Button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            className="hidden"
+            accept=".pdf,.docx,.xlsx,.csv,.jpg,.jpeg,.png"
+            onChange={handleReupload}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={reuploading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold transition-colors disabled:opacity-50"
+            title="Re-upload source file to restore or refresh OCR data"
+          >
+            {reuploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UploadCloud className="w-3.5 h-3.5" />}
+            {reuploading ? "Uploading..." : "Re-upload File"}
+          </button>
+
+          {/* Delete Document Button */}
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold border border-rose-500/20 transition-colors disabled:opacity-50"
+            title="Delete this document record"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Delete
+          </button>
+
           <Link
             href={`/assistant?doc_id=${document.id}`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 text-xs font-semibold border border-teal-500/20 transition-colors"
@@ -416,6 +526,81 @@ function DocumentViewerContent() {
           </Link>
         </div>
       </div>
+
+      {/* Ephemeral Cloud Storage / Processing Error Recovery Banner */}
+      {(document.processing_status === "failed" || document.error_message) && (
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-rose-950/40 via-slate-900 to-amber-950/20 border border-rose-500/30 shadow-xl space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30 shrink-0 mt-0.5">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-rose-200 flex items-center gap-2">
+                  <span>
+                    {document.error_message?.includes("File missing")
+                      ? "Notice: Original File Not Found on Cloud Disk"
+                      : "Document Processing Error"}
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 uppercase tracking-wide">
+                    Action Required
+                  </span>
+                </h4>
+                <p className="text-xs text-rose-300/90 font-mono break-all">
+                  {document.error_message || "Document processing could not complete."}
+                </p>
+                <p className="text-[11px] text-slate-400 leading-relaxed max-w-3xl">
+                  {document.error_message?.includes("File missing")
+                    ? "In cloud hosting (Render), the container filesystem resets during redeployments or sleep cycles. Re-upload the original file below to restore OCR extraction, tables, and AI vectors."
+                    : "The processing pipeline encountered an issue. You can re-upload the file or trigger a retry."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={reuploading}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-md transition-all disabled:opacity-50"
+              >
+                {reuploading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Uploading & Processing...
+                  </>
+                ) : (
+                  <>
+                    <UploadCloud className="w-4 h-4" /> Re-upload File
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleRetryProcess}
+                disabled={loading}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium text-xs border border-slate-700 transition-colors"
+                title="Retry processing with existing file"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Retry
+              </button>
+
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-medium text-xs border border-rose-500/20 transition-colors"
+                title="Delete this document record"
+              >
+                <Trash2 className="w-3.5 h-3.5" /> Delete
+              </button>
+            </div>
+          </div>
+
+          {reuploadError && (
+            <div className="p-3 rounded-lg bg-rose-950/80 border border-rose-500/40 text-rose-200 text-xs font-mono">
+              Re-upload error: {reuploadError}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* KPI Info Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -581,11 +766,19 @@ function DocumentViewerContent() {
             )}
 
             {document.error_message && (
-              <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs space-y-1">
-                <span className="font-bold flex items-center gap-1 text-rose-400">
-                  <AlertTriangle className="w-4 h-4" /> Processing Error Message:
-                </span>
-                <p className="font-mono">{document.error_message}</p>
+              <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold flex items-center gap-1.5 text-rose-400">
+                    <AlertTriangle className="w-4 h-4" /> Processing Status / Error Details
+                  </span>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-[11px] font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1 bg-teal-500/10 px-2 py-1 rounded border border-teal-500/20 transition-colors"
+                  >
+                    <UploadCloud className="w-3 h-3" /> Re-upload File
+                  </button>
+                </div>
+                <p className="font-mono text-slate-300">{document.error_message}</p>
               </div>
             )}
           </div>

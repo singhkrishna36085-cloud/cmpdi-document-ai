@@ -23,10 +23,9 @@ from app.core.dependencies import get_optional_user
 from app.services.processor import process_document_file
 from app.services.structured_extractor import extract_structured_data
 
-router = APIRouter(prefix="/api/documents", tags=["processing"])
+from app.core.storage import get_upload_dir, find_file_on_disk
 
-_HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
-UPLOAD_DIR = os.path.join(_HERE, "uploads")
+router = APIRouter(prefix="/api/documents", tags=["processing"])
 
 
 def _check_doc_access(doc: Document, user: Optional[User]):
@@ -57,12 +56,30 @@ async def process_document_endpoint(
         
     _check_doc_access(doc, user)
 
-    full_path = os.path.join(UPLOAD_DIR, doc.file_path)
-    if not os.path.exists(full_path):
+    full_path = find_file_on_disk(doc.file_path)
+    if not full_path or not os.path.exists(full_path):
+        # Check if chunks already exist in DB
+        chunks_res = await db.execute(select(DocumentChunk).where(DocumentChunk.document_id == document_id))
+        chunks = chunks_res.scalars().all()
+        if chunks or doc.extracted_text:
+            doc.processing_status = "completed"
+            doc.error_message = None
+            await db.commit()
+            return {
+                "status": "completed",
+                "document_id": doc.id,
+                "message": "Physical file is absent from server disk cache, but extracted database chunks and text are intact.",
+                "chunks_count": len(chunks),
+                "page_count": doc.page_count or 1
+            }
+
         doc.processing_status = "failed"
         doc.error_message = f"File missing from disk: {doc.file_path}"
         await db.commit()
-        raise HTTPException(status_code=404, detail=doc.error_message)
+        raise HTTPException(
+            status_code=404,
+            detail=f"File missing from disk: {doc.file_path}. The file was removed during a cloud server restart. Please re-upload the file."
+        )
 
     # Mark as processing
     doc.processing_status = "processing"

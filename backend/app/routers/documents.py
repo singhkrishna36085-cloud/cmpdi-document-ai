@@ -14,7 +14,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
@@ -22,14 +22,9 @@ from app.models import Document, DocumentChunk, StructuredExtraction, User
 from app.services.processor import process_document_file
 from app.services.structured_extractor import extract_structured_data
 from app.core.dependencies import get_optional_user, require_hod
+from app.core.storage import get_upload_dir, find_file_on_disk
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
-
-# ── Storage directory ──────────────────────────────────────────────────────────
-# Resolve to  <project-root>/uploads/  regardless of working directory
-_HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # backend/
-UPLOAD_DIR = os.path.join(_HERE, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "xlsx", "csv", "jpg", "jpeg", "png", "zip"}
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
@@ -101,7 +96,8 @@ async def upload_document(
 
     # ── Generate a unique filename and save to disk ────────────────────────
     safe_name = f"{uuid.uuid4().hex}.{ext}"
-    file_path = os.path.join(UPLOAD_DIR, safe_name)
+    upload_dir = get_upload_dir()
+    file_path = os.path.join(upload_dir, safe_name)
 
     async with aiofiles.open(file_path, "wb") as out_file:
         await out_file.write(contents)
@@ -269,3 +265,144 @@ async def get_document(
     )
 
     return _doc_to_dict(doc)
+
+
+@router.post("/{document_id}/reupload", status_code=status.HTTP_200_OK)
+async def reupload_document(
+    document_id: int,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    user: Optional[User] = Depends(get_optional_user)
+):
+    """
+    Re-uploads a file for an existing document record.
+    Used when a file was removed due to cloud container restart or failed initial upload.
+    Saves file to disk, updates document record, and runs extraction.
+    """
+    result = await db.execute(select(Document).where(Document.id == document_id))
+    doc = result.scalar_one_or_none()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if doc.is_confidential and (not user or user.role != "HOD"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Access denied. Confidential document restricted to HOD role."
+        )
+
+    ext = _get_ext(file.filename or "")
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported file type '.{ext}'. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+        )
+
+    contents = await file.read()
+    file_size = len(contents)
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File exceeds 50 MB limit ({file_size / 1024 / 1024:.1f} MB uploaded)."
+        )
+
+    safe_name = f"{uuid.uuid4().hex}.{ext}"
+    upload_dir = get_upload_dir()
+    file_path = os.path.join(upload_dir, safe_name)
+
+    async with aiofiles.open(file_path, "wb") as out_file:
+        await out_file.write(contents)
+
+    doc.file_path = safe_name
+    doc.file_size = file_size
+    if file.filename:
+        doc.original_filename = file.filename
+    doc.processing_status = "processing"
+    doc.processing_started_at = datetime.utcnow()
+    doc.error_message = None
+    await db.commit()
+
+    # Process file
+    try:
+        extraction_res = await asyncio.to_thread(process_document_file, file_path, doc.original_filename)
+
+        # Clear existing chunks and structured extractions
+        await db.execute(delete(StructuredExtraction).where(StructuredExtraction.document_id == document_id))
+        await db.execute(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
+
+        saved_chunks = []
+        for chunk_data in extraction_res.get("chunks", []):
+            chunk = DocumentChunk(
+                document_id=doc.id,
+                page_number=chunk_data.get("page_number"),
+                sheet_name=chunk_data.get("sheet_name"),
+                chunk_type=chunk_data.get("chunk_type", "text"),
+                content=chunk_data.get("content", "")
+            )
+            db.add(chunk)
+            saved_chunks.append(chunk)
+        await db.flush()
+
+        structured_items = extract_structured_data(saved_chunks)
+        for item in structured_items:
+            s_record = StructuredExtraction(
+                document_id=doc.id,
+                chunk_id=item.get("chunk_id"),
+                page_number=item.get("page_number"),
+                sheet_name=item.get("sheet_name"),
+                source_reference=item.get("source_reference"),
+                entity_type=item.get("entity_type", "key_value"),
+                data=item.get("data", "{}")
+            )
+            db.add(s_record)
+
+        doc.processing_status = "completed"
+        doc.processing_completed_at = datetime.utcnow()
+        doc.extracted_text = extraction_res.get("full_text", "")
+        doc.page_count = extraction_res.get("page_count", 1)
+        doc.meta_info = extraction_res.get("meta_info", "{}")
+        doc.error_message = None
+        await db.commit()
+        await db.refresh(doc)
+    except Exception as exc:
+        doc.processing_status = "failed"
+        doc.error_message = str(exc)
+        await db.commit()
+        await db.refresh(doc)
+
+    return {"status": "reuploaded", "document": _doc_to_dict(doc)}
+
+
+@router.delete("/{document_id}", status_code=status.HTTP_200_OK)
+async def delete_document(
+    document_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: Optional[User] = Depends(get_optional_user)
+):
+    """
+    Deletes a document record, related chunks, structured data, and physical file.
+    """
+    result = await db.execute(select(Document).where(Document.id == document_id))
+    doc = result.scalar_one_or_none()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    if doc.is_confidential and (not user or user.role != "HOD"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Access denied. Confidential document restricted to HOD role."
+        )
+
+    # Attempt to delete physical file if present
+    full_path = find_file_on_disk(doc.file_path)
+    if full_path and os.path.exists(full_path):
+        try:
+            os.remove(full_path)
+        except Exception:
+            pass
+
+    await db.execute(delete(StructuredExtraction).where(StructuredExtraction.document_id == document_id))
+    await db.execute(delete(DocumentChunk).where(DocumentChunk.document_id == document_id))
+    await db.delete(doc)
+    await db.commit()
+
+    return {"status": "deleted", "document_id": document_id}

@@ -31,7 +31,10 @@ import {
   Info, 
   Upload, 
   Activity, 
-  Table as TableIcon
+  Table as TableIcon,
+  UploadCloud,
+  Trash2,
+  Loader2
 } from "lucide-react";
 
 export default function ProcessingPage() {
@@ -202,6 +205,47 @@ export default function ProcessingPage() {
       alert(`Network error triggering re-process: ${err.message}`);
     } finally {
       setReprocessingId(null);
+    }
+  };
+
+  const [drawerReuploading, setDrawerReuploading] = useState<boolean>(false);
+
+  const handleReuploadDoc = async (docId: number, file: File) => {
+    setDrawerReuploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetchWithAuth(`/api/documents/${docId}/reupload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Re-upload error: ${err.detail || "Upload failed"}`);
+      } else {
+        await loadDocuments(true);
+      }
+    } catch (err: any) {
+      alert(`Network error: ${err.message}`);
+    } finally {
+      setDrawerReuploading(false);
+    }
+  };
+
+  const handleDeleteDoc = async (docId: number) => {
+    if (!window.confirm("Are you sure you want to permanently delete this document and its pipeline data?")) return;
+    try {
+      const res = await fetchWithAuth(`/api/documents/${docId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setSelectedDocId(null);
+        await loadDocuments(true);
+      } else {
+        alert("Failed to delete document.");
+      }
+    } catch (err: any) {
+      alert(`Error deleting document: ${err.message}`);
     }
   };
 
@@ -551,20 +595,51 @@ export default function ProcessingPage() {
                 </div>
 
                 {/* Error Banner if Failed */}
-                {selectedDoc.processing_status === "failed" && selectedDoc.error_message && (
-                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs space-y-2">
+                {selectedDoc.processing_status === "failed" && (
+                  <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs space-y-3">
                     <div className="flex items-center justify-between text-rose-400 font-bold">
                       <span className="flex items-center gap-1.5">
-                        <AlertTriangle className="w-4 h-4" /> Processing Failed Error
+                        <AlertTriangle className="w-4 h-4" /> Processing Failed / File Missing
                       </span>
+                    </div>
+                    <p className="font-mono text-[11px] leading-relaxed break-all">
+                      {selectedDoc.error_message || "Document processing failed."}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <input
+                        type="file"
+                        id={`proc-reupload-${selectedDoc.id}`}
+                        className="hidden"
+                        accept=".pdf,.docx,.xlsx,.csv,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleReuploadDoc(selectedDoc.id, f);
+                        }}
+                      />
+                      <label
+                        htmlFor={`proc-reupload-${selectedDoc.id}`}
+                        className="cursor-pointer inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-teal-500 text-slate-950 text-xs font-bold hover:bg-teal-400 transition-colors"
+                      >
+                        {drawerReuploading ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <UploadCloud className="w-3.5 h-3.5" />
+                        )}
+                        {drawerReuploading ? "Uploading..." : "Re-upload File"}
+                      </label>
                       <button
                         onClick={(e) => handleReprocess(selectedDoc.id, e)}
-                        className="px-2 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-[10px] border border-rose-500/30"
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-700 font-medium transition-colors"
                       >
-                        Re-run Pipeline
+                        Retry Pipeline
+                      </button>
+                      <button
+                        onClick={() => handleDeleteDoc(selectedDoc.id)}
+                        className="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs border border-rose-500/30 font-medium transition-colors"
+                      >
+                        Delete Record
                       </button>
                     </div>
-                    <p className="font-mono text-[11px] leading-relaxed break-all">{selectedDoc.error_message}</p>
                   </div>
                 )}
               </div>
