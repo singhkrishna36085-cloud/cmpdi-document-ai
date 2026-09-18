@@ -61,9 +61,9 @@ function MiniFacetedCore({ isThinking }: { isThinking: boolean }) {
   );
 }
 
-export function AiOrb({ isThinking, className = "w-12 h-12" }: AiOrbProps) {
+export function AiOrb({ isThinking, className }: AiOrbProps) {
   return (
-    <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
+    <div className={`relative flex items-center justify-center ${className || "w-12 h-12"} shrink-0`}>
       {/* Background ambient glow */}
       <motion.div
         className="absolute inset-0 rounded-full blur-xl z-0"

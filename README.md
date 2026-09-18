@@ -2,72 +2,109 @@
 
 AI-Assisted Geological, Mining & Production Reporting Platform.
 
-This project is a full-stack application built for CMPDI / CIL. It features a modern, responsive frontend and a powerful API-driven backend.
+Full-stack enterprise application engineered for CMPDI / Coal India Limited, providing multi-document RAG search, AI report generation, automated validation & cross-document conflict detection, topic modeling, and RBAC authentication.
 
-## Architecture
+---
 
-The project is structured into two completely separate applications:
+## Architecture Overview
 
-1. **Frontend**: A modern web application built with Next.js, TypeScript, and Tailwind CSS.
-2. **Backend**: A robust RESTful API built with Python and FastAPI.
+* **Frontend**: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, Framer Motion, Three.js / React Three Fiber.
+* **Backend**: FastAPI (Python 3.11+), Uvicorn, SQLAlchemy (AsyncIO), Alembic, Pydantic.
+* **Database**: PostgreSQL with asyncpg (compatible with local PostgreSQL, Neon, Supabase, Render DB, AWS RDS).
+* **AI & LLM**: Groq (Llama 3.3 / GPT-OSS), Gemini, OpenAI, HuggingFace, with local vector embeddings.
 
-### Current Project Structure
+---
 
+## Quick Local Development
+
+### 1. Backend Setup
+```bash
+cd backend
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# Linux/Mac:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+
+# Copy .env template and customize if needed
+cp .env.example .env
+
+# Run FastAPI server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
-cmpdi-document-ai/
-│
-├── frontend/           # Next.js frontend application
-│   ├── app/
-│   ├── public/
-│   ├── next.config.mjs
-│   ├── package.json
-│   └── ...
-│
-├── backend/            # FastAPI backend application
-│   ├── app/
-│   │   └── main.py
-│   ├── requirements.txt
-│   └── ...
-│
-├── README.md           # Project documentation
-└── .gitignore          # Global git ignores
-```
+API runs at `http://localhost:8000`. Interactive Swagger docs at `http://localhost:8000/docs`.
 
-*Note: AI, OCR, database integration, RAG modules, authentication, and business logic will be implemented in later steps. Currently, the architecture contains the core structural foundation.*
-
-## How to Run
-
-### 1. Frontend
-
-The frontend uses Next.js and requires Node.js.
-
+### 2. Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+Frontend runs at `http://localhost:3000`.
 
-The frontend will start at `http://localhost:3000`.
+---
 
-### 2. Backend
+## 🚀 Public Production Deployment Guide
 
-The backend uses FastAPI and Python. It's recommended to use a virtual environment.
+Deploy this project publicly in 3 simple steps:
 
-```bash
-cd backend
-python -m venv venv
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
+### Step 1: Cloud PostgreSQL Database (Free & Instant)
+You can use **Neon.tech** (Recommended, 1-click serverless PostgreSQL) or **Supabase**:
+1. Go to [neon.tech](https://neon.tech) and create a free project named `cmpdi-db`.
+2. Copy your Connection String (`DATABASE_URL`), for example:
+   `postgresql://neondb_owner:YOUR_PASSWORD@ep-sample-123.us-east-2.aws.neon.tech/neondb?sslmode=require`
 
-# Install requirements
-pip install -r requirements.txt
+*(All database tables and initial users `cmpdi_admin` and `normal_user` will be created automatically on backend startup!)*
 
-# Run the FastAPI server
-uvicorn app.main:app --reload --port 8000
-```
+---
 
-The backend API will start at `http://localhost:8000`. You can check the health status by visiting `http://localhost:8000/api/health`.
+### Step 2: Deploy Backend (Render / Railway)
 
+#### Deploy on Render (Free / Recommended):
+1. Push your repository to GitHub.
+2. Go to [Render Dashboard](https://dashboard.render.com/) $\to$ **New Web Service**.
+3. Select your repository.
+4. Set the following settings:
+   * **Root Directory**: `backend`
+   * **Environment**: `Python 3`
+   * **Build Command**: `pip install -r requirements.txt`
+   * **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5. Under **Environment Variables**, add:
+   * `ENVIRONMENT`: `production`
+   * `DEBUG`: `False`
+   * `DATABASE_URL`: *(Your PostgreSQL URL from Step 1)*
+   * `JWT_SECRET`: *(Generate a random 64-char string)*
+   * `LLM_PROVIDER`: `groq`
+   * `LLM_MODEL`: `openai/gpt-oss-20b`
+   * `GROQ_API_KEY`: *(Your Groq API key)*
+   * `ALLOWED_ORIGINS`: `https://your-frontend-domain.vercel.app,http://localhost:3000`
+6. Click **Deploy Web Service**.
+7. Copy your backend URL (e.g. `https://cmpdi-backend.onrender.com`).
+
+---
+
+### Step 3: Deploy Frontend (Vercel)
+
+1. Go to [Vercel Dashboard](https://vercel.com/new).
+2. Import your GitHub repository.
+3. Configure the project:
+   * **Framework Preset**: `Next.js`
+   * **Root Directory**: `frontend`
+4. Under **Environment Variables**, add:
+   * `NEXT_PUBLIC_API_URL`: `https://cmpdi-backend.onrender.com` *(Your Render backend URL from Step 2)*
+   * `BACKEND_INTERNAL_URL`: `https://cmpdi-backend.onrender.com`
+5. Click **Deploy**.
+6. Once deployed, open your Vercel URL!
+
+---
+
+## Default System Credentials (Out of the Box)
+
+* **Administrator (HOD Role)**:
+  * **Username**: `cmpdi_admin` (or `admin@cmpdi.co.in`)
+  * **Password**: `CMPDI_Secure_Auth_2026!`
+* **Standard Analyst (NORMAL_USER Role)**:
+  * **Username**: `normal_user` (or `normal@cmpdi.co.in`)
+  * **Password**: `CMPDI_Secure_Auth_2026!`

@@ -51,13 +51,22 @@ async def rewrite_query(query: str, history: List[Dict[str, str]], provider: Opt
     if not history:
         return query
         
-    from app.services.llm_service import _call_groq, _call_gemini, _call_ollama, _call_openai_compatible, DEFAULT_PROVIDER, DEFAULT_MODEL, DEFAULT_API_KEY, DEFAULT_BASE_URL
+    from app.services.llm_service import (
+        _call_groq,
+        _call_gemini,
+        _call_ollama,
+        _call_openai_compatible,
+        get_default_provider,
+        get_default_model,
+        get_default_api_key,
+    )
     import os
     
-    provider_name = (provider or os.getenv("LLM_PROVIDER") or DEFAULT_PROVIDER).lower()
-    model_name = model or os.getenv("LLM_MODEL") or DEFAULT_MODEL
-    key = api_key or os.getenv("LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or DEFAULT_API_KEY
-    url = os.getenv("LLM_BASE_URL") or DEFAULT_BASE_URL
+    provider_name = (provider or os.getenv("LLM_PROVIDER") or get_default_provider()).lower()
+    model_name = model or os.getenv("LLM_MODEL") or get_default_model()
+    key = api_key or get_default_api_key(provider_name)
+    url = os.getenv("LLM_BASE_URL", "")
+
     
     sys_prompt = "You are a helpful assistant. Given a conversation history and a follow-up query, rewrite the follow-up query to be fully self-contained without changing its core meaning. Do not answer the question, just output the rewritten query string. If the query is already self-contained, just output the exact query."
     

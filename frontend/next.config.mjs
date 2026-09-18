@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
-const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || "https://cmpdi-backend-ai.loca.lt";
+const rawBackendUrl = process.env.BACKEND_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+const BACKEND_URL = rawBackendUrl.replace(/\/$/, "");
 
 const nextConfig = {
   async rewrites() {

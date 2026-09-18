@@ -9,20 +9,28 @@ import json
 import logging
 import requests
 from typing import Dict, Any, Optional, List
+from dotenv import load_dotenv
+
+load_dotenv()
 
 logger = logging.getLogger("llm_service")
 
 # Default Environment Configuration
-DEFAULT_PROVIDER = os.getenv("LLM_PROVIDER", "groq").lower()
-DEFAULT_MODEL = os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
-DEFAULT_API_KEY = (
-    os.getenv("LLM_API_KEY") or
-    os.getenv("GROQ_API_KEY") or
-    os.getenv("GEMINI_API_KEY") or
-    os.getenv("OPENAI_API_KEY") or
-    ""
-)
-DEFAULT_BASE_URL = os.getenv("LLM_BASE_URL", "")
+def get_default_provider() -> str:
+    return os.getenv("LLM_PROVIDER", "groq").lower()
+
+def get_default_model() -> str:
+    return os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
+
+def get_default_api_key(provider_name: str) -> str:
+    if provider_name == "groq":
+        return os.getenv("GROQ_API_KEY") or os.getenv("LLM_API_KEY") or ""
+    elif provider_name == "gemini":
+        return os.getenv("GEMINI_API_KEY") or os.getenv("LLM_API_KEY") or ""
+    elif provider_name == "openai":
+        return os.getenv("OPENAI_API_KEY") or os.getenv("LLM_API_KEY") or ""
+    return os.getenv("LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+
 
 SYSTEM_PROMPT = """You are an AI Document Assistant for CMPDI (Central Mine Planning & Design Institute) / Coal India Limited.
 Your task is to answer user queries using the retrieved CMPDI document context blocks provided below.
@@ -62,10 +70,10 @@ def generate_llm_answer(
     """
     Calls configured LLM provider to generate a grounded answer from retrieved context.
     """
-    provider_name = (provider or os.getenv("LLM_PROVIDER") or DEFAULT_PROVIDER).lower()
-    model_name = model or os.getenv("LLM_MODEL") or DEFAULT_MODEL
-    key = api_key or os.getenv("LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or DEFAULT_API_KEY
-    url = base_url or os.getenv("LLM_BASE_URL") or DEFAULT_BASE_URL
+    provider_name = (provider or os.getenv("LLM_PROVIDER") or get_default_provider()).lower()
+    model_name = model or os.getenv("LLM_MODEL") or get_default_model()
+    key = api_key or get_default_api_key(provider_name)
+    url = base_url or os.getenv("LLM_BASE_URL", "")
 
     if mode == "RAG" and (not formatted_context or not formatted_context.strip()):
         return {

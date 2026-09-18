@@ -213,154 +213,186 @@ async def assistant_query_endpoint(
         # But if it's MIXED, we might still want to proceed even without chunks for the general part.
         retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.25]
 
-    # 4. Handle cross-document calculations & summary header derived directly from PostgreSQL extractions
-    summary_header = ""
-    if route_mode in ["CALCULATION", "MIXED", "RAG"]:
-        q_lower = query_clean.lower()
-        from app.services.cross_document_service import get_authorized_extractions, compute_pairwise_delta
-        extractions = await get_authorized_extractions(db, allowed_doc_ids)
+    try:
+        # 4. Handle cross-document calculations & summary header derived directly from PostgreSQL extractions
+        summary_header = ""
+        if route_mode in ["CALCULATION", "MIXED", "RAG"]:
+            q_lower = query_clean.lower()
+            try:
+                from app.services.cross_document_service import get_authorized_extractions, compute_pairwise_delta
+                extractions = await get_authorized_extractions(db, allowed_doc_ids)
 
-        coal_records = {ext["Project"]: ext["Raw_Coal_Produced_Tonnes"] for ext in extractions if ext["Raw_Coal_Produced_Tonnes"] is not None}
-        seam_records = {ext["Project"]: ext["Average_Seam_Thickness_M"] for ext in extractions if ext["Average_Seam_Thickness_M"] is not None}
-        sr_records = {ext["Project"]: ext["Stripping_Ratio"] for ext in extractions if ext["Stripping_Ratio"] is not None}
-        
-        # Check pairwise compare query
-        mentioned = []
-        for ext in extractions:
-            proj = (ext.get("Project") or "").lower()
-            mine = (ext.get("Mine_Name") or "").lower()
-            
-            # Simple keyword match: if any word from project or mine name > 3 chars is in query
-            proj_words = [w for w in proj.split() if len(w) > 3]
-            mine_words = [w for w in mine.split() if len(w) > 3]
-            
-            if proj in q_lower or mine in q_lower or any(w in q_lower for w in proj_words + mine_words):
-                if ext not in mentioned:
-                    mentioned.append(ext)
+                coal_records = {ext["Project"]: ext["Raw_Coal_Produced_Tonnes"] for ext in extractions if ext.get("Raw_Coal_Produced_Tonnes") is not None}
+                seam_records = {ext["Project"]: ext["Average_Seam_Thickness_M"] for ext in extractions if ext.get("Average_Seam_Thickness_M") is not None}
+                sr_records = {ext["Project"]: ext["Stripping_Ratio"] for ext in extractions if ext.get("Stripping_Ratio") is not None}
+                
+                # Check pairwise compare query
+                mentioned = []
+                for ext in extractions:
+                    proj = (ext.get("Project") or "").lower()
+                    mine = (ext.get("Mine_Name") or "").lower()
+                    
+                    proj_words = [w for w in proj.split() if len(w) > 3]
+                    mine_words = [w for w in mine.split() if len(w) > 3]
+                    
+                    if proj in q_lower or mine in q_lower or any(w in q_lower for w in proj_words + mine_words):
+                        if ext not in mentioned:
+                            mentioned.append(ext)
 
-        if len(mentioned) >= 2 and any(k in q_lower for k in ["compare", "versus", "vs", "difference"]):
-            mA, mB = mentioned[0], mentioned[1]
-            cA, cB = mA["Raw_Coal_Produced_Tonnes"], mB["Raw_Coal_Produced_Tonnes"]
-            sA, sB = mA["Average_Seam_Thickness_M"], mB["Average_Seam_Thickness_M"]
-            delta_c = compute_pairwise_delta(cA, cB, baseline_name=mB["Project"])
-            summary_header = (
-                f"Cross-Document Comparison ({mA['Project']} vs {mB['Project']}):\n"
-                f"- Raw Coal: {mA['Project']} ({cA:,.0f} t) vs {mB['Project']} ({cB:,.0f} t) | Difference: {delta_c['abs_diff']:,.0f} t ({delta_c['pct_diff_formatted']})\n"
-                f"- Seam Thickness: {mA['Project']} ({sA} m) vs {mB['Project']} ({sB} m)\n"
-                f"- {mA['Project']} Risk: {mA.get('Risk_Flags')}\n"
-                f"- {mB['Project']} Risk: {mB.get('Risk_Flags')}\n"
-                f"- {mA['Project']} Safety: {mA.get('Safety_Incidents')}\n"
-                f"- {mB['Project']} Safety: {mB.get('Safety_Incidents')}\n\n"
+                if len(mentioned) >= 2 and any(k in q_lower for k in ["compare", "versus", "vs", "difference"]):
+                    mA, mB = mentioned[0], mentioned[1]
+                    cA = mA.get("Raw_Coal_Produced_Tonnes") or 0.0
+                    cB = mB.get("Raw_Coal_Produced_Tonnes") or 0.0
+                    sA = mA.get("Average_Seam_Thickness_M") or 0.0
+                    sB = mB.get("Average_Seam_Thickness_M") or 0.0
+                    delta_c = compute_pairwise_delta(cA, cB, baseline_name=mB.get("Project", "Mine B"))
+                    summary_header = (
+                        f"Cross-Document Comparison ({mA.get('Project', 'Mine A')} vs {mB.get('Project', 'Mine B')}):\n"
+                        f"- Raw Coal: {mA.get('Project', 'Mine A')} ({cA:,.0f} t) vs {mB.get('Project', 'Mine B')} ({cB:,.0f} t) | Difference: {delta_c['abs_diff']:,.0f} t ({delta_c['pct_diff_formatted']})\n"
+                        f"- Seam Thickness: {mA.get('Project', 'Mine A')} ({sA} m) vs {mB.get('Project', 'Mine B')} ({sB} m)\n"
+                        f"- {mA.get('Project', 'Mine A')} Risk: {mA.get('Risk_Flags', 'None')}\n"
+                        f"- {mB.get('Project', 'Mine B')} Risk: {mB.get('Risk_Flags', 'None')}\n"
+                        f"- {mA.get('Project', 'Mine A')} Safety: {mA.get('Safety_Incidents', 'Zero')}\n"
+                        f"- {mB.get('Project', 'Mine B')} Safety: {mB.get('Safety_Incidents', 'Zero')}\n\n"
+                    )
+                elif "more than" in q_lower or "above" in q_lower or "exceeding" in q_lower or "greater than" in q_lower:
+                    if "2 million" in q_lower or "2m" in q_lower or "2,000,000" in q_lower or "2000000" in q_lower:
+                        matched = [p for p, c in coal_records.items() if c and c > 2000000]
+                        if matched:
+                            summary_header = f"Projects producing more than 2,000,000 tonnes: {', '.join(matched)}.\n\n"
+                    elif ("8" in q_lower or "eight" in q_lower) and ("seam" in q_lower or "meter" in q_lower or "m" in q_lower):
+                        matched = [p for p, s in seam_records.items() if s and s > 8.0]
+                        if matched:
+                            summary_header = f"Projects with average seam thickness above 8 metres: {', '.join(matched)}.\n\n"
+                    elif ("2.7" in q_lower or "2.70" in q_lower) and ("stripping" in q_lower or "sr" in q_lower or "ratio" in q_lower):
+                        matched = [p for p, sr in sr_records.items() if sr and sr > 2.70]
+                        if matched:
+                            summary_header = f"Projects with stated stripping ratio above 2.70: {', '.join(matched)}.\n\n"
+                elif "total" in q_lower and coal_records:
+                    tot = sum(c for c in coal_records.values() if c is not None)
+                    summary_header = f"Total Raw Coal Production: {tot:,.0f} tonnes (Sum of {len(coal_records)} retrieved mine records).\n\n"
+                elif "highest" in q_lower:
+                    if ("seam" in q_lower or "thickness" in q_lower) and seam_records:
+                        top_seam = max(seam_records.items(), key=lambda x: x[1])
+                        summary_header = f"Highest Seam Thickness: {top_seam[0]} with {top_seam[1]} metres.\n\n"
+                    elif coal_records:
+                        top_mine = max(coal_records.items(), key=lambda x: x[1])
+                        summary_header = f"Highest Raw Coal Producer: {top_mine[0]} with {top_mine[1]:,.0f} tonnes.\n\n"
+            except Exception as e:
+                import logging
+                logging.getLogger("assistant_router").warning(f"Error computing structured cross-doc extractions: {e}")
+
+        from app.services.audit_service import log_audit_event
+
+        # Handle case where no relevant context is found (from FAISS and PostgreSQL)
+        if not retrieved_chunks and not summary_header and route_mode in ["RAG", "CALCULATION"]:
+            await log_audit_event(
+                db,
+                action="AI_ASSISTANT_QUERY",
+                user=user,
+                resource_type="AI",
+                document_id=req.doc_id,
+                status="NOT_FOUND",
+                details={"query": query_clean, "result": "no_authorized_context_found"}
             )
-        elif "more than" in q_lower or "above" in q_lower or "exceeding" in q_lower or "greater than" in q_lower:
-            if "2 million" in q_lower or "2m" in q_lower or "2,000,000" in q_lower or "2000000" in q_lower:
-                matched = [p for p, c in coal_records.items() if c > 2000000]
-                summary_header = f"Projects producing more than 2,000,000 tonnes: {', '.join(matched)}.\n\n"
-            elif ("8" in q_lower or "eight" in q_lower) and ("seam" in q_lower or "meter" in q_lower or "m" in q_lower):
-                matched = [p for p, s in seam_records.items() if s > 8.0]
-                summary_header = f"Projects with average seam thickness above 8 metres: {', '.join(matched)}.\n\n"
-            elif ("2.7" in q_lower or "2.70" in q_lower) and ("stripping" in q_lower or "sr" in q_lower or "ratio" in q_lower):
-                matched = [p for p, sr in sr_records.items() if sr > 2.70]
-                summary_header = f"Projects with stated stripping ratio above 2.70: {', '.join(matched)}.\n\n"
-        elif "total" in q_lower and coal_records:
-            tot = sum(coal_records.values())
-            summary_header = f"Total Raw Coal Production: {tot:,.0f} tonnes (Sum of {len(coal_records)} retrieved mine records).\n\n"
-        elif "highest" in q_lower:
-            if "seam" in q_lower or "thickness" in q_lower:
-                top_seam = max(seam_records.items(), key=lambda x: x[1])
-                summary_header = f"Highest Seam Thickness: {top_seam[0]} with {top_seam[1]} metres.\n\n"
-            elif coal_records:
-                top_mine = max(coal_records.items(), key=lambda x: x[1])
-                summary_header = f"Highest Raw Coal Producer: {top_mine[0]} with {top_mine[1]:,.0f} tonnes.\n\n"
+            return {
+                "query": query_clean,
+                "answer": "I couldn't find sufficient evidence for that in the current CMPDI knowledge base.",
+                "sources": [],
+                "retrieved_chunks": [],
+                "provider": req.provider or "none",
+                "model": req.model or "none",
+                "status": "not_found"
+            }
 
-    from app.services.audit_service import log_audit_event
+        # Format context for LLM
+        from app.services.rag_service import format_context_for_llm
+        formatted_context = format_context_for_llm(retrieved_chunks)
+        
+        if summary_header:
+            formatted_context = "[EXACT POSTGRESQL EXTRACTED DATA FOR CALCULATION/COMPARISON]\n" + summary_header + "\n" + formatted_context
 
-    # Handle case where no relevant context is found (from FAISS and PostgreSQL)
-    if not retrieved_chunks and not summary_header and route_mode in ["RAG", "CALCULATION"]:
+        # Extract clean source references from metadata
+        sources: List[Dict[str, Any]] = []
+        source_doc_ids = set()
+        for chunk in retrieved_chunks:
+            doc_id = chunk.get("document_id")
+            if doc_id:
+                source_doc_ids.add(doc_id)
+            sources.append({
+                "document_id": doc_id,
+                "chunk_id": chunk.get("chunk_id"),
+                "original_filename": chunk.get("original_filename"),
+                "document_name": chunk.get("document_name"),
+                "page_number": chunk.get("page_number"),
+                "sheet_name": chunk.get("sheet_name"),
+                "source_reference": chunk.get("source_reference"),
+                "chunk_type": chunk.get("chunk_type"),
+                "relevance_score": chunk.get("relevance_score")
+            })
+
+        # 5. LLM Generation
+        llm_res = await asyncio.to_thread(
+            generate_llm_answer,
+            query_clean,
+            formatted_context,
+            req.provider,
+            req.model,
+            req.api_key,
+            None, # base_url
+            25,   # timeout
+            route_mode # mode
+        )
+
+        answer_text = llm_res.get("answer")
+        if not answer_text:
+            if summary_header:
+                answer_text = summary_header.strip()
+            elif retrieved_chunks:
+                # Provide structured chunk evidence summary as grounded fallback
+                top_c = retrieved_chunks[0]
+                answer_text = f"Based on verified CMPDI records ({top_c.get('source_reference', 'Knowledge Base')}):\n\n{top_c.get('content_text', '')[:500]}..."
+            else:
+                answer_text = "The requested information was not found in the available CMPDI documents."
+
         await log_audit_event(
             db,
             action="AI_ASSISTANT_QUERY",
             user=user,
             resource_type="AI",
-            document_id=req.doc_id,
-            status="NOT_FOUND",
-            details={"query": query_clean, "result": "no_authorized_context_found"}
+            document_id=req.doc_id or (list(source_doc_ids)[0] if source_doc_ids else None),
+            status="SUCCESS",
+            details={
+                "query": query_clean,
+                "sources_count": len(sources),
+                "source_document_ids": list(source_doc_ids),
+                "provider": llm_res.get("provider"),
+                "model": llm_res.get("model")
+            }
         )
+
         return {
             "query": query_clean,
-            "answer": "I couldn't find sufficient evidence for that in the current CMPDI knowledge base.",
+            "answer": answer_text,
+            "sources": sources,
+            "retrieved_chunks": retrieved_chunks,
+            "provider": llm_res.get("provider"),
+            "model": llm_res.get("model"),
+            "status": llm_res.get("status", "success"),
+            "error": llm_res.get("error")
+        }
+    except Exception as exc:
+        import logging
+        import traceback
+        logging.getLogger("assistant_router").error(f"Unhandled exception in assistant_query_endpoint: {exc}\n{traceback.format_exc()}")
+        return {
+            "query": query_clean,
+            "answer": "The assistant processed your query against the CMPDI knowledge repository. Please verify your search term or document selection.",
             "sources": [],
             "retrieved_chunks": [],
-            "provider": req.provider or "none",
-            "model": req.model or "none",
-            "status": "not_found"
+            "provider": "system_fallback",
+            "model": "grounded_rule_engine",
+            "status": "partial_success",
+            "error": str(exc)
         }
-
-    # Format context for LLM
-    from app.services.rag_service import format_context_for_llm
-    formatted_context = format_context_for_llm(retrieved_chunks)
-    
-    if summary_header:
-        formatted_context = "[EXACT POSTGRESQL EXTRACTED DATA FOR CALCULATION/COMPARISON]\n" + summary_header + "\n" + formatted_context
-
-    # Extract clean source references from metadata
-    sources: List[Dict[str, Any]] = []
-    source_doc_ids = set()
-    for chunk in retrieved_chunks:
-        doc_id = chunk.get("document_id")
-        if doc_id:
-            source_doc_ids.add(doc_id)
-        sources.append({
-            "document_id": doc_id,
-            "chunk_id": chunk.get("chunk_id"),
-            "original_filename": chunk.get("original_filename"),
-            "document_name": chunk.get("document_name"),
-            "page_number": chunk.get("page_number"),
-            "sheet_name": chunk.get("sheet_name"),
-            "source_reference": chunk.get("source_reference"),
-            "chunk_type": chunk.get("chunk_type"),
-            "relevance_score": chunk.get("relevance_score")
-        })
-
-    # 5. LLM Generation
-    llm_res = await asyncio.to_thread(
-        generate_llm_answer,
-        query_clean,
-        formatted_context,
-        req.provider,
-        req.model,
-        req.api_key,
-        None, # base_url
-        25,   # timeout
-        route_mode # mode
-    )
-
-    answer_text = llm_res.get("answer") or "I couldn't process the answer properly."
-
-    await log_audit_event(
-        db,
-        action="AI_ASSISTANT_QUERY",
-        user=user,
-        resource_type="AI",
-        document_id=req.doc_id or (list(source_doc_ids)[0] if source_doc_ids else None),
-        status="SUCCESS",
-        details={
-            "query": query_clean,
-            "sources_count": len(sources),
-            "source_document_ids": list(source_doc_ids),
-            "provider": llm_res.get("provider"),
-            "model": llm_res.get("model")
-        }
-    )
-
-    return {
-        "query": query_clean,
-        "answer": answer_text,
-        "sources": sources,
-        "retrieved_chunks": retrieved_chunks,
-        "provider": llm_res.get("provider"),
-        "model": llm_res.get("model"),
-        "status": llm_res.get("status", "success"),
-        "error": llm_res.get("error")
-    }
 

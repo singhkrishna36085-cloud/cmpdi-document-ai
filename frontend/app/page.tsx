@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { TopNavbar } from "@/components/layout/TopNavbar";
 import { HeroScene } from "@/components/3d/HeroScene";
-import { FluidJellyCore } from "@/components/3d/FluidJellyCore";
+import { Geological3DKnowledgeCore } from "@/components/3d/Geological3DKnowledgeCore";
 import { 
   ArrowRight, 
   MessageSquare, 
@@ -142,8 +142,8 @@ export default function CinematicLandingPage() {
               <motion.div
                 initial={{ opacity: 0, x: -40 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                 className="lg:col-span-6 space-y-7"
               >
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-xs font-semibold">
@@ -170,19 +170,16 @@ export default function CinematicLandingPage() {
                 </div>
               </motion.div>
 
-              {/* Right Column: Large 3D Fluid Jelly Visual */}
+              {/* Right Column: 3D Geological Knowledge Core Visual */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+                initial={{ opacity: 0, scale: 0.92, y: 30 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
                 className="lg:col-span-6 flex items-center justify-center relative"
               >
-                <div className="w-full relative rounded-3xl bg-gradient-to-b from-purple-50/70 via-sky-50/40 to-white border border-slate-200/80 p-6 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
-                  <FluidJellyCore />
-                  <div className="text-center pb-2 text-xs font-medium text-slate-400">
-                    Interactive 3D Fluid Matter • Move cursor over core
-                  </div>
+                <div className="w-full relative">
+                  <Geological3DKnowledgeCore />
                 </div>
               </motion.div>
 
@@ -192,10 +189,10 @@ export default function CinematicLandingPage() {
           {/* ── SECTION 2: DOCUMENT INTELLIGENCE PIPELINE ── */}
           <section className="py-24 sm:py-32 border-t border-slate-100">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 35 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ duration: 0.9 }}
+              viewport={{ once: false, amount: 0.2 }}
+              transition={{ duration: 0.8 }}
               className="text-center max-w-3xl mx-auto space-y-4 mb-20"
             >
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
@@ -244,10 +241,10 @@ export default function CinematicLandingPage() {
               ].map((item, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: idx * 0.12 }}
+                  initial={{ opacity: 0, y: 35, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: false, amount: 0.15 }}
+                  transition={{ duration: 0.7, delay: idx * 0.1 }}
                   className="relative rounded-3xl bg-slate-50/70 p-8 border border-slate-200/80 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all flex flex-col justify-between"
                 >
                   <div>
@@ -272,8 +269,8 @@ export default function CinematicLandingPage() {
               <motion.div
                 initial={{ opacity: 0, x: -40 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 1.0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.8 }}
                 className="lg:col-span-5 space-y-6"
               >
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
@@ -302,10 +299,10 @@ export default function CinematicLandingPage() {
 
               {/* AI Chat Card Mockup */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.96 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 1.0 }}
+                initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.8 }}
                 className="lg:col-span-7"
               >
                 <div className="rounded-3xl bg-slate-50 border border-slate-200/90 p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] space-y-6">
@@ -360,10 +357,10 @@ export default function CinematicLandingPage() {
               
               {/* Visual Cross-Doc Node Graph */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.0 }}
+                initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.8 }}
                 className="lg:col-span-7 order-2 lg:order-1"
               >
                 <div className="rounded-3xl bg-slate-900 text-white p-8 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.12)] relative overflow-hidden">
@@ -420,8 +417,8 @@ export default function CinematicLandingPage() {
               <motion.div
                 initial={{ opacity: 0, x: 40 }}
                 whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 1.0 }}
+                viewport={{ once: false, amount: 0.2 }}
+                transition={{ duration: 0.8 }}
                 className="lg:col-span-5 order-1 lg:order-2 space-y-6"
               >
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-semibold">
@@ -454,10 +451,10 @@ export default function CinematicLandingPage() {
           {/* ── SECTION 5: VALIDATION & DATA QUALITY ── */}
           <section className="py-24 sm:py-32 border-t border-slate-100">
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 35 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9 }}
+              viewport={{ once: false, amount: 0.2 }}
+              transition={{ duration: 0.8 }}
               className="text-center max-w-3xl mx-auto space-y-4 mb-16"
             >
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
@@ -499,10 +496,10 @@ export default function CinematicLandingPage() {
               ].map((v, idx) => (
                 <motion.div
                   key={idx}
-                  initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: idx * 0.12 }}
+                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: false, amount: 0.15 }}
+                  transition={{ duration: 0.7, delay: idx * 0.1 }}
                   className="rounded-3xl bg-slate-50/70 p-7 border border-slate-200/80 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.05)] transition-all"
                 >
                   <div className="flex items-center justify-between mb-4">

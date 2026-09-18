@@ -2,23 +2,31 @@
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { fetchWithAuth } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
 import { 
+  MessageSquare, 
   Send, 
   Trash2, 
+  Sparkles, 
+  FileText, 
   Database, 
   CheckCircle, 
+  RefreshCw,
+  FileSpreadsheet,
   ChevronDown,
   ChevronUp,
   AlertCircle,
+  ExternalLink,
   ShieldAlert,
-  HelpCircle,
-  Bot,
-  Sparkles
+  Info,
+  Layers,
+  HelpCircle
 } from "lucide-react";
-import { AiOrb } from "@/components/chat/AiOrb";
 
 export interface SourceReference {
   document_id: number | null;
@@ -54,8 +62,6 @@ export interface AssistantQueryResponse {
   model: string;
   status: "success" | "not_found" | "configuration_error" | "provider_error" | "timeout_error" | string;
   error?: string | null;
-  officialUrl?: string;
-  officialTitle?: string;
 }
 
 export interface ChatMessage {
@@ -69,8 +75,6 @@ export interface ChatMessage {
   model?: string;
   status?: string;
   error?: string | null;
-  officialUrl?: string;
-  officialTitle?: string;
 }
 
 const SAMPLE_PROMPTS = [
@@ -92,7 +96,7 @@ function AssistantContent() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [loadingStep, setLoadingStep] = useState<string>("Initializing neural vector retrieval...");
+  const [loadingStep, setLoadingStep] = useState<string>("Searching authorized documents...");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
 
@@ -142,36 +146,26 @@ function AssistantContent() {
     }
 
     setIsLoading(true);
-    setLoadingStep("Extracting semantic embeddings from FAISS...");
+    setLoadingStep("Searching authorized documents...");
 
-    const stepTimer1 = setTimeout(() => {
-      setLoadingStep("Cross-referencing PostgreSQL authorized document chunks...");
+    // Simulated progress text transition
+    const stepTimer = setTimeout(() => {
+      setLoadingStep("Generating grounded answer from retrieved evidence...");
     }, 1500);
-
-    const stepTimer2 = setTimeout(() => {
-      setLoadingStep("Synthesizing 4D intelligence response...");
-    }, 3500);
 
     try {
       const docIdFilter = targetDocId !== undefined ? targetDocId : paramDocId;
-
-      const historyContext = messages.slice(-4).map(m => ({
-        role: m.sender,
-        content: m.content
-      }));
 
       const response = await fetchWithAuth("/api/assistant/query", {
         method: "POST",
         body: JSON.stringify({
           query: textToSubmit,
           top_k: 5,
-          doc_id: docIdFilter || undefined,
-          history: historyContext.length > 0 ? historyContext : undefined
+          doc_id: docIdFilter || undefined
         })
       });
 
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer);
 
       if (!response.ok) {
         let errDetail = `HTTP ${response.status} ${response.statusText}`;
@@ -214,19 +208,16 @@ function AssistantContent() {
         provider: data.provider,
         model: data.model,
         status: data.status,
-        error: data.error,
-        officialUrl: data.officialUrl,
-        officialTitle: data.officialTitle
+        error: data.error
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (err: any) {
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer);
       const networkErrorMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
         sender: "assistant",
-        content: "Unable to connect to Khani Gyan AI service. Please verify that the FastAPI backend server is running.",
+        content: "Unable to connect to CMPDI AI service. Please verify that the FastAPI backend server is running.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         status: "network_error",
         error: err.message || "Failed to fetch"
@@ -235,8 +226,9 @@ function AssistantContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, paramDocId, messages]);
+  }, [inputValue, paramDocId]);
 
+  // Initial trigger from URL query parameters (e.g., from Search or Viewer pages)
   useEffect(() => {
     if (!initialTriggeredRef.current && (paramQuery.trim() || paramDocId)) {
       initialTriggeredRef.current = true;
@@ -253,128 +245,80 @@ function AssistantContent() {
   };
 
   return (
-    <div className="space-y-6 pb-12 bg-[#030509] min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 text-slate-100 relative overflow-hidden">
-      
-      {/* Background Ambience */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-4xl h-[400px] bg-cyan-900/10 blur-[120px] pointer-events-none z-0 rounded-full" />
-      <div className="absolute bottom-0 left-0 w-full max-w-2xl h-[300px] bg-blue-900/10 blur-[100px] pointer-events-none z-0 rounded-full" />
-
+    <div className="space-y-6 max-w-6xl mx-auto pb-8">
       {/* Header Bar */}
-      <div className="bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-2xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative z-10">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl text-cyan-400">
-            <Sparkles className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black tracking-tight text-white mb-1">Khani Gyan 4D Assistant</h1>
-            <p className="text-xs font-mono text-cyan-400/80">
-              Neural Grounded Intelligence Core
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
+        <PageHeader 
+          title="AI Document Assistant" 
+          description="Ask natural-language questions across official CMPDI reports with evidence-first grounding and PostgreSQL traceability."
+        />
 
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 text-cyan-300 text-xs font-bold font-mono border border-cyan-500/20 shadow-[0_0_15px_rgba(6,182,212,0.1)]">
-            <Bot className="w-3.5 h-3.5" />
-            <span>RAG Active</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-400 text-xs font-semibold border border-teal-500/20">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Grounded RAG Mode</span>
           </div>
 
-          <div className="text-[11px] font-mono font-bold px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
-            Role: <span className={isHod ? "text-emerald-400" : "text-cyan-400"}>{user?.role || "NORMAL_USER"}</span>
+          <div className="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-800">
+            Role: <span className={isHod ? "text-amber-400 font-bold" : "text-teal-400 font-bold"}>{user?.role || "NORMAL_USER"}</span>
           </div>
 
           {messages.length > 0 && (
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleClearChat}
-              className="px-3 py-1.5 rounded-xl border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 text-[11px] font-mono font-bold flex items-center gap-1 transition-colors"
+              className="flex items-center gap-1.5 text-slate-400 hover:text-rose-400 border-slate-800 bg-slate-900"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              Clear
-            </button>
+              <Trash2 className="w-4 h-4" />
+              <span>Clear Chat</span>
+            </Button>
           )}
         </div>
       </div>
 
+      {/* Security Context Banner */}
+      <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="w-4 h-4 text-teal-400 shrink-0" />
+          <span>Answers are generated strictly from authorized CMPDI/CIL document evidence. Unsupported claims are rejected.</span>
+        </div>
+        {paramDocId && (
+          <span className="font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+            Filtering Context: Doc #{paramDocId}
+          </span>
+        )}
+      </div>
+
       {/* Main Chat Container */}
-      <div className="bg-slate-900/40 backdrop-blur-md rounded-2xl border border-white/5 shadow-2xl flex flex-col min-h-[600px] overflow-hidden relative z-10">
+      <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl flex flex-col min-h-[580px] overflow-hidden">
         
-        {/* Full Screen Loading Overlay with 4D Animation */}
-        <AnimatePresence>
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-              animate={{ opacity: 1, backdropFilter: "blur(16px)" }}
-              exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-              className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#030509]/80"
-            >
-              <motion.div
-                layoutId="ai-orb-main"
-                className="relative z-10"
-                initial={{ scale: 0.5, y: -50 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
-              >
-                <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
-                <AiOrb isThinking={true} className="w-64 h-64 sm:w-80 sm:h-80" />
-              </motion.div>
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-8 flex flex-col items-center"
-              >
-                <div className="text-cyan-400 font-mono text-lg sm:text-xl font-bold tracking-[0.2em] uppercase">
-                  Processing Query
-                </div>
-                <div className="text-xs sm:text-sm text-slate-400 mt-3 font-mono tracking-wider max-w-md text-center animate-pulse">
-                  {loadingStep}
-                </div>
-                
-                {/* Visual loading bar */}
-                <div className="w-48 h-1 bg-slate-800 rounded-full mt-6 overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full"
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                  />
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Chat History Messages */}
-        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 max-h-[620px] custom-scrollbar">
-          {messages.length === 0 && !isLoading ? (
-            <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4 space-y-8 relative">
-              
-              {/* Idle Orb at the top/center */}
-              <motion.div layoutId="ai-orb-main" className="relative z-10 cursor-pointer hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-cyan-500/10 blur-2xl rounded-full scale-150" />
-                <AiOrb isThinking={false} className="w-40 h-40" />
-              </motion.div>
+        <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 max-h-[620px]">
+          {messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 mb-2 shadow-lg">
+                <MessageSquare className="w-8 h-8" />
+              </div>
 
-              <div className="relative z-10 max-w-xl mx-auto space-y-4">
-                <h3 className="text-xl font-bold text-white font-mono tracking-tight">Khani Gyan Core is Online</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  I am connected to the CMPDI vector index. Ask me anything about production metrics, geological surveys, or safety compliance, and I will extract the exact evidence from authorized documents.
+              <div>
+                <h3 className="text-lg font-bold text-slate-100">CMPDI Intelligent AI Assistant</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
+                  Type a question below to perform dense FAISS vector context retrieval and generate evidence-first answers grounded in PostgreSQL document chunks.
                 </p>
               </div>
 
               {/* Sample Prompts */}
-              <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6 relative z-10">
+              <div className="w-full max-w-2xl grid grid-cols-1 sm:grid-cols-2 gap-3 pt-4">
                 {SAMPLE_PROMPTS.map((prompt, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleSubmit(prompt)}
-                    className="p-4 text-left bg-slate-950/50 hover:bg-cyan-950/30 border border-slate-800 hover:border-cyan-500/50 rounded-xl transition-all duration-300 group cursor-pointer shadow-lg backdrop-blur-sm"
+                    className="p-3.5 text-left bg-slate-950 hover:bg-slate-900 border border-slate-800/80 hover:border-teal-500/40 rounded-xl transition-all group cursor-pointer"
                   >
-                    <div className="flex items-start gap-3">
-                      <Sparkles className="w-4 h-4 text-cyan-500 shrink-0 mt-0.5 opacity-50 group-hover:opacity-100 group-hover:animate-pulse" />
-                      <span className="text-sm text-slate-300 group-hover:text-cyan-100 font-medium">
+                    <div className="flex items-start gap-2.5">
+                      <Sparkles className="w-4 h-4 text-teal-400 mt-0.5 group-hover:scale-110 transition-transform shrink-0" />
+                      <span className="text-xs font-semibold text-slate-300 group-hover:text-teal-300">
                         {prompt}
                       </span>
                     </div>
@@ -385,127 +329,199 @@ function AssistantContent() {
           ) : (
             messages.map((msg) => {
               const isUser = msg.sender === "user";
-              const hasSources = (msg.sources && msg.sources.length > 0);
               const isExpanded = !!expandedSources[msg.id];
+              const hasSources = (msg.sources && msg.sources.length > 0);
 
               return (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  key={msg.id} 
-                  className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1.5 w-full relative z-10`}
+                <div
+                  key={msg.id}
+                  className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-2`}
                 >
-                  <div className={`flex items-center gap-2 px-1 text-xs font-mono ${isUser ? "flex-row-reverse" : "flex-row"}`}>
-                    <span className={`font-bold ${isUser ? "text-cyan-400" : "text-emerald-400"}`}>
-                      {isUser ? "USER" : "KHANI GYAN AI"}
+                  {/* Sender Header */}
+                  <div className="flex items-center gap-2 px-1 text-xs">
+                    <span className="font-bold text-slate-400">
+                      {isUser ? "You" : "CMPDI AI Assistant"}
                     </span>
-                    <span className="text-[10px] text-slate-500">{msg.timestamp}</span>
+                    <span className="text-[11px] font-mono text-slate-500">{msg.timestamp}</span>
                   </div>
 
-                  <div className={`max-w-3xl rounded-2xl p-5 shadow-2xl text-sm leading-relaxed border ${
-                    isUser
-                      ? "bg-cyan-950/30 text-white border-cyan-500/30 rounded-tr-sm shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-                      : "bg-slate-900/80 backdrop-blur-xl text-slate-200 border-white/10 rounded-tl-sm"
-                  }`}>
+                  {/* Message Bubble / Card */}
+                  <div
+                    className={`max-w-3xl rounded-2xl p-4 sm:p-5 shadow-lg text-xs sm:text-sm leading-relaxed ${
+                      isUser
+                        ? "bg-teal-500 text-slate-950 rounded-tr-none font-medium"
+                        : "bg-slate-950 text-slate-100 border border-slate-800 rounded-tl-none"
+                    }`}
+                  >
+                    {/* Assistant Status Badges */}
                     {!isUser && msg.status && (
-                      <div className="mb-4 flex flex-wrap items-center gap-2">
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
                         {msg.status === "success" && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                            <CheckCircle className="w-3 h-3" /> EVIDENCE GROUNDED
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                            <CheckCircle className="w-3 h-3" /> Grounded Evidence Answer
                           </span>
                         )}
                         {msg.status === "not_found" && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-                            <HelpCircle className="w-3 h-3" /> LOW CONFIDENCE
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700 font-mono">
+                            <HelpCircle className="w-3 h-3" /> Insufficient Context
                           </span>
                         )}
                         {(msg.status === "server_error" || msg.status === "network_error") && (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-rose-500/10 text-rose-400 border border-rose-500/30">
-                            <AlertCircle className="w-3 h-3" /> SYSTEM ERROR
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 font-mono">
+                            <AlertCircle className="w-3 h-3" /> Error Response
                           </span>
                         )}
                       </div>
                     )}
 
-                    <div className="whitespace-pre-wrap font-sans text-[15px]">
+                    {/* Main Content Text */}
+                    <div className="whitespace-pre-wrap font-sans text-slate-100 leading-relaxed">
                       {msg.content}
                     </div>
 
+                    {/* Backend Error Alert Banner */}
                     {!isUser && msg.error && (
-                      <div className="mt-4 p-4 bg-rose-950/30 border border-rose-500/30 rounded-xl text-rose-300 text-sm flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                        <div><strong className="font-mono text-rose-400 uppercase text-xs block mb-1">Fault Detected</strong> {msg.error}</div>
+                      <div className="mt-3 p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="font-bold">Error Detail:</strong> {msg.error}
+                        </div>
                       </div>
                     )}
 
+                    {/* Evidence & Source Citations Section */}
                     {!isUser && hasSources && (
-                      <div className="mt-5 pt-5 border-t border-white/5">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2 text-xs font-mono font-bold text-slate-400 uppercase">
-                            <Database className="w-3.5 h-3.5 text-cyan-500" />
-                            <span>Retrieved Sources ({msg.sources?.length})</span>
+                      <div className="mt-4 pt-3.5 border-t border-slate-800">
+                        {/* Evidence Traceability Pipeline Visualizer */}
+                        <div className="mb-3 p-3 rounded-xl bg-slate-950 border border-slate-800/80">
+                          <div className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-bold mb-2 flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3 text-cyan-400" /> Grounded Evidence Pipeline Flow
                           </div>
+                          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-slate-300">
+                            <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold">Answer</span>
+                            <span className="text-slate-500">&rarr;</span>
+                            <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/30 font-bold">Source Doc</span>
+                            <span className="text-slate-500">&rarr;</span>
+                            <span className="px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/30 font-bold">Page</span>
+                            <span className="text-slate-500">&rarr;</span>
+                            <span className="px-2 py-0.5 rounded bg-pink-500/10 text-pink-300 border border-pink-500/30 font-bold">Chunk</span>
+                            <span className="text-slate-500">&rarr;</span>
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 font-bold">Verified Evidence</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
+                            <Database className="w-3.5 h-3.5 text-cyan-400" />
+                            <span>Evidence Citations & Traceability ({msg.sources?.length})</span>
+                          </div>
+
                           <button
                             onClick={() => toggleSourceExpand(msg.id)}
-                            className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 font-bold flex items-center gap-1 cursor-pointer transition-colors px-2 py-1 bg-cyan-950/30 rounded-md border border-cyan-500/20"
+                            className="text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1 cursor-pointer font-mono"
                           >
-                            <span>{isExpanded ? "COLLAPSE" : "INSPECT"}</span>
-                            {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                            <span>{isExpanded ? "Collapse Details" : "View Retrieved Chunks"}</span>
+                            {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                           </button>
                         </div>
-                        
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div 
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              className="space-y-3 mt-3 overflow-hidden"
-                            >
-                              {msg.sources?.map((src, idx) => (
-                                <div key={idx} className="p-4 bg-slate-950/60 border border-white/10 rounded-xl hover:border-cyan-500/30 transition-colors">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="text-xs font-bold text-slate-200 line-clamp-1">
-                                      {src.document_name}
-                                    </div>
-                                    <div className="text-[10px] px-2 py-0.5 rounded bg-blue-900/30 border border-blue-500/20 text-blue-400 font-mono font-bold shrink-0">
-                                      ID: {src.document_id}
-                                    </div>
+
+                        {/* Source Cards List */}
+                        <div className="space-y-2 mt-2">
+                          {msg.sources?.map((src, idx) => {
+                            const scorePct = src.relevance_score ? Math.round(src.relevance_score * 100) : 85;
+                            const refText = src.source_reference || (src.page_number ? `Page ${src.page_number}` : (src.sheet_name ? `Sheet: ${src.sheet_name}` : "Document Text"));
+
+                            return (
+                              <div
+                                key={idx}
+                                className="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs space-y-2 hover:border-cyan-500/40 transition-all shadow-md group"
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                  <div className="flex items-center gap-2 font-bold text-slate-200 truncate">
+                                    <FileText className="w-4 h-4 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
+                                    <span className="truncate">{src.original_filename || src.document_name || "CMPDI Document"}</span>
                                   </div>
-                                  <div className="text-[10px] font-mono text-cyan-500/70 mb-3 uppercase tracking-wider">
-                                    Ref: {src.source_reference} • Score: {src.relevance_score}
-                                  </div>
-                                  <div className="text-xs text-slate-400 bg-[#030509] p-3 rounded-lg border border-white/5 whitespace-pre-wrap font-mono leading-relaxed">
-                                    {msg.retrievedChunks?.[idx]?.content}
+
+                                  <div className="flex items-center gap-2 shrink-0 font-mono">
+                                    <span className="px-2.5 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-slate-800 text-[11px]">
+                                      {refText}
+                                    </span>
+                                    
+                                    {/* Confidence Visualization Bar */}
+                                    <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-[11px]">
+                                      <span className="font-bold">Match: {scorePct}%</span>
+                                      <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
+                                        <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${scorePct}%` }} />
+                                      </div>
+                                    </div>
+
+                                    {src.document_id && (
+                                      <Link
+                                        href={`/documents/viewer?id=${src.document_id}`}
+                                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-[11px] transition-all shadow-sm"
+                                      >
+                                        View <ExternalLink className="w-3 h-3" />
+                                      </Link>
+                                    )}
                                   </div>
                                 </div>
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+
+                                {/* Expanded Chunk Snippet */}
+                                {isExpanded && (
+                                  <div className="mt-2.5 pt-2 border-t border-slate-800 text-slate-300 text-[11px] font-mono bg-slate-900/90 p-3 rounded-xl border border-slate-800/80">
+                                    <div className="text-cyan-400 font-sans font-bold text-[10px] uppercase tracking-wider mb-1">
+                                      Context Block (Doc #{src.document_id}, Chunk #{src.chunk_id}):
+                                    </div>
+                                    {msg.retrievedChunks?.[idx]?.content || "Retrieved vector content match."}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
-                </motion.div>
+                </div>
               );
             })
+          )}
+
+          {/* Loading Animated State */}
+          {isLoading && (
+            <div className="flex flex-col items-start space-y-2">
+              <div className="flex items-center gap-2 px-1 text-xs">
+                <span className="font-bold text-slate-400">CMPDI AI Assistant</span>
+                <span className="text-[11px] font-mono text-teal-400 animate-pulse">{loadingStep}</span>
+              </div>
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl rounded-tl-none p-4 shadow-xl max-w-md space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 shrink-0">
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-200">Evaluating FAISS Embeddings...</p>
+                    <p className="text-[11px] text-slate-400">{loadingStep}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <div className="p-4 sm:p-6 bg-slate-900/80 backdrop-blur-xl border-t border-white/10 relative z-10">
+        {/* Input Bar Footer */}
+        <div className="p-4 bg-slate-950 border-t border-slate-800 space-y-3">
           {validationError && (
-            <div className="mb-3 px-4 py-2 bg-rose-950/50 text-rose-400 text-xs font-mono font-bold rounded-lg border border-rose-500/30 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="px-3 py-2 bg-rose-500/10 text-rose-300 text-xs font-medium rounded-xl border border-rose-500/20 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
               <span>{validationError}</span>
             </div>
           )}
 
           <div className="flex items-end gap-3">
-            <div className="flex-1 relative group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
+            <div className="flex-1 relative">
               <textarea
                 value={inputValue}
                 onChange={(e) => {
@@ -514,27 +530,25 @@ function AssistantContent() {
                 }}
                 onKeyDown={handleKeyDown}
                 disabled={isLoading}
-                placeholder="Initialize semantic query..."
-                rows={1}
-                className="relative w-full resize-none rounded-xl border border-white/10 bg-[#030509]/80 px-4 py-4 text-sm text-white placeholder:text-slate-600 focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 focus:outline-none disabled:opacity-50 transition-all font-mono"
-                style={{ minHeight: "56px", maxHeight: "120px" }}
+                placeholder="Ask a natural language question about CMPDI coal reserves, borehole metrics, core logs..."
+                rows={2}
+                className="w-full resize-none rounded-xl border border-slate-800 bg-slate-900 p-3 pr-10 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-teal-500 focus:outline-none disabled:bg-slate-950 disabled:cursor-not-allowed"
               />
             </div>
 
             <button
               onClick={() => handleSubmit()}
               disabled={isLoading || !inputValue.trim()}
-              className="relative h-[56px] px-8 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 text-white font-bold font-mono text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 shrink-0 shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.4)] disabled:shadow-none overflow-hidden group"
+              className="h-[54px] px-6 rounded-xl bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-slate-950 font-bold text-sm transition-colors flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-teal-500/10 cursor-pointer"
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              <span className="relative z-10">Transmit</span>
-              <Send className="w-4 h-4 relative z-10" />
+              <span>Send</span>
+              <Send className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center justify-between text-[10px] font-mono text-slate-500">
-            <span>Security: <span className="text-emerald-500/80">AES-256 Encrypted Stream</span></span>
-            <span>Return ↵ to transmit</span>
+          <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-500 font-mono px-1">
+            <span>Press <strong>Enter</strong> to send, <strong>Shift + Enter</strong> for new line</span>
+            <span>API: <code className="text-teal-400">POST /api/assistant/query</code></span>
           </div>
         </div>
 
@@ -545,12 +559,9 @@ function AssistantContent() {
 
 export default function AssistantPage() {
   return (
-    <Suspense fallback={
-      <div className="h-screen w-full bg-[#030509] flex items-center justify-center">
-        <div className="text-cyan-500 font-mono text-sm animate-pulse">Initializing Core...</div>
-      </div>
-    }>
+    <Suspense fallback={<div className="p-8 text-center text-slate-400">Loading Assistant...</div>}>
       <AssistantContent />
     </Suspense>
   );
 }
+

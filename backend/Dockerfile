@@ -40,5 +40,5 @@ ENV HOST=0.0.0.0 \
 
 EXPOSE 8000
 
-# Production uvicorn execution with multi-worker ASGI support
-CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Production uvicorn execution with dynamic cloud PORT support
+CMD ["sh", "-c", "python -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

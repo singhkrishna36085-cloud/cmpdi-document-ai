@@ -6,8 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from .database import get_db, AsyncSessionLocal
+from .database import get_db, AsyncSessionLocal, engine, Base
 from .services.audit_service import ensure_audit_schema
+from .core.seed import seed_initial_users
 from .routers import documents as docs_router
 from .routers import processing as processing_router
 from .routers import validation as validation_router
@@ -30,21 +31,47 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
 @app.on_event("startup")
 async def on_startup():
-    async with AsyncSessionLocal() as session:
-        await ensure_audit_schema(session)
+    # 1. Ensure all database tables exist (safe on fresh or existing databases)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database schema initialized successfully.")
+    except Exception as exc:
+        logger.warning(f"Database schema check notice: {exc}")
+
+    # 2. Ensure schema additions and default user accounts
+    try:
+        async with AsyncSessionLocal() as session:
+            await ensure_audit_schema(session)
+            await seed_initial_users(session)
+        logger.info("Audit schema verified and default seed users confirmed.")
+    except Exception as exc:
+        logger.warning(f"Startup maintenance notice: {exc}")
 
 
-# ── CORS: allow environment-configured origins + dev server fallbacks ───────
-raw_origins = os.getenv("ALLOWED_ORIGINS", os.getenv("FRONTEND_PUBLIC_URL", "https://sih-26023-flame.vercel.app,http://localhost:3000,http://127.0.0.1:3000"))
-allowed_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
-if "https://sih-26023-flame.vercel.app" not in allowed_origins:
-    allowed_origins.append("https://sih-26023-flame.vercel.app")
+# ── CORS: dynamic support for Vercel, Railway, Render, custom domains, and local dev ──
+raw_origins = os.getenv("ALLOWED_ORIGINS", os.getenv("FRONTEND_PUBLIC_URL", ""))
+explicit_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+
+# Default local & preview origins
+default_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://sih-26023-flame.vercel.app",
+]
+for origin in default_origins:
+    if origin not in explicit_origins:
+        explicit_origins.append(origin)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=explicit_origins,
+    allow_origin_regex=r"^https?://([a-zA-Z0-9_\-]+\.)*(vercel\.app|onrender\.com|railway\.app|loca\.lt)(:[0-9]+)?$|^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -58,6 +85,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     if debug_mode:
         return JSONResponse(status_code=500, content={"detail": str(exc)})
     return JSONResponse(status_code=500, content={"detail": "An internal server error occurred."})
+
 
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(docs_router.router)
@@ -77,7 +105,18 @@ app.include_router(cross_doc_router.router)
 app.include_router(govt_resources_router.router)
 
 
-# ── Health endpoints ──────────────────────────────────────────────────────────
+# ── Root & Health endpoints ──────────────────────────────────────────────────
+@app.get("/", tags=["health"])
+def root_index():
+    return {
+        "service": "CMPDI / CIL Document AI Backend",
+        "status": "online",
+        "version": "1.0.0",
+        "documentation": "/docs",
+        "health_check": "/api/health/ready"
+    }
+
+
 @app.get("/api/health", tags=["health"])
 def health_check():
     return {"status": "ok", "message": "CMPDI backend is running."}
