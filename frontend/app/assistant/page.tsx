@@ -99,38 +99,167 @@ export interface ChatMessage {
   model?: string;
   status?: string;
   error?: string | null;
+  mode?: string;
 }
 
-const QUICK_PROMPT_CARDS = [
-  {
-    category: "PROJECT COMPARISON",
-    title: "Compare Gevra vs Nigahi Production",
-    desc: "Analyze stripped volume, coal extraction, and stripping ratios across sectors.",
-    prompt: "Compare production and stripping ratio between Gevra Expansion and Nigahi.",
-    icon: Database,
-  },
-  {
-    category: "SECTOR INTELLIGENCE",
-    title: "Latest 2026 Coal Guidelines",
-    desc: "Retrieve recent Ministry of Coal directives, policy notifications and updates.",
-    prompt: "What are the latest 2026 coal sector guidelines and news in India?",
-    icon: Globe,
-  },
-  {
-    category: "MINING CALCULATIONS",
-    title: "Stripping Ratio & Overburden",
-    desc: "Calculate strip ratio formulas with borehole core log practical examples.",
-    prompt: "Explain how stripping ratio and overburden are calculated with a practical example.",
-    icon: Cpu,
-  },
-  {
-    category: "SAFETY & COMPLIANCE",
-    title: "Mine Safety Incidents & Audits",
-    desc: "Audit DGMS safety guidelines, incident records, and hazard logs.",
-    prompt: "What safety incidents or hazards occurred at Ukni?",
-    icon: ShieldAlert,
-  }
-];
+const MODE_CARDS_MAP: Record<string, Array<{
+  category: string;
+  title: string;
+  desc: string;
+  prompt: string;
+  icon: any;
+}>> = {
+  all: [
+    {
+      category: "PROJECT COMPARISON",
+      title: "Compare Gevra vs Nigahi Production",
+      desc: "Analyze stripped volume, coal extraction, and stripping ratios across sectors.",
+      prompt: "Compare production and stripping ratio between Gevra Expansion and Nigahi.",
+      icon: Database,
+    },
+    {
+      category: "SECTOR INTELLIGENCE",
+      title: "Latest 2026 Coal Guidelines",
+      desc: "Retrieve recent Ministry of Coal directives, policy notifications and updates.",
+      prompt: "What are the latest 2026 coal sector guidelines and news in India?",
+      icon: Globe,
+    },
+    {
+      category: "MINING CALCULATIONS",
+      title: "Stripping Ratio & Overburden",
+      desc: "Calculate strip ratio formulas with borehole core log practical examples.",
+      prompt: "Explain how stripping ratio and overburden are calculated with a practical example.",
+      icon: Cpu,
+    },
+    {
+      category: "SAFETY & COMPLIANCE",
+      title: "Mine Safety Incidents & Audits",
+      desc: "Audit DGMS safety guidelines, incident records, and hazard logs.",
+      prompt: "What safety incidents or hazards occurred at Ukni?",
+      icon: ShieldAlert,
+    }
+  ],
+  doc: [
+    {
+      category: "BOREHOLE LITHOLOGY",
+      title: "Borehole Core Logs & Strata",
+      desc: "Extract borehole core logs, depth intervals, and coal seam thicknesses.",
+      prompt: "Retrieve borehole core logs and seam thickness from authorized CMPDI documents.",
+      icon: FileText,
+    },
+    {
+      category: "COAL QUALITY",
+      title: "Proximate Analysis & Ash %",
+      desc: "Retrieve proximate analysis results (Ash %, Moisture %, GCV) from project files.",
+      prompt: "What are the proximate analysis results (Ash %, Moisture %) reported in Nigahi project?",
+      icon: Database,
+    },
+    {
+      category: "RESERVES CLASSIFICATION",
+      title: "Proved vs Indicated Reserves",
+      desc: "Summarize geological reserve classifications across CMPDI authorized blocks.",
+      prompt: "Summarize the Proved vs Indicated coal reserve metrics across the project files.",
+      icon: Layers,
+    },
+    {
+      category: "OVERBURDEN METRICS",
+      title: "Stripped Volume & Extraction",
+      desc: "Extract official overburden volume stripped and coal extracted figures.",
+      prompt: "Extract overburden volume stripped and coal extracted values from CMPDI reports.",
+      icon: BookOpen,
+    }
+  ],
+  web: [
+    {
+      category: "MINISTRY DIRECTIVES",
+      title: "Latest 2026 Policy Circulars",
+      desc: "Live search recent Ministry of Coal notifications, Gazette orders, and circulars.",
+      prompt: "What are the latest 2026 Ministry of Coal guidelines, policies, and notifications in India?",
+      icon: Globe,
+    },
+    {
+      category: "PRODUCTION TARGETS",
+      title: "Coal India (CIL) Dispatch Targets",
+      desc: "Real-time updates on CIL domestic coal extraction and off-take goals.",
+      prompt: "What is the latest domestic coal extraction and dispatch target for Coal India Limited?",
+      icon: Zap,
+    },
+    {
+      category: "COMMERCIAL BLOCKS",
+      title: "Commercial Auction Results",
+      desc: "Find recent commercial coal mine auction results and revenue share updates.",
+      prompt: "What are the latest commercial coal block auction results and policy updates in 2025-2026?",
+      icon: ExternalLink,
+    },
+    {
+      category: "CLEAN COAL TECH",
+      title: "Coal Gasification & Washeries",
+      desc: "Live web intelligence on national coal gasification schemes and Washery directives.",
+      prompt: "What are the latest government directives on coal gasification and washery reject usage?",
+      icon: Sparkles,
+    }
+  ],
+  calc: [
+    {
+      category: "STRIPPING RATIO",
+      title: "Calculate Stripping Ratio (SR)",
+      desc: "Step-by-step ratio calculation: Overburden volume (m³) / Coal extracted (tonnes).",
+      prompt: "Calculate stripping ratio with an example where Overburden = 4,200,000 m³ and Coal = 1,400,000 tonnes.",
+      icon: Cpu,
+    },
+    {
+      category: "RESERVE ESTIMATION",
+      title: "In-situ Coal Reserve Formula",
+      desc: "Calculate geological reserves from Area (sq m), Seam Thickness (m), and Specific Gravity.",
+      prompt: "Explain the formula and calculate in-situ coal reserve from Area, Seam Thickness, and Specific Gravity.",
+      icon: Database,
+    },
+    {
+      category: "ECONOMIC CUTOFF",
+      title: "Break-Even Stripping Ratio (BESR)",
+      desc: "Formulate break-even economics based on mining costs, recovery, and market price.",
+      prompt: "How is Break-Even Stripping Ratio (BESR) calculated from cost of mining, coal selling price, and processing cost?",
+      icon: RotateCcw,
+    },
+    {
+      category: "EMPIRICAL FORMULAS",
+      title: "Specific Gravity & Ash Relation",
+      desc: "Compute expected specific gravity from Ash % using CMPDI empirical formulas.",
+      prompt: "Calculate expected specific gravity given non-coking coal ash percentage with standard CMPDI empirical formula.",
+      icon: FileSpreadsheet,
+    }
+  ],
+  safety: [
+    {
+      category: "CMR 2017 COMPLIANCE",
+      title: "Bench Height & Slope Stability",
+      desc: "Statutory parameters for opencast mine bench dimensions and slope angles under CMR 2017.",
+      prompt: "What are the statutory requirements for bench height, width, and slope stability under Coal Mines Regulations 2017?",
+      icon: ShieldAlert,
+    },
+    {
+      category: "DUMP SAFETY",
+      title: "Dump Slope Radar & Monitoring",
+      desc: "DGMS compliance circulars for overburden waste dump monitoring and stability.",
+      prompt: "What are the DGMS guidelines for overburden dump slope monitoring and radar installation in opencast mines?",
+      icon: AlertCircle,
+    },
+    {
+      category: "HEMM TRANSPORT",
+      title: "HEMM Haul Road Safety Rules",
+      desc: "DGMS transport standards for dumpers, shovels, and gradient specifications.",
+      prompt: "What are the statutory DGMS safety rules for Heavy Earth Moving Machinery (HEMM) haul road management?",
+      icon: Info,
+    },
+    {
+      category: "HAZARD AUDIT",
+      title: "Incident Reporting & Investigation",
+      desc: "Statutory procedure for reporting and investigating dangerous occurrences in mines.",
+      prompt: "What DGMS statutory procedures must be followed for reporting and investigating mine safety hazards?",
+      icon: HelpCircle,
+    }
+  ]
+};
 
 const SAMPLE_PROMPTS = [
   "Which project produced the highest coal in Q1 2026?",
@@ -260,7 +389,8 @@ function AssistantContent() {
       id: `user-${Date.now()}`,
       sender: "user",
       content: textToSubmit,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      mode: selectedMode
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -269,7 +399,19 @@ function AssistantContent() {
     }
 
     setIsLoading(true);
-    setLoadingStep("Searching authorized documents...");
+
+    // Dynamic loading step based on selected mode
+    if (selectedMode === "web") {
+      setLoadingStep("Querying live Ministry of Coal & sector web intelligence...");
+    } else if (selectedMode === "calc") {
+      setLoadingStep("Computing step-by-step mining formulas & engineering metrics...");
+    } else if (selectedMode === "safety") {
+      setLoadingStep("Auditing DGMS safety circulars & CMR 2017 compliance records...");
+    } else if (selectedMode === "doc") {
+      setLoadingStep("Scanning authorized CMPDI borehole & geological archives...");
+    } else {
+      setLoadingStep("Searching authorized documents & hybrid intelligence...");
+    }
 
     // Simulated progress text transition
     const stepTimer = setTimeout(() => {
@@ -279,10 +421,22 @@ function AssistantContent() {
     try {
       const docIdFilter = targetDocId !== undefined ? targetDocId : paramDocId;
 
+      // Enrich query with targeted context directive if a specific mode is selected
+      let finalQuery = textToSubmit;
+      if (selectedMode === "doc") {
+        finalQuery = `[CMPDI DOCUMENT RETRIEVAL ONLY - Ground answer strictly on authorized CMPDI reports and borehole logs] ${textToSubmit}`;
+      } else if (selectedMode === "web") {
+        finalQuery = `[LIVE WEB INTEL - Search and ground with latest 2026 Ministry of Coal guidelines and news] ${textToSubmit}`;
+      } else if (selectedMode === "calc") {
+        finalQuery = `[MINING CALCULATION - Compute step-by-step mathematical formulas, units, and clear numbers] ${textToSubmit}`;
+      } else if (selectedMode === "safety") {
+        finalQuery = `[DGMS COMPLIANCE - Ground answer in Directorate General of Mines Safety and CMR 2017 regulations] ${textToSubmit}`;
+      }
+
       const response = await fetchWithAuth("/api/assistant/query", {
         method: "POST",
         body: JSON.stringify({
-          query: textToSubmit,
+          query: finalQuery,
           top_k: 5,
           doc_id: docIdFilter || undefined
         })
@@ -306,7 +460,8 @@ function AssistantContent() {
             : "The assistant encountered a backend server error while processing your query.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           status: "server_error",
-          error: errDetail
+          error: errDetail,
+          mode: selectedMode
         };
         setMessages((prev) => [...prev, errorAssistantMsg]);
         return;
@@ -333,7 +488,8 @@ function AssistantContent() {
         provider: data.provider,
         model: data.model,
         status: data.status,
-        error: data.error
+        error: data.error,
+        mode: selectedMode
       };
 
       setMessages((prev) => [...prev, assistantMessage]);
@@ -345,13 +501,14 @@ function AssistantContent() {
         content: "Unable to connect to CMPDI AI service. Please verify that the FastAPI backend server is running.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         status: "network_error",
-        error: err.message || "Failed to fetch"
+        error: err.message || "Failed to fetch",
+        mode: selectedMode
       };
       setMessages((prev) => [...prev, networkErrorMsg]);
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, paramDocId]);
+  }, [inputValue, paramDocId, selectedMode]);
 
   // Initial trigger from URL query parameters (e.g., from Search or Viewer pages)
   useEffect(() => {
@@ -451,9 +608,9 @@ function AssistantContent() {
                 </p>
               </div>
 
-              {/* 4 Sleek Prompt Cards */}
+              {/* Dynamic Mode-Specific Prompt Cards */}
               <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 text-left">
-                {QUICK_PROMPT_CARDS.map((card, idx) => {
+                {(MODE_CARDS_MAP[selectedMode] || MODE_CARDS_MAP.all).map((card, idx) => {
                   const Icon = card.icon;
                   return (
                     <button
@@ -546,6 +703,21 @@ function AssistantContent() {
                       {/* Top row: Status badges & Engine */}
                       <div className="pb-3 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
+                          {msg.mode && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 font-mono">
+                              {msg.mode === "doc" && <FileText className="w-3 h-3 text-emerald-400" />}
+                              {msg.mode === "web" && <Globe className="w-3 h-3 text-cyan-400" />}
+                              {msg.mode === "calc" && <Cpu className="w-3 h-3 text-amber-400" />}
+                              {msg.mode === "safety" && <ShieldAlert className="w-3 h-3 text-purple-400" />}
+                              {(!["doc", "web", "calc", "safety"].includes(msg.mode)) && <Sparkles className="w-3 h-3 text-teal-400" />}
+                              <span>
+                                {msg.mode === "doc" ? "CMPDI Documents Mode" :
+                                 msg.mode === "web" ? "Live Web Intel Mode" :
+                                 msg.mode === "calc" ? "Mine Calculations Mode" :
+                                 msg.mode === "safety" ? "DGMS Compliance Mode" : "Autonomous Hybrid"}
+                              </span>
+                            </span>
+                          )}
                           {msg.source_type === "document" && (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
                               <FileText className="w-3 h-3" /> Verified Document Evidence
@@ -894,7 +1066,17 @@ function AssistantContent() {
               }}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
-              placeholder="Ask a question across CMPDI reports, borehole data, or engineering calculations..."
+              placeholder={
+                selectedMode === "doc"
+                  ? "Query authorized CMPDI geological reports, borehole core logs, seam strata..."
+                  : selectedMode === "web"
+                  ? "Search live Ministry of Coal directives, 2026 notifications, market intel..."
+                  : selectedMode === "calc"
+                  ? "Calculate stripping ratio, overburden volume, coal reserves in tonnes, specific gravity..."
+                  : selectedMode === "safety"
+                  ? "Query DGMS safety circulars, Coal Mines Regulations (CMR 2017), hazard logs..."
+                  : "Ask a question across CMPDI reports, borehole data, or engineering calculations..."
+              }
               rows={2}
               className="w-full resize-none bg-transparent px-3 py-1.5 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50 leading-relaxed font-sans"
             />
@@ -902,14 +1084,26 @@ function AssistantContent() {
             {/* Bottom Controls Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2 px-2 border-t border-white/[0.06]">
               <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[10px] font-mono">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono border ${
+                  selectedMode === "doc"
+                    ? "bg-emerald-950/70 border-emerald-500/40 text-emerald-300"
+                    : selectedMode === "web"
+                    ? "bg-cyan-950/70 border-cyan-500/40 text-cyan-300"
+                    : selectedMode === "calc"
+                    ? "bg-amber-950/70 border-amber-500/40 text-amber-300"
+                    : selectedMode === "safety"
+                    ? "bg-purple-950/70 border-purple-500/40 text-purple-300"
+                    : "bg-cyan-950/60 border-cyan-500/30 text-cyan-300"
+                }`}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  Mode: {ASSISTANT_MODES.find(m => m.id === selectedMode)?.label || "Hybrid"}
+                </span>
+
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700/60 text-slate-300 text-[10px] font-mono">
+                  <Database className="w-3 h-3 text-cyan-400" />
                   RAG: FAISS + PostgreSQL
                 </span>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700/60 text-slate-300 text-[10px] font-mono">
-                  <Globe className="w-3 h-3 text-blue-400" />
-                  Hybrid Search
-                </span>
+
                 {paramDocId && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-[10px] font-mono">
                     Doc #{paramDocId}
