@@ -201,17 +201,18 @@ async def assistant_query_endpoint(
     if any(k in query_lower for k in ["highest", "total", "summary", "compare", "all", "sabse", "max"]):
         effective_top_k = max(effective_top_k, 15)
 
-    if route_mode == "GENERAL":
-        # For completely general questions, skip FAISS to avoid fake sources
-        retrieved_chunks = []
-        raw_chunks = []
-    else:
-        retrieval_res = await asyncio.to_thread(retrieve_rag_context, query_clean, effective_top_k, allowed_doc_ids)
-        raw_chunks = retrieval_res.get("retrieved_chunks", [])
-        
-        # Filter out weak chunks below similarity threshold (0.25)
-        # But if it's MIXED, we might still want to proceed even without chunks for the general part.
-        retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.25]
+    retrieved_chunks = []
+    raw_chunks = []
+    if route_mode != "GENERAL":
+        try:
+            retrieval_res = await asyncio.to_thread(retrieve_rag_context, query_clean, effective_top_k, allowed_doc_ids)
+            raw_chunks = retrieval_res.get("retrieved_chunks", [])
+            retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.25]
+        except Exception as e:
+            import logging
+            logging.getLogger("assistant_router").warning(f"RAG retrieval fallback: {e}")
+            raw_chunks = []
+            retrieved_chunks = []
 
     try:
         # 4. Handle cross-document calculations & summary header derived directly from PostgreSQL extractions
