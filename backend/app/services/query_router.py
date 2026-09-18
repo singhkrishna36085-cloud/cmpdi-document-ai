@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional
 def classify_query_intent(query: str) -> str:
     """
     Classify the intent of the user's query deterministically.
-    Modes: RAG, GENERAL, MIXED, CALCULATION
+    Modes: RAG, WEB, GENERAL, MIXED, CALCULATION
     """
     q = query.lower()
     
@@ -14,19 +14,26 @@ def classify_query_intent(query: str) -> str:
         "cmpdi", "cil", "coal", "mining", "production", "overburden", "stripping ratio",
         "geological", "seam", "tonnes", "borehole", "dataset", "document", "report",
         "page", "reference", "gevra", "nigahi", "wani", "lithology", "reserves", "thickness",
-        "ash content", "gcv", "drilling", "project", "mine", "q1", "2026"
+        "ash content", "gcv", "drilling", "project", "mine", "q1", "block c", "north karanpura"
     ]
     
-    calc_keywords = ['calculate', 'compute', 'sum', 'difference', 'multiply', 'divide', 'add']
+    calc_keywords = ['calculate', 'compute', 'sum', 'difference', 'multiply', 'divide', 'add', 'math', '%']
     
+    web_keywords = [
+        "latest", "news", "today", "yesterday", "recent", "current", "guidelines 2026", "2025", "2026",
+        "market price", "stock", "tender", "press release", "ministry announcement", "internet", "google"
+    ]
+
     general_keywords = [
         "python", "c++", "c program", "javascript", "api", "machine learning", "ai", "artificial intelligence",
         "deep learning", "recursion", "database", "sql", "explain", "what is the difference between", 
-        "rag", "what are", "who is", "how does", "capital of"
+        "rag", "what are", "who is", "how does", "capital of", "why is", "tell me about", "define",
+        "how to", "write a", "code", "summary of", "history of"
     ]
     
     has_calc = any(kw in q for kw in calc_keywords) or re.search(r'\d+\s*[\+\-\*\/]\s*\d+', q)
     has_cmpdi = any(re.search(rf'\b{kw}\b', q) for kw in cmpdi_keywords)
+    has_web = any(re.search(rf'\b{kw}\b', q) for kw in web_keywords)
     has_general = any(re.search(rf'\b{kw}\b', q) for kw in general_keywords)
     
     if has_calc:
@@ -34,6 +41,9 @@ def classify_query_intent(query: str) -> str:
             return "CALCULATION"
         return "GENERAL"
         
+    if has_web:
+        return "WEB"
+
     if has_cmpdi and has_general:
         return "MIXED"
         

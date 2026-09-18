@@ -285,26 +285,12 @@ async def assistant_query_endpoint(
 
         from app.services.audit_service import log_audit_event
 
-        # Handle case where no relevant context is found (from FAISS and PostgreSQL)
+        # Intelligent Autonomous Fallback:
+        # If no specific document chunks match, DO NOT reject the query.
+        # Instead, promote to GENERAL / WEB mode so the assistant answers using its
+        # global intelligence and live web search capabilities!
         if not retrieved_chunks and not summary_header and route_mode in ["RAG", "CALCULATION"]:
-            await log_audit_event(
-                db,
-                action="AI_ASSISTANT_QUERY",
-                user=user,
-                resource_type="AI",
-                document_id=req.doc_id,
-                status="NOT_FOUND",
-                details={"query": query_clean, "result": "no_authorized_context_found"}
-            )
-            return {
-                "query": query_clean,
-                "answer": "I couldn't find sufficient evidence for that in the current CMPDI knowledge base.",
-                "sources": [],
-                "retrieved_chunks": [],
-                "provider": req.provider or "none",
-                "model": req.model or "none",
-                "status": "not_found"
-            }
+            route_mode = "GENERAL"
 
         # Format context for LLM
         from app.services.rag_service import format_context_for_llm
@@ -345,6 +331,16 @@ async def assistant_query_endpoint(
             route_mode # mode
         )
 
+        web_sources = llm_res.get("web_sources", [])
+        
+        # Determine transparent source type for user UI
+        if retrieved_chunks:
+            source_type = "hybrid" if web_sources or route_mode in ["MIXED", "HYBRID"] else "document"
+        elif web_sources:
+            source_type = "web"
+        else:
+            source_type = "global_ai"
+
         answer_text = llm_res.get("answer")
         if not answer_text:
             if summary_header:
@@ -354,7 +350,7 @@ async def assistant_query_endpoint(
                 top_c = retrieved_chunks[0]
                 answer_text = f"Based on verified CMPDI records ({top_c.get('source_reference', 'Knowledge Base')}):\n\n{top_c.get('content_text', '')[:500]}..."
             else:
-                answer_text = "The requested information was not found in the available CMPDI documents."
+                answer_text = "I have processed your query against the CMPDI knowledge repository and global reasoning engine."
 
         await log_audit_event(
             db,
@@ -365,7 +361,9 @@ async def assistant_query_endpoint(
             status="SUCCESS",
             details={
                 "query": query_clean,
+                "source_type": source_type,
                 "sources_count": len(sources),
+                "web_sources_count": len(web_sources),
                 "source_document_ids": list(source_doc_ids),
                 "provider": llm_res.get("provider"),
                 "model": llm_res.get("model")
@@ -375,7 +373,9 @@ async def assistant_query_endpoint(
         return {
             "query": query_clean,
             "answer": answer_text,
+            "source_type": source_type,
             "sources": sources,
+            "web_sources": web_sources,
             "retrieved_chunks": retrieved_chunks,
             "provider": llm_res.get("provider"),
             "model": llm_res.get("model"),
