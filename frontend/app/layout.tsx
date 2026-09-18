@@ -23,7 +23,7 @@ const sansDisplay = Noto_Sans_Display({
 });
 
 export const metadata: Metadata = {
-  title: "CMPDI Document AI",
+  title: "KhaniGyan-AI",
   description: "AI-Assisted Geological, Mining & Production Reporting Platform",
 };
 

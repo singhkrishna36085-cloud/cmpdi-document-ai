@@ -77,7 +77,7 @@ export default function LoginPage() {
               </span>
             </h1>
             <p className="text-xs text-slate-400">
-              Central Mine Planning & Design Institute Limited (Coal India Subsidiary)
+              AI-Assisted Geological, Mining & Production Reporting Platform
             </p>
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function LoginPage() {
 
       {/* Footer */}
       <footer className="w-full border-t border-slate-800/60 bg-slate-950/80 py-4 px-6 text-center text-xs text-slate-500">
-        © 2026 CMPDI / Coal India Limited. All Rights Reserved. Authorized Personnel Only.
+        © 2026 KhaniGyan-AI. All Rights Reserved. Authorized Personnel Only.
       </footer>
     </div>
   );

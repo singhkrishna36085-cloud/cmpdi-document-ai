@@ -244,7 +244,7 @@ export function TopNavbar() {
                 </span>
               </div>
               <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase hidden xl:block">
-                Central Mine Planning &amp; Design Institute
+                KhaniGyan-AI Intelligence System
               </span>
             </div>
           </Link>
