@@ -23,10 +23,10 @@ def get_default_provider() -> str:
 def get_default_model() -> str:
     provider = get_default_provider()
     if provider == "groq":
-        return os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
+        return os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
     elif provider == "gemini":
         return os.getenv("LLM_MODEL", "gemini-1.5-flash")
-    return os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
+    return os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
 
 def get_default_api_key(provider_name: str) -> str:
     if provider_name == "groq":
@@ -166,48 +166,51 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    primary_model = model or "llama-3.3-70b-versatile"
-    payload = {
-        "model": primary_model,
-        "messages": [
-            {"role": "system", "content": sys_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        "temperature": 0.2
-    }
-    resp = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
-    if resp.status_code == 200:
-        data = resp.json()
-        answer = data["choices"][0]["message"]["content"].strip()
-        return {
-            "answer": answer,
-            "provider": "groq",
-            "model": primary_model,
-            "web_sources": [],
-            "status": "success"
+
+    # Build candidate model list with stable, universal models as immediate fallbacks
+    candidate_models = []
+    if model and model.strip():
+        candidate_models.append(model.strip())
+    for standard_model in ["llama-3.1-8b-instant", "llama3-8b-8192", "mixtral-8x7b-32768", "llama3-70b-8192"]:
+        if standard_model not in candidate_models:
+            candidate_models.append(standard_model)
+
+    last_error = ""
+    for candidate in candidate_models:
+        payload = {
+            "model": candidate,
+            "messages": [
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "temperature": 0.2
         }
-    elif resp.status_code in [400, 404] and primary_model != "llama-3.1-8b-instant":
-        # Fallback to llama-3.1-8b-instant if 70b model name is unavailable on specific key
-        fallback_model = "llama-3.1-8b-instant"
-        payload["model"] = fallback_model
-        fallback_resp = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
-        if fallback_resp.status_code == 200:
-            data = fallback_resp.json()
-            answer = data["choices"][0]["message"]["content"].strip()
-            return {
-                "answer": answer,
-                "provider": "groq",
-                "model": fallback_model,
-                "web_sources": [],
-                "status": "success"
-            }
+        try:
+            resp = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
+            if resp.status_code == 200:
+                data = resp.json()
+                answer = data["choices"][0]["message"]["content"].strip()
+                return {
+                    "answer": answer,
+                    "provider": "groq",
+                    "model": candidate,
+                    "web_sources": [],
+                    "status": "success"
+                }
+            else:
+                last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
+                logger.warning(f"Groq model '{candidate}' returned {resp.status_code} -> trying next available model...")
+        except requests.exceptions.Timeout:
+            last_error = f"Groq request for '{candidate}' timed out."
+        except Exception as exc:
+            last_error = f"Groq request error on '{candidate}': {str(exc)}"
 
     return {
         "answer": None,
         "provider": "groq",
-        "model": primary_model,
+        "model": candidate_models[0] if candidate_models else "llama-3.1-8b-instant",
         "status": "provider_error",
-        "error": f"Groq API HTTP {resp.status_code}: {resp.text}"
+        "error": last_error or "All Groq candidate models failed."
     }
 
 
