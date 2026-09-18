@@ -6,3 +6,8 @@ alembic
 python-dotenv
 python-multipart
 aiofiles
+bcrypt
+pyjwt
+requests
+pydantic
+
