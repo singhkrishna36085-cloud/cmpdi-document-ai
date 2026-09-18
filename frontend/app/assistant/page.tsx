@@ -25,7 +25,8 @@ import {
   ShieldAlert,
   Info,
   Layers,
-  HelpCircle
+  HelpCircle,
+  Globe
 } from "lucide-react";
 
 export interface SourceReference {
@@ -53,10 +54,17 @@ export interface RetrievedChunk {
   content: string;
 }
 
+export interface WebSource {
+  title: string;
+  url: string;
+}
+
 export interface AssistantQueryResponse {
   query: string;
   answer: string | null;
+  source_type?: "document" | "web" | "global_ai" | "hybrid" | string;
   sources: SourceReference[];
+  web_sources?: WebSource[];
   retrieved_chunks: RetrievedChunk[];
   provider: string;
   model: string;
@@ -69,7 +77,9 @@ export interface ChatMessage {
   sender: "user" | "assistant";
   content: string;
   timestamp: string;
+  source_type?: string;
   sources?: SourceReference[];
+  web_sources?: WebSource[];
   retrievedChunks?: RetrievedChunk[];
   provider?: string;
   model?: string;
@@ -79,9 +89,9 @@ export interface ChatMessage {
 
 const SAMPLE_PROMPTS = [
   "Which project produced the highest coal in Q1 2026?",
-  "Compare production and stripping ratio between Gevra Expansion and Nigahi.",
-  "What safety incidents or hazards occurred at Ukni?",
-  "List all projects with average coal seam thickness above 8 metres."
+  "What are the latest 2026 coal sector guidelines and news in India?",
+  "Explain how stripping ratio and overburden are calculated with a practical example.",
+  "Compare production and seam thickness between Gevra and Nigahi."
 ];
 
 function AssistantContent() {
@@ -203,7 +213,9 @@ function AssistantContent() {
         sender: "assistant",
         content: answerText,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        source_type: data.source_type,
         sources: data.sources || [],
+        web_sources: data.web_sources || [],
         retrievedChunks: data.retrieved_chunks || [],
         provider: data.provider,
         model: data.model,
@@ -250,13 +262,13 @@ function AssistantContent() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
         <PageHeader 
           title="AI Document Assistant" 
-          description="Ask natural-language questions across official CMPDI reports with evidence-first grounding and PostgreSQL traceability."
+          description="Ask questions across official CMPDI reports, live internet search, or global engineering intelligence."
         />
 
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-400 text-xs font-semibold border border-teal-500/20">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Grounded RAG Mode</span>
+            <span>Hybrid Autonomous AI</span>
           </div>
 
           <div className="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-800">
@@ -281,7 +293,7 @@ function AssistantContent() {
       <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-2 shadow-sm">
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-teal-400 shrink-0" />
-          <span>Answers are generated strictly from authorized CMPDI/CIL document evidence. Unsupported claims are rejected.</span>
+          <span>Multi-source reasoning enabled: Official CMPDI reports + Live Web Grounding + Global Engineering Intelligence.</span>
         </div>
         {paramDocId && (
           <span className="font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
@@ -302,9 +314,9 @@ function AssistantContent() {
               </div>
 
               <div>
-                <h3 className="text-lg font-bold text-slate-100">CMPDI Intelligent AI Assistant</h3>
+                <h3 className="text-lg font-bold text-slate-100">CMPDI Hybrid AI Assistant</h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-                  Type a question below to perform dense FAISS vector context retrieval and generate evidence-first answers grounded in PostgreSQL document chunks.
+                  Ask about uploaded geological/mining PDFs, search the live web for recent guidelines and news, or ask any technical & scientific calculation.
                 </p>
               </div>
 
@@ -331,6 +343,7 @@ function AssistantContent() {
               const isUser = msg.sender === "user";
               const isExpanded = !!expandedSources[msg.id];
               const hasSources = (msg.sources && msg.sources.length > 0);
+              const hasWebSources = (msg.web_sources && msg.web_sources.length > 0);
 
               return (
                 <div
@@ -354,16 +367,36 @@ function AssistantContent() {
                     }`}
                   >
                     {/* Assistant Status Badges */}
-                    {!isUser && msg.status && (
+                    {!isUser && (
                       <div className="mb-3 flex flex-wrap items-center gap-2">
-                        {msg.status === "success" && (
+                        {msg.source_type === "document" && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                            <FileText className="w-3 h-3" /> Verified Document Evidence
+                          </span>
+                        )}
+                        {msg.source_type === "web" && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">
+                            <Globe className="w-3 h-3" /> Live Web Grounding
+                          </span>
+                        )}
+                        {msg.source_type === "hybrid" && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 font-mono">
+                            <Sparkles className="w-3 h-3" /> Hybrid Multi-Source Intelligence
+                          </span>
+                        )}
+                        {msg.source_type === "global_ai" && (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
+                            <Sparkles className="w-3 h-3" /> AI Global Knowledge Engine
+                          </span>
+                        )}
+                        {(!msg.source_type && msg.status === "success") && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                            <CheckCircle className="w-3 h-3" /> Grounded Evidence Answer
+                            <CheckCircle className="w-3 h-3" /> Answer Generated
                           </span>
                         )}
                         {msg.status === "not_found" && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700 font-mono">
-                            <HelpCircle className="w-3 h-3" /> Insufficient Context
+                            <HelpCircle className="w-3 h-3" /> General Knowledge Response
                           </span>
                         )}
                         {(msg.status === "server_error" || msg.status === "network_error") && (
@@ -378,6 +411,30 @@ function AssistantContent() {
                     <div className="whitespace-pre-wrap font-sans text-slate-100 leading-relaxed">
                       {msg.content}
                     </div>
+
+                    {/* Web Search Sources Section */}
+                    {!isUser && hasWebSources && (
+                      <div className="mt-4 pt-3.5 border-t border-slate-800">
+                        <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 mb-2 font-mono">
+                          <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Live Web Grounding Sources ({msg.web_sources?.length})</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                          {msg.web_sources?.map((ws, wIdx) => (
+                            <a
+                              key={wIdx}
+                              href={ws.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/40 hover:bg-slate-900 transition-all text-xs text-slate-300 group font-mono"
+                            >
+                              <span className="truncate group-hover:text-cyan-300">{ws.title || ws.url}</span>
+                              <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 shrink-0" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Backend Error Alert Banner */}
                     {!isUser && msg.error && (
