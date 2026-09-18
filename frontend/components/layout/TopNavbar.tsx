@@ -32,8 +32,137 @@ import {
   Menu,
   X,
   Radio,
-  FileSearch
+  FileSearch,
+  AlertTriangle,
+  AlertCircle
 } from "lucide-react";
+import { fetchWithAuth } from "@/lib/api";
+
+export interface SystemNotification {
+  id: string | number;
+  title: string;
+  description: string;
+  timeAgo: string;
+  timestamp: string;
+  type: "success" | "warning" | "info" | "error";
+  href: string;
+  icon: any;
+  unread: boolean;
+}
+
+function formatTimeAgo(isoString?: string): string {
+  if (!isoString) return "just now";
+  try {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 0 || isNaN(diffMs)) return "just now";
+    const diffSec = Math.floor(diffMs / 1000);
+    if (diffSec < 60) return `${Math.max(1, diffSec)}s ago`;
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  } catch {
+    return "recent";
+  }
+}
+
+function mapAuditLogToNotification(log: any, readIds: Set<string | number>): SystemNotification {
+  const isUnread = !readIds.has(log.id);
+  const action = (log.action || "").toUpperCase();
+  const isError = log.status === "FAILURE" || log.status === "ERROR";
+
+  let title = "System Activity";
+  let description = `Operation ${log.action || "performed"} by ${log.username || "System"}`;
+  let type: "success" | "warning" | "info" | "error" = isError ? "error" : "info";
+  let href = "/audit";
+  let icon = isError ? AlertTriangle : Activity;
+
+  if (action.includes("UPLOAD") || action.includes("INGEST") || action.includes("DOCUMENT")) {
+    title = isError ? "Document Ingestion Alert" : "Document Ingested";
+    description = log.details?.filename
+      ? `File "${log.details.filename}" processed into vault.`
+      : `${log.username || "User"} uploaded document #${log.document_id || log.resource_id || "new"}`;
+    type = isError ? "error" : "success";
+    href = "/documents";
+    icon = isError ? AlertCircle : Files;
+  } else if (action.includes("VALIDAT") || action.includes("CONFLICT") || action.includes("ANOMALY")) {
+    title = "Validation Engine Alert";
+    description = log.details?.message || `${log.username || "System"} executed compliance rules.`;
+    type = isError ? "error" : "warning";
+    href = "/validation";
+    icon = CheckCircle;
+  } else if (action.includes("REPORT") || action.includes("EXPORT")) {
+    title = "Report Generated";
+    description = `${log.username || "Analyst"} compiled report #${log.report_id || log.resource_id || ""}`;
+    type = "info";
+    href = "/reports";
+    icon = FileText;
+  } else if (action.includes("QUERY") || action.includes("CHAT") || action.includes("ASSISTANT") || action.includes("RAG") || action.includes("SEARCH")) {
+    title = "AI Neural Query";
+    description = `Grounded RAG retrieval executed by ${log.username || "User"}`;
+    type = "info";
+    href = "/assistant";
+    icon = MessageSquare;
+  } else if (action.includes("LOGIN") || action.includes("AUTH") || action.includes("SECURITY")) {
+    title = isError ? "Security Notice" : "Security Session";
+    description = `${log.username || "User"} session authenticated.`;
+    type = isError ? "error" : "success";
+    href = "/audit";
+    icon = ShieldCheck;
+  }
+
+  return {
+    id: log.id,
+    title,
+    description,
+    timeAgo: formatTimeAgo(log.timestamp),
+    timestamp: log.timestamp || new Date().toISOString(),
+    type,
+    href,
+    icon,
+    unread: isUnread,
+  };
+}
+
+const DEFAULT_NOTIFICATIONS: SystemNotification[] = [
+  {
+    id: "system-ready",
+    title: "System Live & Connected",
+    description: "KhaniGyan AI Document Intelligence platform is synchronized.",
+    timeAgo: "Just now",
+    timestamp: new Date().toISOString(),
+    type: "success",
+    href: "/dashboard",
+    icon: Sparkles,
+    unread: false
+  },
+  {
+    id: "faiss-active",
+    title: "Vector Pipeline Ready",
+    description: "FAISS multi-tenant neural embedding vault initialized.",
+    timeAgo: "1m ago",
+    timestamp: new Date().toISOString(),
+    type: "info",
+    href: "/knowledge-base",
+    icon: Database,
+    unread: false
+  },
+  {
+    id: "validation-online",
+    title: "Rule Engine Active",
+    description: "Automated standard variance & conflict detectors running.",
+    timeAgo: "3m ago",
+    timestamp: new Date().toISOString(),
+    type: "info",
+    href: "/validation",
+    icon: CheckCircle,
+    unread: false
+  }
+];
 
 interface NavItem {
   name: string;
@@ -66,37 +195,36 @@ const navigationGroups: NavGroup[] = [
     isStandalone: true,
   },
   {
-    name: "Document Intelligence",
-    icon: Database,
+    name: "Repository",
+    icon: Files,
     items: [
-      { name: "Repository", href: "/documents", icon: Files, desc: "Exploration logs, boreholes & CSVs" },
-      { name: "Semantic Search", href: "/search", icon: SearchIcon, desc: "Vector similarity & hybrid queries" },
-      { name: "Knowledge Base", href: "/knowledge-base", icon: Database, desc: "Entity graph & mining ontologies" },
-      { name: "Document Viewer", href: "/documents/viewer", icon: Eye, desc: "Interactive PDF, table & core viewer" },
+      { name: "Documents Vault", href: "/documents", icon: Files, desc: "Centralized archive & multi-tenant storage" },
+      { name: "Upload Documents", href: "/upload", icon: Upload, desc: "Ingest PDF, DOCX, XLSX up to 50MB" },
+      { name: "Document Viewer", href: "/documents/viewer", icon: Eye, desc: "Side-by-side OCR & metadata viewer" },
+      { name: "Processing Pipeline", href: "/processing", icon: Cpu, desc: "8-stage OCR, chunking & FAISS index" },
     ]
   },
   {
-    name: "AI & Analytics",
-    icon: Cpu,
+    name: "Analytics",
+    icon: GitCompare,
     items: [
-      { name: "AI Assistant", href: "/assistant", icon: MessageSquare, desc: "Evidence-grounded conversational RAG", badge: "AI Core" },
-      { name: "Cross-Document", href: "/cross-document", icon: GitCompare, desc: "Multi-mine comparative analysis", badge: "New" },
-      { name: "Analytical Reports", href: "/reports", icon: FileText, desc: "Automated executive dossiers" },
-      { name: "Topic Modeling", href: "/topics", icon: Layers, desc: "Unsupervised geological clustering" },
+      { name: "Cross-Document Matrix", href: "/cross-document", icon: GitCompare, desc: "Side-by-side production & thickness diffs" },
+      { name: "Validation & Conflicts", href: "/validation", icon: CheckCircle, desc: "Automated rule validation & anomaly alerts" },
+      { name: "Generated Reports", href: "/reports", icon: FileText, desc: "Compilation of structured reports & exports" },
+      { name: "Topics & NLP", href: "/topics", icon: Layers, desc: "TF-IDF topic modeling & keyword analysis" },
     ]
   },
   {
-    name: "Governance & Operations",
-    icon: ShieldCheck,
+    name: "Search & AI",
+    icon: SearchIcon,
     items: [
-      { name: "Validation Center", href: "/validation", icon: CheckCircle, desc: "Rule engine & data integrity checks" },
-      { name: "OCR & Processing", href: "/processing", icon: Cpu, desc: "Real-time document ingestion pipeline" },
-      { name: "Audit Trail", href: "/audit", icon: History, desc: "Cryptographic tamper-evident activity log" },
-      { name: "Upload Pipeline", href: "/upload", icon: Upload, desc: "Secure multi-format file ingestion" },
+      { name: "Semantic Search", href: "/search", icon: SearchIcon, desc: "Dense FAISS vector search across reports" },
+      { name: "Knowledge Base", href: "/knowledge-base", icon: Database, desc: "Embedding index stats & manual sync" },
+      { name: "AI Assistant", href: "/assistant", icon: MessageSquare, desc: "Grounded conversational mining assistant", badge: "Live RAG" },
     ]
   },
   {
-    name: "Gov Resources",
+    name: "Government Resources",
     icon: Cloud,
     items: [
       { name: "Ministry of Coal", href: "/government-resources", icon: Cloud, desc: "Official portals & directives" },
@@ -118,12 +246,48 @@ export function TopNavbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Live Real-Time Notifications State
+  const [notifications, setNotifications] = useState<SystemNotification[]>(DEFAULT_NOTIFICATIONS);
+  const [readNotifIds, setReadNotifIds] = useState<Set<string | number>>(new Set());
+  const [unreadCount, setUnreadCount] = useState<number>(0);
   
   const navRef = useRef<HTMLElement>(null);
 
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const userMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const notifTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const fetchLiveNotifications = async () => {
+    try {
+      const res = await fetchWithAuth("/api/audit?page=1&page_size=6");
+      if (res.ok) {
+        const data = await res.json();
+        const logs = data.items || [];
+        if (logs.length > 0) {
+          const mapped = logs.map((log: any) => mapAuditLogToNotification(log, readNotifIds));
+          setNotifications(mapped);
+          const unread = mapped.filter((n: SystemNotification) => n.unread).length;
+          setUnreadCount(unread);
+        }
+      }
+    } catch {
+      // Keep default telemetry fallback
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveNotifications();
+    const interval = setInterval(fetchLiveNotifications, 12000); // 12-second live polling
+    return () => clearInterval(interval);
+  }, [readNotifIds]);
+
+  const markAllAsRead = () => {
+    const allIds = new Set<string | number>(notifications.map(n => n.id));
+    setReadNotifIds(allIds);
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+    setUnreadCount(0);
+  };
 
   const handleDropdownEnter = (groupName: string) => {
     if (dropdownTimeoutRef.current) {
@@ -424,12 +588,28 @@ export function TopNavbar() {
             onMouseLeave={handleNotifLeave}
           >
             <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-slate-400 hover:text-cyan-300 rounded-lg bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] hover:border-cyan-500/30 transition-all focus:outline-none"
-              title="System Alerts & Notifications"
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                if (!showNotifications && unreadCount > 0) {
+                  markAllAsRead();
+                }
+              }}
+              className={`relative p-2 rounded-lg border transition-all focus:outline-none cursor-pointer ${
+                showNotifications || unreadCount > 0
+                  ? "text-cyan-300 bg-cyan-950/40 border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                  : "text-slate-400 hover:text-cyan-300 bg-white/[0.02] hover:bg-white/[0.06] border-white/[0.08] hover:border-cyan-500/30"
+              }`}
+              title="Real-Time System Alerts & Telemetry"
+              aria-label="System Alerts"
             >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
+              <Bell className={`w-4 h-4 ${unreadCount > 0 ? "text-cyan-300 animate-[bounce_1.5s_infinite]" : ""}`} />
+              {unreadCount > 0 ? (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full bg-gradient-to-r from-cyan-500 to-teal-400 text-[9px] font-mono font-bold text-slate-950 shadow-[0_0_10px_#06b6d4]">
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </span>
+              ) : (
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#10b981]" />
+              )}
             </button>
 
             {/* Notifications Popover with continuous hover bridge */}
@@ -445,59 +625,99 @@ export function TopNavbar() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 4, scale: 0.97 }}
                     transition={{ duration: 0.16, ease: "easeOut" }}
-                    className="w-80 rounded-xl bg-[#0d1017]/95 backdrop-blur-2xl border border-white/[0.1] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
+                    className="w-80 sm:w-96 rounded-2xl bg-[#0d1017]/98 backdrop-blur-2xl border border-white/[0.12] p-3.5 shadow-[0_25px_60px_rgba(0,0,0,0.9)] overflow-hidden"
                   >
-                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.06]">
+                    {/* Header accent line */}
+                    <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+
+                    <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/[0.08]">
                       <div className="flex items-center gap-2">
-                        <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                        <div className="flex h-2 w-2 relative">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </div>
                         <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                          Operational Telemetry
+                          Live System Alerts
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30">
-                        Live
-                      </span>
-                    </div>
 
-                    <div className="flex flex-col gap-2">
-                      <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-cyan-500/20 transition-all">
-                        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
-                          <span>Q1 2026 Operations Ingested</span>
-                          <span className="text-[9px] font-mono text-slate-500">2m ago</span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          7 mine records parsed into PostgreSQL with full RBAC isolation.
-                        </p>
-                      </div>
-
-                      <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-emerald-500/20 transition-all">
-                        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
-                          <span className="text-emerald-300">Safety Incident Threshold OK</span>
-                          <span className="text-[9px] font-mono text-slate-500">14m ago</span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          Zero lost-time injuries verified across Gevra and Piparwar sectors.
-                        </p>
-                      </div>
-
-                      <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-cyan-500/20 transition-all">
-                        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
-                          <span>FAISS Vector Index Synchronized</span>
-                          <span className="text-[9px] font-mono text-slate-500">1h ago</span>
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          153 semantic text chunks indexed with cosine metric.
-                        </p>
+                      <div className="flex items-center gap-2">
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="text-[10px] font-mono text-cyan-400 hover:text-cyan-300 hover:underline cursor-pointer"
+                          >
+                            Mark all read
+                          </button>
+                        )}
+                        <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                          Real-Time
+                        </span>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-white/[0.06] text-center">
+                    <div className="flex flex-col gap-2 max-h-[340px] overflow-y-auto pr-1">
+                      {notifications.map((notif) => {
+                        const Icon = notif.icon || Activity;
+                        return (
+                          <Link
+                            key={notif.id}
+                            href={notif.href}
+                            onClick={() => setShowNotifications(false)}
+                            className={`p-2.5 rounded-xl border transition-all text-left group block ${
+                              notif.unread
+                                ? "bg-cyan-950/30 border-cyan-500/30 hover:border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.1)]"
+                                : "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05] hover:border-cyan-500/20"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                                notif.type === "success"
+                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                  : notif.type === "warning"
+                                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                  : notif.type === "error"
+                                  ? "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                                  : "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                              }`}>
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-1">
+                                  <h4 className="text-xs font-semibold text-slate-100 group-hover:text-cyan-300 transition-colors truncate">
+                                    {notif.title}
+                                  </h4>
+                                  <span className="text-[9px] font-mono text-slate-500 shrink-0">
+                                    {notif.timeAgo}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-400 line-clamp-2 mt-0.5 leading-relaxed group-hover:text-slate-300">
+                                  {notif.description}
+                                </p>
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-3 pt-2.5 border-t border-white/[0.08] flex items-center justify-between text-[11px] font-mono">
                       <Link
                         href="/audit"
                         onClick={() => setShowNotifications(false)}
-                        className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors flex items-center justify-center gap-1"
+                        className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 font-semibold"
                       >
-                        View Complete Cryptographic Audit Log &rarr;
+                        <span>Audit Log Chain</span>
+                        <span>&rarr;</span>
+                      </Link>
+
+                      <Link
+                        href="/validation"
+                        onClick={() => setShowNotifications(false)}
+                        className="text-slate-400 hover:text-white transition-colors"
+                      >
+                        Validation Center
                       </Link>
                     </div>
                   </motion.div>
