@@ -62,7 +62,12 @@ async def ensure_audit_schema(db: AsyncSession):
         "ALTER TABLE validation_results ADD COLUMN IF NOT EXISTS review_note TEXT;",
         "CREATE INDEX IF NOT EXISTS idx_val_results_status ON validation_results (status);",
         "CREATE INDEX IF NOT EXISTS idx_val_results_severity ON validation_results (severity);",
-        "CREATE INDEX IF NOT EXISTS idx_val_results_rule_type ON validation_results (rule_type);"
+        "CREATE INDEX IF NOT EXISTS idx_val_results_rule_type ON validation_results (rule_type);",
+        "ALTER TABLE documents ADD COLUMN IF NOT EXISTS is_confidential BOOLEAN DEFAULT FALSE;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR DEFAULT 'NORMAL_USER';",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR;",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"
     ]
     for stmt in statements:
         try:

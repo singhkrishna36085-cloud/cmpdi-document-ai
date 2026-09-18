@@ -1,37 +1,25 @@
 """
-Database Migration Script for STEP 13.1 & 13.2 — User Model Schema Update
-Removes NOT NULL constraint from legacy 'hashed_password' column to allow 'password_hash' usage cleanly.
+Database Migration Script — User Model Schema Update
+Removes legacy constraints using unified app.database.
 """
 
-import sys
-import psycopg2
+import asyncio
+from sqlalchemy import text
+from app.database import AsyncSessionLocal
 
-DB_URI = "postgresql://postgres:Singh@localhost:5432/cmpdi_document_ai"
 
-
-def migrate_users_table():
-    print("Connecting to PostgreSQL database...")
-    conn = psycopg2.connect(DB_URI)
-    conn.autocommit = True
-    cur = conn.cursor()
-
-    try:
-        # 1. Drop NOT NULL on legacy hashed_password column if present
-        print("Dropping NOT NULL constraint on legacy 'hashed_password' column...")
-        cur.execute("ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL;")
-        
-        # 2. Make password_hash NOT NULL if present
-        cur.execute("ALTER TABLE users ALTER COLUMN password_hash SET NOT NULL;")
-        
-        print("[SUCCESS] Legacy constraint update completed successfully!")
-
-    except Exception as exc:
-        print(f"[ERROR] Migration failed: {exc}")
-        sys.exit(1)
-    finally:
-        cur.close()
-        conn.close()
+async def migrate_users_table():
+    print("Connecting to PostgreSQL database via unified AsyncSessionLocal...")
+    async with AsyncSessionLocal() as session:
+        try:
+            await session.execute(text("ALTER TABLE users ALTER COLUMN hashed_password DROP NOT NULL;"))
+            await session.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR;"))
+            await session.commit()
+            print("[SUCCESS] Legacy constraint update completed successfully!")
+        except Exception as exc:
+            await session.rollback()
+            print(f"[ERROR] Migration failed: {exc}")
 
 
 if __name__ == "__main__":
-    migrate_users_table()
+    asyncio.run(migrate_users_table())

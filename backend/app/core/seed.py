@@ -1,4 +1,4 @@
-﻿"""
+"""
 Database Seeding Module
 Ensures essential system administrative & standard user accounts exist on initial deployment.
 """

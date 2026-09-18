@@ -18,7 +18,7 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-from app.database import Base, DATABASE_URL
+from app.database import Base, DATABASE_URL, engine
 import app.models  # Import models to register them with Base.metadata
 
 target_metadata = Base.metadata
@@ -62,22 +62,9 @@ def do_run_migrations(connection: Connection) -> None:
 
 
 async def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
-
-    async with connectable.connect() as connection:
+    """Run migrations in 'online' mode using the unified app engine."""
+    async with engine.connect() as connection:
         await connection.run_sync(do_run_migrations)
-
-    await connectable.dispose()
 
 
 if context.is_offline_mode():
