@@ -63,6 +63,8 @@ default_origins = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "https://sih-26023-flame.vercel.app",
+    "https://khanijgyan-ai.vercel.app",
+    "https://khanijgyan.ai",
 ]
 for origin in default_origins:
     if origin not in explicit_origins:
@@ -71,7 +73,7 @@ for origin in default_origins:
 app.add_middleware(
     CORSMiddleware,
     allow_origins=explicit_origins,
-    allow_origin_regex=r"^https?://([a-zA-Z0-9_\-]+\.)*(vercel\.app|onrender\.com|railway\.app|loca\.lt)(:[0-9]+)?$|^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
+    allow_origin_regex=r"^https?://([a-zA-Z0-9_\-]+\.)*(vercel\.app|onrender\.com|railway\.app|loca\.lt|khanijgyan\.ai)(:[0-9]+)?$|^http://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
