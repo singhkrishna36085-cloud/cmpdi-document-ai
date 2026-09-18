@@ -105,7 +105,7 @@ export default function Dashboard() {
         <div className="absolute right-0 top-0 w-64 h-full bg-gradient-to-l from-blue-50 to-transparent pointer-events-none" />
         
         <div className="relative z-10">
-          <h1 className="text-2xl font-bold text-slate-900 mb-1">CMPDI Document Intelligence Core</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Khani Gyan AI Intelligence Core</h1>
           <p className="text-sm text-slate-500 max-w-2xl">
             AI-powered document processing, knowledge discovery and evidence-backed analysis for the Central Mine Planning & Design Institute.
           </p>
@@ -247,11 +247,11 @@ export default function Dashboard() {
             {/* ── 2. MIDDLE ROW: ASK AI & RECENT ACTIVITY ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* Ask CMPDI AI */}
+              {/* Ask Khani Gyan AI */}
               <div className="bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col h-full overflow-hidden lg:col-span-1">
                 <div className="border-b border-slate-100 px-5 py-4 bg-slate-50 flex items-center gap-2">
                   <MessageSquare className="h-5 w-5 text-blue-600" />
-                  <h2 className="font-semibold text-slate-800">Ask CMPDI AI</h2>
+                  <h2 className="font-semibold text-slate-800">Ask Khani Gyan AI</h2>
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-center">
                   <p className="text-sm text-slate-600 mb-6">

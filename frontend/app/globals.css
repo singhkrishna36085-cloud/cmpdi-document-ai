@@ -1,223 +1,91 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-rajdhani), ui-monospace, SFMono-Regular, monospace;
-  --color-obsidian-900: #090A0F;
-  --color-obsidian-800: #12141D;
-  --color-obsidian-700: #1B1E2B;
+  --font-display: var(--font-sans-display), "Google Sans Display", "Google Sans", "Product Sans", "SF Pro Display", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-sans-display), "Google Sans Display", "Google Sans", "Product Sans", "SF Pro Display", "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
 }
 
 @layer base {
   :root {
-    --background: #090A0F;
+    --background: #030303;
     --foreground: #f8fafc;
   }
 
-  body {
-    background-color: var(--color-obsidian-900);
-    color: var(--color-foreground);
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+    background-color: #030303;
+    color: #f8fafc;
     font-family: var(--font-sans);
     overflow-x: hidden;
-    selection-background-color: #06b6d4;
-    selection-color: #ffffff;
-    
-    /* Subtle Topographical/LiDAR Grid Pattern */
-    background-image: 
-      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 40px 40px;
-    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
-/* Base Headings mapped to Rajdhani */
-h1, h2, h3, h4, h5, h6, .font-heading {
-  font-family: var(--font-mono);
-  letter-spacing: 0.02em;
+/* Modern Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-sans);
+  letter-spacing: -0.025em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Engineering-Grade Glassmorphism & UI Panels */
+/* Glassmorphism Panels */
 .glass-panel {
-  background: rgba(18, 20, 29, 0.6);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-}
-
-.data-extraction-panel {
-  background: linear-gradient(145deg, rgba(18, 20, 29, 0.8), rgba(9, 10, 15, 0.95));
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-top: 1px solid rgba(16, 185, 129, 0.5); /* Glowing top laser scan line */
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.8);
-  /* Chamfered corners effect */
-  clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
-  position: relative;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.03);
 }
 
-.data-extraction-panel:hover {
-  border-top: 1px solid rgba(6, 182, 212, 0.8);
-  box-shadow: 0 15px 50px -15px rgba(6, 182, 212, 0.2);
-  transform: translateY(-2px);
-}
-
-.glass-panel-interactive {
-  background: rgba(18, 20, 29, 0.6);
+.glass-panel-dark {
+  background: rgba(10, 15, 29, 0.6);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
 }
 
-.glass-panel-interactive:hover {
-  background: rgba(27, 30, 43, 0.7);
-  border-color: rgba(6, 182, 212, 0.3);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -10px rgba(6, 182, 212, 0.2);
+/* Soft 3D Floats */
+@keyframes float-soft {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
 }
 
-.glass-card-3d {
-  transform-style: preserve-3d;
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+.animate-float-soft {
+  animation: float-soft 5s ease-in-out infinite;
 }
 
-.glass-card-3d:hover {
-  transform: translateY(-6px) rotateX(2deg) rotateY(-2deg);
-  box-shadow: 0 20px 50px -12px rgba(59, 130, 246, 0.3);
-}
-
-.text-gradient-cyan-blue {
-  background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 50%, #8b5cf6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.text-gradient-emerald {
-  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #06b6d4 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.luminous-border-cyan {
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.1), 0 0 25px rgba(6, 182, 212, 0.15);
-}
-
-/* 3D Floating Keyframe Animations */
-@keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(1deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-/* Data flow animated connection lines */
-@keyframes flow-line {
-  0% { stroke-dashoffset: 20; }
-  100% { stroke-dashoffset: 0; }
-}
-@keyframes flow-line-reverse {
-  0% { stroke-dashoffset: 0; }
-  100% { stroke-dashoffset: 20; }
-}
-.animate-flow-line {
-  animation: flow-line 1s linear infinite;
-}
-.animate-flow-line-reverse {
-  animation: flow-line-reverse 1s linear infinite;
-}
-
-@keyframes float-slow {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-12px) rotate(1.5deg);
-  }
-}
-
-@keyframes float-reverse {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(10px) rotate(-1.5deg);
-  }
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: scale(1.08);
-  }
-}
-
-@keyframes orbit-rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-float-slow {
-  animation: float-slow 6s ease-in-out infinite;
-}
-
-.animate-float-reverse {
-  animation: float-reverse 7s ease-in-out infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 4s ease-in-out infinite;
-}
-
-.animate-orbit-rotate {
-  animation: orbit-rotate 25s linear infinite;
-}
-
-/* Custom Scrollbar for 3D Dark Mode */
+/* Custom Clean Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #030712;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 9999px;
-  border: 2px solid #030712;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
+  background: rgba(148, 163, 184, 0.6);
 }
 
-/* Reduced Motion Respect */
+/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
-  .animate-float-slow,
-  .animate-float-reverse,
-  .animate-pulse-glow,
-  .animate-orbit-rotate {
+  .animate-float-soft {
     animation: none !important;
-  }
-  .glass-card-3d:hover {
-    transform: none !important;
   }
 }

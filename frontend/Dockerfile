@@ -1,5 +1,5 @@
 # ==========================================
-# CMPDI / CIL Document AI Frontend Dockerfile
+# CMPDI / CIL Khani Gyan AI Frontend Dockerfile
 # ==========================================
 
 FROM node:20-alpine AS builder

@@ -115,6 +115,61 @@ export function TopNavbar() {
   
   const navRef = useRef<HTMLElement>(null);
 
+  const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const userMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const notifTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleDropdownEnter = (groupName: string) => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+      dropdownTimeoutRef.current = null;
+    }
+    setActiveDropdown(groupName);
+  };
+
+  const handleDropdownLeave = () => {
+    if (dropdownTimeoutRef.current) {
+      clearTimeout(dropdownTimeoutRef.current);
+    }
+    dropdownTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 180);
+  };
+
+  const handleUserMenuEnter = () => {
+    if (userMenuTimeoutRef.current) {
+      clearTimeout(userMenuTimeoutRef.current);
+      userMenuTimeoutRef.current = null;
+    }
+    setShowUserMenu(true);
+  };
+
+  const handleUserMenuLeave = () => {
+    if (userMenuTimeoutRef.current) {
+      clearTimeout(userMenuTimeoutRef.current);
+    }
+    userMenuTimeoutRef.current = setTimeout(() => {
+      setShowUserMenu(false);
+    }, 180);
+  };
+
+  const handleNotifEnter = () => {
+    if (notifTimeoutRef.current) {
+      clearTimeout(notifTimeoutRef.current);
+      notifTimeoutRef.current = null;
+    }
+    setShowNotifications(true);
+  };
+
+  const handleNotifLeave = () => {
+    if (notifTimeoutRef.current) {
+      clearTimeout(notifTimeoutRef.current);
+    }
+    notifTimeoutRef.current = setTimeout(() => {
+      setShowNotifications(false);
+    }, 180);
+  };
+
   // Close dropdowns on route change or click outside
   useEffect(() => {
     setActiveDropdown(null);
@@ -122,6 +177,14 @@ export function TopNavbar() {
     setShowNotifications(false);
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    return () => {
+      if (dropdownTimeoutRef.current) clearTimeout(dropdownTimeoutRef.current);
+      if (userMenuTimeoutRef.current) clearTimeout(userMenuTimeoutRef.current);
+      if (notifTimeoutRef.current) clearTimeout(notifTimeoutRef.current);
+    };
+  }, []);
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -139,7 +202,7 @@ export function TopNavbar() {
   return (
     <header 
       ref={navRef}
-      className="fixed top-0 left-0 w-full z-50 h-16 bg-[#090A0F]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.6)] transition-all"
+      className="fixed top-0 left-0 w-full z-50 h-[68px] bg-[#090A0F]/85 backdrop-blur-xl border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.6)] transition-all"
     >
       {/* Laser highlight top accent line */}
       <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent pointer-events-none" />
@@ -153,11 +216,11 @@ export function TopNavbar() {
             className="flex items-center gap-3 group focus:outline-none"
           >
             {/* Geometric Mineral Crest */}
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-obsidian-700 via-obsidian-800 to-obsidian-900 border border-cyan-500/30 group-hover:border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all duration-300">
+            <div className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-obsidian-700 via-obsidian-800 to-obsidian-900 border border-cyan-500/30 group-hover:border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all duration-300">
               {/* Inner glowing pulse */}
               <div className="absolute inset-0 rounded-lg bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative font-mono font-bold text-sm bg-gradient-to-br from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
-                C
+              <div className="relative font-mono font-bold text-base bg-gradient-to-br from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+                K
               </div>
               {/* Tiny corner tech accents */}
               <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-cyan-400" />
@@ -167,15 +230,15 @@ export function TopNavbar() {
             {/* Brand Title */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-sm font-bold tracking-wider text-white uppercase group-hover:text-cyan-200 transition-colors">
-                  CMPDI
+                <span className="font-mono text-base font-bold tracking-wider text-white uppercase group-hover:text-cyan-200 transition-colors">
+                  Khani Gyan
                 </span>
-                <span className="text-[9px] font-mono tracking-widest px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 uppercase">
-                  Doc AI
+                <span className="text-[10px] font-mono tracking-widest px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 uppercase">
+                  AI
                 </span>
               </div>
-              <span className="text-[9px] text-slate-400 font-mono tracking-wider uppercase hidden xl:block">
-                Central Mine Planning & Design Institute
+              <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase hidden xl:block">
+                Central Mine Planning &amp; Design Institute
               </span>
             </div>
           </Link>
@@ -191,7 +254,7 @@ export function TopNavbar() {
         </div>
 
         {/* Center: Desktop Navigation Groups */}
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 justify-center flex-1">
+        <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2 justify-center flex-1">
           {navigationGroups.map((group) => {
             const groupIsActive = isGroupActive(group);
 
@@ -201,13 +264,13 @@ export function TopNavbar() {
                 <Link
                   key={group.name}
                   href={group.href}
-                  className={`relative flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                     active
                       ? "text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
                       : "text-slate-300 hover:text-white hover:bg-white/[0.04] border border-transparent hover:border-white/[0.06]"
                   }`}
                 >
-                  <group.icon className={`w-3.5 h-3.5 ${active ? "text-cyan-400" : "text-slate-400"}`} />
+                  <group.icon className={`w-4 h-4 ${active ? "text-cyan-400" : "text-slate-400"}`} />
                   <span>{group.name}</span>
                   {active && (
                     <motion.div
@@ -226,22 +289,22 @@ export function TopNavbar() {
               <div
                 key={group.name}
                 className="relative"
-                onMouseEnter={() => setActiveDropdown(group.name)}
-                onMouseLeave={() => setActiveDropdown(null)}
+                onMouseEnter={() => handleDropdownEnter(group.name)}
+                onMouseLeave={handleDropdownLeave}
               >
                 <button
                   onClick={() => setActiveDropdown(isOpen ? null : group.name)}
-                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
                     isOpen || groupIsActive
                       ? "text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
                       : "text-slate-300 hover:text-white hover:bg-white/[0.04] border border-transparent hover:border-white/[0.06]"
                   }`}
                 >
                   {group.icon && (
-                    <group.icon className={`w-3.5 h-3.5 ${groupIsActive ? "text-cyan-400" : "text-slate-400"}`} />
+                    <group.icon className={`w-4 h-4 ${groupIsActive ? "text-cyan-400" : "text-slate-400"}`} />
                   )}
                   <span>{group.name}</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 opacity-60 ${isOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 opacity-60 ${isOpen ? "rotate-180" : ""}`} />
 
                   {groupIsActive && (
                     <motion.div
@@ -252,72 +315,79 @@ export function TopNavbar() {
                   )}
                 </button>
 
-                {/* Dropdown Menu Panel */}
+                {/* Dropdown Menu Panel with continuous hover bridge */}
                 <AnimatePresence>
                   {isOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                      transition={{ duration: 0.18, ease: "easeOut" }}
-                      className="absolute top-full left-0 mt-1.5 w-72 rounded-xl bg-[#0d1017]/95 backdrop-blur-2xl border border-white/[0.1] p-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50 overflow-hidden"
+                    <div
+                      className="absolute top-full left-0 pt-2 z-50"
+                      onMouseEnter={() => handleDropdownEnter(group.name)}
+                      onMouseLeave={handleDropdownLeave}
                     >
-                      {/* Subtle header accent glow */}
-                      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
-                      
-                      <div className="px-2.5 py-1.5 text-[10px] font-mono tracking-widest text-slate-400 uppercase border-b border-white/[0.05] mb-1 flex items-center justify-between">
-                        <span>{group.name}</span>
-                        <span className="text-cyan-400/80">● {group.items?.length || 0} Modules</span>
-                      </div>
+                      <motion.div
+                        initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                        transition={{ duration: 0.16, ease: "easeOut" }}
+                        className="w-80 rounded-xl bg-[#0d1017]/95 backdrop-blur-2xl border border-white/[0.1] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.85)] overflow-hidden"
+                      >
+                        {/* Subtle header accent glow */}
+                        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+                        
+                        <div className="px-3 py-2 text-[11px] font-mono tracking-widest text-slate-400 uppercase border-b border-white/[0.05] mb-1.5 flex items-center justify-between">
+                          <span className="font-bold text-slate-300">{group.name}</span>
+                          <span className="text-cyan-400/80 text-[10px]">● {group.items?.length || 0} Modules</span>
+                        </div>
 
-                      <div className="flex flex-col gap-0.5">
-                        {group.items?.map((item) => {
-                          const itemActive = isActive(item.href);
-                          const Icon = item.icon;
+                        <div className="flex flex-col gap-1">
+                          {group.items?.map((item) => {
+                            const itemActive = isActive(item.href);
+                            const Icon = item.icon;
 
-                          return (
-                            <Link
-                              key={item.name}
-                              href={item.href}
-                              className={`group flex items-start gap-3 rounded-lg px-2.5 py-2 text-xs transition-all duration-150 ${
-                                itemActive
-                                  ? "bg-cyan-950/50 border border-cyan-500/30 text-white"
-                                  : "text-slate-300 hover:text-white hover:bg-white/[0.05] border border-transparent"
-                              }`}
-                            >
-                              <div className={`mt-0.5 p-1 rounded-md transition-colors ${
-                                itemActive 
-                                  ? "bg-cyan-500/20 text-cyan-300" 
-                                  : "bg-white/[0.03] text-slate-400 group-hover:text-cyan-300 group-hover:bg-cyan-950/40"
-                              }`}>
-                                <Icon className="w-3.5 h-3.5" />
-                              </div>
+                            return (
+                              <Link
+                                key={item.name}
+                                href={item.href}
+                                onClick={() => setActiveDropdown(null)}
+                                className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-150 ${
+                                  itemActive
+                                    ? "bg-cyan-950/50 border border-cyan-500/30 text-white"
+                                    : "text-slate-300 hover:text-white hover:bg-white/[0.05] border border-transparent"
+                                }`}
+                              >
+                                <div className={`shrink-0 p-1.5 rounded-lg transition-colors ${
+                                  itemActive 
+                                    ? "bg-cyan-500/20 text-cyan-300" 
+                                    : "bg-white/[0.04] text-slate-400 group-hover:text-cyan-300 group-hover:bg-cyan-950/50"
+                                }`}>
+                                  <Icon className="w-[18px] h-[18px]" />
+                                </div>
 
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <span className={`font-medium ${itemActive ? "text-cyan-300" : "text-slate-200 group-hover:text-white"}`}>
-                                    {item.name}
-                                  </span>
-                                  {item.badge && (
-                                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                                      {item.badge}
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-semibold tracking-tight ${itemActive ? "text-cyan-300" : "text-slate-100 group-hover:text-white"}`}>
+                                      {item.name}
                                     </span>
-                                  )}
-                                  {itemActive && (
-                                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4] ml-auto" />
+                                    {item.badge && (
+                                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                        {item.badge}
+                                      </span>
+                                    )}
+                                    {itemActive && (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4] ml-auto" />
+                                    )}
+                                  </div>
+                                  {item.desc && (
+                                    <p className="text-xs text-slate-400 line-clamp-1 group-hover:text-slate-300 transition-colors mt-0.5">
+                                      {item.desc}
+                                    </p>
                                   )}
                                 </div>
-                                {item.desc && (
-                                  <p className="text-[10px] text-slate-400 line-clamp-1 group-hover:text-slate-300 transition-colors mt-0.5 font-normal">
-                                    {item.desc}
-                                  </p>
-                                )}
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    </div>
                   )}
                 </AnimatePresence>
               </div>
@@ -342,7 +412,11 @@ export function TopNavbar() {
           </Link>
 
           {/* Notifications Trigger */}
-          <div className="relative">
+          <div 
+            className="relative"
+            onMouseEnter={handleNotifEnter}
+            onMouseLeave={handleNotifLeave}
+          >
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 text-slate-400 hover:text-cyan-300 rounded-lg bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] hover:border-cyan-500/30 transition-all focus:outline-none"
@@ -352,69 +426,76 @@ export function TopNavbar() {
               <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-cyan-400 shadow-[0_0_8px_#06b6d4]" />
             </button>
 
-            {/* Notifications Popover */}
+            {/* Notifications Popover with continuous hover bridge */}
             <AnimatePresence>
               {showNotifications && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-80 rounded-xl bg-[#0d1017]/95 backdrop-blur-2xl border border-white/[0.1] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50"
+                <div 
+                  className="absolute right-0 top-full pt-2 z-50"
+                  onMouseEnter={handleNotifEnter}
+                  onMouseLeave={handleNotifLeave}
                 >
-                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.06]">
-                    <div className="flex items-center gap-2">
-                      <Activity className="w-3.5 h-3.5 text-cyan-400" />
-                      <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
-                        Operational Telemetry
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                    transition={{ duration: 0.16, ease: "easeOut" }}
+                    className="w-80 rounded-xl bg-[#0d1017]/95 backdrop-blur-2xl border border-white/[0.1] p-3 shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
+                  >
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/[0.06]">
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5 text-cyan-400" />
+                        <span className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                          Operational Telemetry
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30">
+                        Live
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30">
-                      Live
-                    </span>
-                  </div>
 
-                  <div className="flex flex-col gap-2">
-                    <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-cyan-500/20 transition-all">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
-                        <span>Q1 2026 Operations Ingested</span>
-                        <span className="text-[9px] font-mono text-slate-500">2m ago</span>
+                    <div className="flex flex-col gap-2">
+                      <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-cyan-500/20 transition-all">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
+                          <span>Q1 2026 Operations Ingested</span>
+                          <span className="text-[9px] font-mono text-slate-500">2m ago</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          7 mine records parsed into PostgreSQL with full RBAC isolation.
+                        </p>
                       </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        7 mine records parsed into PostgreSQL with full RBAC isolation.
-                      </p>
+
+                      <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-emerald-500/20 transition-all">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
+                          <span className="text-emerald-300">Safety Incident Threshold OK</span>
+                          <span className="text-[9px] font-mono text-slate-500">14m ago</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Zero lost-time injuries verified across Gevra and Piparwar sectors.
+                        </p>
+                      </div>
+
+                      <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-cyan-500/20 transition-all">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
+                          <span>FAISS Vector Index Synchronized</span>
+                          <span className="text-[9px] font-mono text-slate-500">1h ago</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          153 semantic text chunks indexed with cosine metric.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-emerald-500/20 transition-all">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
-                        <span className="text-emerald-300">Safety Incident Threshold OK</span>
-                        <span className="text-[9px] font-mono text-slate-500">14m ago</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        Zero lost-time injuries verified across Gevra and Piparwar sectors.
-                      </p>
+                    <div className="mt-3 pt-2 border-t border-white/[0.06] text-center">
+                      <Link
+                        href="/audit"
+                        onClick={() => setShowNotifications(false)}
+                        className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors flex items-center justify-center gap-1"
+                      >
+                        View Complete Cryptographic Audit Log &rarr;
+                      </Link>
                     </div>
-
-                    <div className="p-2 rounded-lg bg-white/[0.02] border border-white/[0.05] hover:border-cyan-500/20 transition-all">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
-                        <span>FAISS Vector Index Synchronized</span>
-                        <span className="text-[9px] font-mono text-slate-500">1h ago</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 mt-0.5">
-                        153 semantic text chunks indexed with cosine metric.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-3 pt-2 border-t border-white/[0.06] text-center">
-                    <Link
-                      href="/audit"
-                      className="text-[11px] font-mono text-cyan-400 hover:text-cyan-300 transition-colors flex items-center justify-center gap-1"
-                    >
-                      View Complete Cryptographic Audit Log &rarr;
-                    </Link>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </div>
@@ -422,10 +503,14 @@ export function TopNavbar() {
           <div className="h-5 w-px bg-white/[0.1] hidden sm:block" />
 
           {/* User Profile Pill & Dropdown */}
-          <div className="relative">
+          <div 
+            className="relative"
+            onMouseEnter={handleUserMenuEnter}
+            onMouseLeave={handleUserMenuLeave}
+          >
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] hover:border-cyan-500/30 transition-all focus:outline-none"
+              className="flex items-center gap-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-lg bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.08] hover:border-cyan-500/30 transition-all focus:outline-none cursor-pointer"
             >
               {/* Avatar with Role Halo */}
               <div className={`relative flex h-7 w-7 items-center justify-center rounded-lg border ${
@@ -451,70 +536,82 @@ export function TopNavbar() {
               <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${showUserMenu ? "rotate-180" : ""}`} />
             </button>
 
-            {/* User Dropdown Menu */}
+            {/* User Dropdown Menu with continuous hover bridge */}
             <AnimatePresence>
               {showUserMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 6, scale: 0.96 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 mt-2 w-64 rounded-xl bg-[#0d1017]/95 backdrop-blur-2xl border border-white/[0.1] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.85)] z-50"
+                <div 
+                  className="absolute right-0 top-full pt-2 z-50"
+                  onMouseEnter={handleUserMenuEnter}
+                  onMouseLeave={handleUserMenuLeave}
                 >
-                  <div className="px-3 py-2 border-b border-white/[0.06] mb-1">
-                    <p className="text-xs font-semibold text-white">
-                      {user?.full_name || user?.username || "Officer"}
-                    </p>
-                    <p className="text-[10px] text-slate-400 truncate">
-                      {user?.email || "officer@cmpdi.coalindia.in"}
-                    </p>
-                    <div className="mt-1.5 flex items-center gap-1.5">
-                      <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-semibold border ${
-                        isHOD 
-                          ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
-                          : "bg-cyan-950/60 border-cyan-500/40 text-cyan-300"
-                      }`}>
-                        {isHOD ? "Full Access (HOD)" : "Standard User (Normal)"}
-                      </span>
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 4, scale: 0.97 }}
+                    transition={{ duration: 0.16, ease: "easeOut" }}
+                    className="w-64 rounded-xl bg-[#0d1017]/95 backdrop-blur-2xl border border-white/[0.1] p-2 shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
+                  >
+                    <div className="px-3 py-2 border-b border-white/[0.06] mb-1">
+                      <p className="text-xs font-semibold text-white">
+                        {user?.full_name || user?.username || "Officer"}
+                      </p>
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {user?.email || "officer@cmpdi.coalindia.in"}
+                      </p>
+                      <div className="mt-1.5 flex items-center gap-1.5">
+                        <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded uppercase font-semibold border ${
+                          isHOD 
+                            ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
+                            : "bg-cyan-950/60 border-cyan-500/40 text-cyan-300"
+                        }`}>
+                          {isHOD ? "Full Access (HOD)" : "Standard User (Normal)"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex flex-col gap-0.5">
-                    <Link
-                      href="/audit"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors"
-                    >
-                      <History className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Security & Audit Log</span>
-                    </Link>
-                    
-                    <Link
-                      href="/validation"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors"
-                    >
-                      <CheckCircle className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Validation Center</span>
-                    </Link>
+                    <div className="flex flex-col gap-0.5">
+                      <Link
+                        href="/audit"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors"
+                      >
+                        <History className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Security & Audit Log</span>
+                      </Link>
+                      
+                      <Link
+                        href="/validation"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Validation Center</span>
+                      </Link>
 
-                    <Link
-                      href="/"
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Public Landing Page</span>
-                    </Link>
-                  </div>
+                      <Link
+                        href="/"
+                        onClick={() => setShowUserMenu(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-300 hover:text-white hover:bg-white/[0.05] transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Public Landing Page</span>
+                      </Link>
+                    </div>
 
-                  <div className="mt-1 pt-1 border-t border-white/[0.06]">
-                    <button
-                      onClick={logout}
-                      className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 transition-colors"
-                    >
-                      <LogOut className="w-3.5 h-3.5" />
-                      <span>Sign Out Session</span>
-                    </button>
-                  </div>
-                </motion.div>
+                    <div className="mt-1 pt-1 border-t border-white/[0.06]">
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          logout();
+                        }}
+                        className="flex w-full items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 transition-colors cursor-pointer"
+                      >
+                        <LogOut className="w-3.5 h-3.5" />
+                        <span>Sign Out Session</span>
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
               )}
             </AnimatePresence>
           </div>

@@ -38,7 +38,7 @@ export function Hero2DFallback() {
               <Cpu className="w-8 h-8 animate-spin [animation-duration:12s]" />
             </div>
             <span className="text-[11px] font-mono font-bold tracking-widest text-cyan-300 uppercase">
-              CMPDI AI CORE
+              KHANI GYAN AI CORE
             </span>
           </div>
         </div>

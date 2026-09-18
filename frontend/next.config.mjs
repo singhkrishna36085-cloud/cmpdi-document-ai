@@ -1,5 +1,5 @@
 /** @type {import('next').NextConfig} */
-const BACKEND_URL = "https://cmpdi-backend-ai.loca.lt";
+const BACKEND_URL = process.env.BACKEND_INTERNAL_URL || "https://cmpdi-backend-ai.loca.lt";
 
 const nextConfig = {
   async rewrites() {

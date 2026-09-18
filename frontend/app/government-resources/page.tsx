@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { motion, useInView } from "framer-motion";
 import {
   ExternalLink,
   Search,
@@ -17,7 +18,6 @@ import {
   Users,
   BookOpen,
   FileSearch,
-  Tag,
   Image,
   MessageCircle,
   Phone,
@@ -25,83 +25,50 @@ import {
   Flame,
   HardHat,
   Cpu,
-  Star,
+  Trophy,
   HeartHandshake,
-  Grid3X3,
+  Layers,
+  UsersRound,
+  ClipboardList,
+  PlaySquare,
   X,
+  ChevronUp,
 } from "lucide-react";
 import registryData from "@/data/registry.json";
 
-const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
-  "About Us": Building2,
-  "Major Statistics": BarChart3,
-  "Organisations": Landmark,
-  "Sustainability": Leaf,
-  "Nominated Authority": Gavel,
-  "Public Information": Users,
-  "Minutes of Meetings": BookOpen,
-  "Reports": FileSearch,
-  "RTI": Tag,
-  "Tenders": FileText,
-  "Media": Image,
-  "Parliament Q&A": MessageCircle,
-  "Contact Us": Phone,
-  "Acts & Policies": Scale,
-  "Coal Gasification": Flame,
-  "Safety in Coal Mines": HardHat,
-  "Technology Roadmap": Cpu,
-  "Achievements Flipbook": Star,
-  "CSR": HeartHandshake,
-  "Central Sector Schemes": Grid3X3,
-  "Chintan Shivir": BookOpen,
-  "Procurement Projection": BarChart3,
+// Each category gets an icon + a rich colorful background gradient
+const CATEGORY_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; bg: string; iconColor: string; badge: string }> = {
+  "About Us":               { icon: Building2,     bg: "from-blue-500 to-blue-700",        iconColor: "text-white", badge: "bg-blue-100 text-blue-700 border-blue-200" },
+  "Major Statistics":       { icon: BarChart3,     bg: "from-violet-500 to-purple-700",    iconColor: "text-white", badge: "bg-violet-100 text-violet-700 border-violet-200" },
+  "Organisations":          { icon: Landmark,      bg: "from-cyan-500 to-teal-700",        iconColor: "text-white", badge: "bg-cyan-100 text-cyan-700 border-cyan-200" },
+  "Sustainability":         { icon: Leaf,          bg: "from-emerald-500 to-green-700",    iconColor: "text-white", badge: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+  "Nominated Authority":    { icon: Gavel,         bg: "from-amber-500 to-orange-600",     iconColor: "text-white", badge: "bg-amber-100 text-amber-700 border-amber-200" },
+  "Public Information":     { icon: Users,         bg: "from-sky-500 to-blue-600",         iconColor: "text-white", badge: "bg-sky-100 text-sky-700 border-sky-200" },
+  "Minutes of Meetings":    { icon: BookOpen,      bg: "from-indigo-500 to-indigo-700",    iconColor: "text-white", badge: "bg-indigo-100 text-indigo-700 border-indigo-200" },
+  "Reports":                { icon: FileSearch,    bg: "from-purple-500 to-fuchsia-700",   iconColor: "text-white", badge: "bg-purple-100 text-purple-700 border-purple-200" },
+  "RTI":                    { icon: ShieldCheck,   bg: "from-rose-500 to-red-700",         iconColor: "text-white", badge: "bg-rose-100 text-rose-700 border-rose-200" },
+  "Tenders":                { icon: ClipboardList, bg: "from-orange-500 to-amber-600",     iconColor: "text-white", badge: "bg-orange-100 text-orange-700 border-orange-200" },
+  "Media":                  { icon: PlaySquare,    bg: "from-pink-500 to-rose-600",        iconColor: "text-white", badge: "bg-pink-100 text-pink-700 border-pink-200" },
+  "Parliament Q&A":         { icon: Landmark,      bg: "from-teal-500 to-cyan-700",        iconColor: "text-white", badge: "bg-teal-100 text-teal-700 border-teal-200" },
+  "Contact Us":             { icon: Phone,         bg: "from-slate-500 to-slate-700",      iconColor: "text-white", badge: "bg-slate-100 text-slate-700 border-slate-200" },
+  "Acts & Policies":        { icon: Scale,         bg: "from-red-500 to-red-700",          iconColor: "text-white", badge: "bg-red-100 text-red-700 border-red-200" },
+  "Coal Gasification":      { icon: Flame,         bg: "from-orange-400 to-red-600",       iconColor: "text-white", badge: "bg-orange-100 text-orange-700 border-orange-200" },
+  "Safety in Coal Mines":   { icon: HardHat,       bg: "from-yellow-400 to-orange-500",    iconColor: "text-white", badge: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+  "Technology Roadmap":     { icon: Cpu,           bg: "from-cyan-400 to-blue-600",        iconColor: "text-white", badge: "bg-cyan-100 text-cyan-700 border-cyan-200" },
+  "Achievements Flipbook":  { icon: Trophy,        bg: "from-yellow-500 to-amber-600",     iconColor: "text-white", badge: "bg-yellow-100 text-yellow-700 border-yellow-200" },
+  "CSR":                    { icon: HeartHandshake,bg: "from-green-500 to-emerald-700",    iconColor: "text-white", badge: "bg-green-100 text-green-700 border-green-200" },
+  "Central Sector Schemes": { icon: Layers,        bg: "from-blue-600 to-indigo-700",      iconColor: "text-white", badge: "bg-blue-100 text-blue-700 border-blue-200" },
+  "Chintan Shivir":         { icon: UsersRound,    bg: "from-violet-600 to-purple-700",    iconColor: "text-white", badge: "bg-violet-100 text-violet-700 border-violet-200" },
+  "Procurement Projection": { icon: BarChart3,     bg: "from-indigo-500 to-blue-700",      iconColor: "text-white", badge: "bg-indigo-100 text-indigo-700 border-indigo-200" },
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "About Us": "blue",
-  "Major Statistics": "violet",
-  "Organisations": "cyan",
-  "Sustainability": "emerald",
-  "Nominated Authority": "amber",
-  "Public Information": "sky",
-  "Minutes of Meetings": "indigo",
-  "Reports": "purple",
-  "RTI": "rose",
-  "Tenders": "orange",
-  "Media": "pink",
-  "Parliament Q&A": "teal",
-  "Contact Us": "slate",
-  "Acts & Policies": "red",
-  "Coal Gasification": "orange",
-  "Safety in Coal Mines": "red",
-  "Technology Roadmap": "cyan",
-  "Achievements Flipbook": "yellow",
-  "CSR": "green",
-  "Central Sector Schemes": "blue",
-  "Chintan Shivir": "violet",
-  "Procurement Projection": "indigo",
-};
-
-function getColorClasses(color: string) {
-  const map: Record<string, { icon: string; badge: string; border: string; hover: string }> = {
-    blue:    { icon: "text-blue-400",    badge: "bg-blue-900/30 text-blue-400 border-blue-500/30",    border: "border-blue-500/50",    hover: "group-hover:text-blue-300" },
-    violet:  { icon: "text-violet-400",  badge: "bg-violet-900/30 text-violet-400 border-violet-500/30",  border: "border-violet-500/50",  hover: "group-hover:text-violet-300" },
-    cyan:    { icon: "text-cyan-400",    badge: "bg-cyan-900/30 text-cyan-400 border-cyan-500/30",    border: "border-cyan-500/50",    hover: "group-hover:text-cyan-300" },
-    emerald: { icon: "text-emerald-400", badge: "bg-emerald-900/30 text-emerald-400 border-emerald-500/30", border: "border-emerald-500/50", hover: "group-hover:text-emerald-300" },
-    amber:   { icon: "text-amber-400",   badge: "bg-amber-900/30 text-amber-400 border-amber-500/30",   border: "border-amber-500/50",   hover: "group-hover:text-amber-300" },
-    sky:     { icon: "text-sky-400",     badge: "bg-sky-900/30 text-sky-400 border-sky-500/30",     border: "border-sky-500/50",     hover: "group-hover:text-sky-300" },
-    indigo:  { icon: "text-indigo-400",  badge: "bg-indigo-900/30 text-indigo-400 border-indigo-500/30",  border: "border-indigo-500/50",  hover: "group-hover:text-indigo-300" },
-    purple:  { icon: "text-purple-400",  badge: "bg-purple-900/30 text-purple-400 border-purple-500/30",  border: "border-purple-500/50",  hover: "group-hover:text-purple-300" },
-    rose:    { icon: "text-rose-400",    badge: "bg-rose-900/30 text-rose-400 border-rose-500/30",    border: "border-rose-500/50",    hover: "group-hover:text-rose-300" },
-    orange:  { icon: "text-orange-400",  badge: "bg-orange-900/30 text-orange-400 border-orange-500/30",  border: "border-orange-500/50",  hover: "group-hover:text-orange-300" },
-    pink:    { icon: "text-pink-400",    badge: "bg-pink-900/30 text-pink-400 border-pink-500/30",    border: "border-pink-500/50",    hover: "group-hover:text-pink-300" },
-    teal:    { icon: "text-teal-400",    badge: "bg-teal-900/30 text-teal-400 border-teal-500/30",    border: "border-teal-500/50",    hover: "group-hover:text-teal-300" },
-    slate:   { icon: "text-slate-400",   badge: "bg-slate-800 text-slate-400 border-slate-600",   border: "border-slate-500/50",   hover: "group-hover:text-slate-300" },
-    red:     { icon: "text-red-400",     badge: "bg-red-900/30 text-red-400 border-red-500/30",     border: "border-red-500/50",     hover: "group-hover:text-red-300" },
-    yellow:  { icon: "text-yellow-400",  badge: "bg-yellow-900/30 text-yellow-400 border-yellow-500/30",  border: "border-yellow-500/50",  hover: "group-hover:text-yellow-300" },
-    green:   { icon: "text-green-400",   badge: "bg-green-900/30 text-green-400 border-green-500/30",   border: "border-green-500/50",   hover: "group-hover:text-green-300" },
+function getConfig(category: string) {
+  return CATEGORY_CONFIG[category] ?? {
+    icon: FileText,
+    bg: "from-slate-400 to-slate-600",
+    iconColor: "text-white",
+    badge: "bg-slate-100 text-slate-700 border-slate-200",
   };
-  return map[color] ?? map["slate"];
 }
 
 function GovernmentResourcesContent() {
@@ -126,13 +93,11 @@ function GovernmentResourcesContent() {
         r.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.parent.toLowerCase().includes(searchQuery.toLowerCase())
     );
-
     const cats: Record<string, typeof registryData> = {};
     filtered.forEach((r) => {
       if (!cats[r.category]) cats[r.category] = [];
       cats[r.category].push(r);
     });
-
     return { resources: filtered, categories: cats, totalCount: validResources.length };
   }, [searchQuery]);
 
@@ -150,198 +115,239 @@ function GovernmentResourcesContent() {
 
   const isSearching = searchQuery.length > 0;
 
+  // 3D scroll-triggered heading animation
+  const heroRef = useRef(null);
+  const isInView = useInView(heroRef, { once: true, margin: "-80px" });
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f172a] text-slate-200">
-      <main className="flex-1 overflow-auto pt-24 pb-16">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-white text-slate-800">
+      {/* Force white body for this page */}
+      <style dangerouslySetInnerHTML={{ __html: `body { background: #ffffff !important; }` }} />
 
-          {/* ── Header ── */}
-          <div className="mb-6">
-            <div className="flex items-start justify-between flex-wrap gap-4">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-widest mb-2">
-                  <ShieldCheck className="h-4 w-4" />
-                  Government of India · Ministry of Coal
-                </div>
-                <h1 className="text-3xl font-bold text-white mb-2">
-                  Official Government Resources
-                </h1>
-                <p className="text-slate-400 max-w-2xl">
-                  Verified directory of official Ministry of Coal resources. All links navigate
-                  directly to <span className="text-blue-400 font-medium">coal.gov.in</span> and
-                  other authorised government portals. No content is replicated.
-                </p>
+      <main className="pt-[76px] pb-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+          {/* ── Hero Header ── */}
+          <div className="text-center mb-10" ref={heroRef} style={{ perspective: "1000px" }}>
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-xs font-semibold text-blue-600 uppercase tracking-widest mb-5">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Government of India · Ministry of Coal
               </div>
-            </div>
-          </div>
+            </motion.div>
 
-          {/* ── Stats Banner ── */}
-          <div className="grid grid-cols-3 gap-3 mb-6">
-            {[
-              { label: "Official Resources", value: totalCount, color: "text-blue-400" },
-              { label: "Categories", value: Object.keys(CATEGORY_ICONS).length, color: "text-violet-400" },
-              { label: "Source Domain", value: "coal.gov.in", color: "text-emerald-400" },
-            ].map(({ label, value, color }) => (
-              <div
-                key={label}
-                className="bg-slate-800/50 border border-slate-700 rounded-xl px-4 py-3 text-center"
+            <motion.h1
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-4"
+              style={{ fontFamily: "'Georgia', 'Times New Roman', serif", transformOrigin: "bottom center" }}
+              initial={{ opacity: 0, y: 100, rotateX: 30, scale: 0.95 }}
+              animate={isInView ? { opacity: 1, y: 0, rotateX: 0, scale: 1 } : {}}
+              transition={{
+                duration: 0.9,
+                ease: [0.22, 1, 0.36, 1],
+                delay: 0.1,
+              }}
+            >
+              <span className="text-slate-900">Official </span>
+              <span
+                className="text-transparent bg-clip-text"
+                style={{ backgroundImage: "linear-gradient(135deg, #1d4ed8 0%, #7c3aed 50%, #db2777 100%)" }}
               >
-                <div className={`text-xl font-bold ${color}`}>{value}</div>
-                <div className="text-[11px] text-slate-500 uppercase tracking-wide mt-0.5">{label}</div>
+                Government
+              </span>
+              <br />
+              <span className="text-slate-900">Resources</span>
+            </motion.h1>
+
+            <motion.p
+              className="text-slate-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed"
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.7, ease: "easeOut", delay: 0.35 }}
+            >
+              Verified directory of official Ministry of Coal resources. All links navigate
+              directly to{" "}
+              <span className="text-blue-600 font-semibold">coal.gov.in</span> and other
+              authorised government portals.
+            </motion.p>
+
+            {/* Stats row */}
+            <motion.div
+              className="flex flex-wrap items-center justify-center gap-6 mt-7"
+              initial={{ opacity: 0, y: 20 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.5 }}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span className="text-sm font-semibold text-slate-700">{totalCount} Official Resources</span>
               </div>
-            ))}
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-violet-500"></div>
+                <span className="text-sm font-semibold text-slate-700">{Object.keys(CATEGORY_CONFIG).length} Categories</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <span className="text-sm font-semibold text-slate-700">Source: coal.gov.in</span>
+              </div>
+            </motion.div>
           </div>
 
-          {/* ── Search Bar ── */}
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-3 mb-4">
-            <div className="relative flex items-center gap-3">
-              <Search className="absolute left-3 h-5 w-5 text-slate-400 pointer-events-none" />
+          {/* ── Search + Expand All ── */}
+          <motion.div
+            className="flex flex-col sm:flex-row items-center gap-3 mb-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.65 }}
+          >
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder='Search resources… e.g. "RTI", "production", "PIO", "Lok Sabha"'
+                placeholder='Search resources… e.g. "RTI", "production", "Lok Sabha"'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-10 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow text-sm"
+                className="w-full bg-white border border-slate-200 rounded-xl pl-11 pr-10 py-3 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent shadow-sm transition text-sm"
               />
               {isSearching && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 p-1 rounded text-slate-400 hover:text-slate-200 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-slate-400 hover:text-slate-600"
                 >
                   <X className="h-4 w-4" />
                 </button>
               )}
             </div>
-            {isSearching && (
-              <div className="mt-2 px-1 text-xs text-slate-400">
-                Showing <span className="text-white font-semibold">{resources.length}</span> result
-                {resources.length !== 1 ? "s" : ""} across{" "}
-                <span className="text-white font-semibold">{Object.keys(categories).length}</span> categories
-              </div>
-            )}
-          </div>
 
-          {/* ── Controls ── */}
-          {!isSearching && (
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-xs text-slate-500">
-                {Object.keys(categories).length} categories · click to expand
-              </p>
-              <button
-                onClick={toggleAll}
-                className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
-              >
-                {allExpanded ? (
-                  <><ChevronDown className="h-3.5 w-3.5" /> Collapse All</>
-                ) : (
-                  <><ChevronRight className="h-3.5 w-3.5" /> Expand All</>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={toggleAll}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 text-white font-semibold text-sm hover:from-blue-700 hover:to-violet-700 transition shadow-md shrink-0"
+            >
+              {allExpanded ? (
+                <><ChevronUp className="h-4 w-4" /> Collapse All</>
+              ) : (
+                <><ChevronDown className="h-4 w-4" /> Expand All</>
+              )}
+            </button>
+          </motion.div>
+
+          {isSearching && (
+            <p className="text-xs text-slate-500 mb-4">
+              Showing <span className="font-semibold text-slate-700">{resources.length}</span> result
+              {resources.length !== 1 ? "s" : ""} across{" "}
+              <span className="font-semibold text-slate-700">{Object.keys(categories).length}</span> categories
+            </p>
           )}
 
-          {/* ── Category Sections ── */}
-          <div className="space-y-3">
+          {/* ── Category List (3-in-a-row Horizontal Grid with generous gaps) ── */}
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
+            initial="hidden"
+            animate="visible"
+          >
             {Object.keys(categories).length === 0 ? (
-              <div className="text-center py-16 bg-slate-800/20 border border-slate-700/50 rounded-xl">
-                <FileText className="h-12 w-12 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-slate-300">No resources found</h3>
-                <p className="text-slate-500 text-sm mt-1">
-                  Try searching for "RTI", "coal statistics", "parliament", "tenders"…
+              <div className="col-span-full text-center py-16 border border-slate-100 rounded-2xl bg-slate-50">
+                <FileText className="h-12 w-12 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-500">No resources found</h3>
+                <p className="text-slate-400 text-sm mt-1">
+                  Try "RTI", "coal statistics", "parliament", "tenders"…
                 </p>
               </div>
             ) : (
-              Object.entries(categories).map(([category, items]) => {
+              Object.entries(categories).map(([category, items], index) => {
                 const isExpanded = expandedCategories[category] ?? isSearching;
-                const Icon = CATEGORY_ICONS[category] ?? FileText;
-                const colorKey = CATEGORY_COLORS[category] ?? "slate";
-                const colors = getColorClasses(colorKey);
+                const cfg = getConfig(category);
+                const Icon = cfg.icon;
+                // Wave: alternate entrance direction
+                const fromLeft = index % 3 === 0;
 
                 return (
-                  <div
+                  <motion.div
                     key={category}
-                    className="border border-slate-700/80 rounded-xl bg-slate-800/20 overflow-hidden"
+                    variants={{
+                      hidden: { opacity: 0, x: fromLeft ? -50 : 50, y: 20 },
+                      visible: {
+                        opacity: 1, x: 0, y: 0,
+                        transition: {
+                          duration: 0.5,
+                          ease: [0.22, 1, 0.36, 1],
+                        },
+                      },
+                    }}
+                    className="self-start border border-slate-100/90 rounded-2xl bg-white shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-200 overflow-hidden flex flex-col"
                   >
                     {/* Category Header */}
                     <button
                       onClick={() => toggleCategory(category)}
-                      className="w-full flex items-center justify-between px-5 py-4 bg-slate-800/40 hover:bg-slate-700/40 transition-colors text-left group"
+                      className="w-full flex items-center justify-between p-5 hover:bg-slate-50/70 transition-colors text-left group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`p-1.5 rounded-lg bg-slate-900/60 ${colors.icon}`}>
-                          <Icon className="h-4 w-4" />
+                      <div className="flex items-center gap-4 min-w-0">
+                        {/* Colorful gradient icon square */}
+                        <div className={`flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br ${cfg.bg} shadow-md shrink-0 transition-transform group-hover:scale-105`}>
+                          <Icon className={`h-6 w-6 ${cfg.iconColor}`} />
                         </div>
-                        <h2 className="text-[15px] font-semibold text-white">{category}</h2>
-                        <span
-                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${colors.badge}`}
-                        >
-                          {items.length} {items.length === 1 ? "resource" : "resources"}
-                        </span>
+
+                        <div className="min-w-0">
+                          <h2 className="text-[16px] font-bold text-slate-800 group-hover:text-blue-700 transition-colors truncate">
+                            {category}
+                          </h2>
+                          <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${cfg.badge} mt-1 inline-block`}>
+                            {items.length} {items.length === 1 ? "resource" : "resources"}
+                          </span>
+                        </div>
                       </div>
-                      <div className={`transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}>
+
+                      <div className={`shrink-0 ml-2 p-1 rounded-full hover:bg-slate-100 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}>
                         <ChevronDown className="h-4 w-4 text-slate-400" />
                       </div>
                     </button>
 
-                    {/* Resources Grid */}
+                    {/* Expanded Resources List */}
                     {isExpanded && (
-                      <div className="p-4 bg-slate-900/20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      <div className="px-4 pb-4 pt-2 flex flex-col gap-2.5 border-t border-slate-100 bg-slate-50/60 max-h-[380px] overflow-y-auto">
                         {items.map((item, idx) => (
                           <a
                             key={idx}
                             href={item.officialUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`group flex flex-col justify-between p-4 rounded-lg bg-slate-800 border border-slate-700 hover:${colors.border} transition-all shadow-sm`}
+                            className="group flex flex-col justify-between p-3.5 rounded-xl bg-white border border-slate-100 hover:border-blue-300 hover:shadow-sm transition-all"
                           >
-                            <div className="flex items-start justify-between gap-2 mb-3">
-                              <h3 className={`font-medium text-[13px] leading-snug text-slate-200 ${colors.hover} transition-colors`}>
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h3 className="font-semibold text-[13px] leading-snug text-slate-700 group-hover:text-blue-700 transition-colors">
                                 {item.title}
                               </h3>
-                              <ExternalLink className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-500 group-hover:text-slate-300 transition-colors" />
+                              <ExternalLink className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-300 group-hover:text-blue-500 transition-colors" />
                             </div>
-
-                            <div className="flex items-center justify-between mt-auto pt-2.5 border-t border-slate-700/50">
-                              <div className="flex items-center gap-1.5">
-                                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-                                <span className="text-[10px] font-semibold text-emerald-500/80 uppercase tracking-wider">
-                                  Official Source
-                                </span>
-                              </div>
-                              <span className="text-[10px] text-slate-500 font-mono truncate max-w-[120px]">
-                                coal.gov.in
+                            <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-50">
+                              <ShieldCheck className="h-3 w-3 text-emerald-500" />
+                              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">
+                                Official Source
                               </span>
                             </div>
                           </a>
                         ))}
                       </div>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })
             )}
-          </div>
+          </motion.div>
 
-          {/* ── Footer Note ── */}
-          <div className="mt-8 p-4 bg-slate-800/30 border border-slate-700/50 rounded-xl text-center">
-            <p className="text-xs text-slate-500">
+          {/* ── Footer ── */}
+          <div className="mt-10 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-center">
+            <p className="text-xs text-slate-400">
               All resources link directly to the{" "}
-              <a
-                href="https://coal.gov.in"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:underline"
-              >
+              <a href="https://coal.gov.in" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline font-medium">
                 official Ministry of Coal website
               </a>
-              . CMPDI Document AI does not host or replicate government content. Navigation
-              structure sourced from{" "}
-              <a
-                href="https://coal.gov.in/sitemap"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:underline"
-              >
+              . Khani Gyan AI does not host or replicate government content. Navigation structure sourced from{" "}
+              <a href="https://coal.gov.in/sitemap" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline font-medium">
                 coal.gov.in/sitemap
               </a>
               .
@@ -357,10 +363,10 @@ function GovernmentResourcesContent() {
 export default function GovernmentResourcesPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen bg-[#0f172a]">
+      <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center">
           <ShieldCheck className="h-10 w-10 text-blue-500 mx-auto mb-3 animate-pulse" />
-          <p className="text-slate-400">Loading Government Resources…</p>
+          <p className="text-slate-500">Loading Government Resources…</p>
         </div>
       </div>
     }>

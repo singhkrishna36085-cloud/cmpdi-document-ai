@@ -223,7 +223,7 @@ function AssistantContent() {
       const networkErrorMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
         sender: "assistant",
-        content: "Unable to connect to CMPDI AI service. Please verify that the FastAPI backend server is running.",
+        content: "Unable to connect to Khani Gyan AI service. Please verify that the FastAPI backend server is running.",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         status: "network_error",
         error: err.message || "Failed to fetch"
@@ -307,7 +307,7 @@ function AssistantContent() {
               </div>
 
               <div>
-                <h3 className="text-lg font-semibold text-slate-800">CMPDI Intelligent AI Assistant</h3>
+                <h3 className="text-lg font-semibold text-slate-800">Khani Gyan AI Assistant</h3>
                 <p className="text-sm text-slate-500 max-w-md mx-auto mt-1">
                   Type a question below to perform dense FAISS vector context retrieval and generate evidence-first answers grounded in PostgreSQL document chunks.
                 </p>
@@ -341,7 +341,7 @@ function AssistantContent() {
                 <div key={msg.id} className={`flex flex-col ${isUser ? "items-end" : "items-start"} space-y-1 w-full`}>
                   <div className={`flex items-center gap-2 px-1 text-xs ${isUser ? "flex-row-reverse" : "flex-row"}`}>
                     <span className="font-semibold text-slate-600">
-                      {isUser ? "You" : "CMPDI AI"}
+                      {isUser ? "You" : "Khani Gyan AI"}
                     </span>
                     <span className="text-[11px] text-slate-400">{msg.timestamp}</span>
                   </div>
@@ -425,7 +425,7 @@ function AssistantContent() {
           {isLoading && (
             <div className="flex flex-col items-start space-y-1">
               <div className="flex items-center gap-2 px-1 text-xs">
-                <span className="font-semibold text-slate-600">CMPDI AI</span>
+                <span className="font-semibold text-slate-600">Khani Gyan AI</span>
               </div>
               <div className="bg-white border border-slate-200 rounded-lg rounded-tl-none p-4 shadow-sm max-w-md space-y-2 ml-1">
                 <div className="flex items-center gap-3">

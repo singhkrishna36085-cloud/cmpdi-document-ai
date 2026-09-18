@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Rajdhani } from "next/font/google";
+import { Inter, Rajdhani, Noto_Sans_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
@@ -15,6 +15,13 @@ const rajdhani = Rajdhani({
   subsets: ["latin"],
 });
 
+const sansDisplay = Noto_Sans_Display({
+  variable: "--font-sans-display",
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "CMPDI Document AI",
   description: "AI-Assisted Geological, Mining & Production Reporting Platform",
@@ -28,9 +35,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${rajdhani.variable} h-full antialiased dark`}
+      className={`${inter.variable} ${rajdhani.variable} ${sansDisplay.variable} min-h-full antialiased dark`}
     >
-      <body className="flex h-full overflow-hidden bg-obsidian-900 text-slate-100 font-sans">
+      <body className="min-h-full bg-[#030303] text-slate-100 font-sans overflow-x-hidden">
         <AuthProvider>
           <AuthGuard>{children}</AuthGuard>
         </AuthProvider>
@@ -38,4 +45,3 @@ export default function RootLayout({
     </html>
   );
 }
-

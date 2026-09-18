@@ -763,7 +763,7 @@ export default function AuditCenterPage() {
               CMPDI System Governance & Immutable Audit Chain
             </h3>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Every operation within the CMPDI / CIL Document AI platform passes through centralized audit services. Activity records are persisted directly to PostgreSQL with strict secret redaction and role-based data protection.
+              Every operation within the Khani Gyan AI platform passes through centralized audit services. Activity records are persisted directly to PostgreSQL with strict secret redaction and role-based data protection.
             </p>
 
             {/* Traceability Flow Diagram */}

@@ -1,5 +1,5 @@
 /**
- * TypeScript definitions for CMPDI Document AI Dashboard Analytics (STEP 12.2 & STEP 12.3)
+ * TypeScript definitions for Khani Gyan AI Dashboard Analytics (STEP 12.2 & STEP 12.3)
  * Matches GET /api/dashboard/overview backend API response schema.
  */
 

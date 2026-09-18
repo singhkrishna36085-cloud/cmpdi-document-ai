@@ -67,11 +67,11 @@ export default function LoginPage() {
       <header className="w-full border-b border-slate-800 bg-slate-900/60 backdrop-blur-md px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 text-white font-bold text-xl shadow-md shadow-blue-600/30">
-            C
+            K
           </div>
           <div>
             <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
-              CMPDI DOCUMENT AI
+              KHANI GYAN AI
               <span className="inline-flex items-center gap-1 rounded-full bg-teal-500/10 px-2 py-0.5 text-xs font-semibold text-teal-400 border border-teal-500/20">
                 <Sparkles className="h-3 w-3" /> Enterprise
               </span>
@@ -213,7 +213,7 @@ export default function LoginPage() {
                   </>
                 ) : (
                   <>
-                    <span>Sign In to CMPDI AI</span>
+                    <span>Sign In to Khani Gyan AI</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
