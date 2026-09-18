@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { TopNavbar } from "@/components/layout/TopNavbar";
 import { HeroScene } from "@/components/3d/HeroScene";
 import { FluidJellyCore } from "@/components/3d/FluidJellyCore";
 import { 
@@ -31,23 +32,6 @@ export default function CinematicLandingPage() {
     offset: ["start start", "end end"]
   });
 
-  // Floating Navbar Color Interpolation
-  const navBg = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.3],
-    ["rgba(3, 3, 5, 0.6)", "rgba(15, 23, 42, 0.75)", "rgba(255, 255, 255, 0.95)"]
-  );
-  const navBorder = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.3],
-    ["rgba(255, 255, 255, 0.08)", "rgba(255, 255, 255, 0.12)", "rgba(0, 0, 0, 0.08)"]
-  );
-  const navText = useTransform(
-    scrollYProgress,
-    [0, 0.15, 0.3],
-    ["#ffffff", "#e2e8f0", "#0f172a"]
-  );
-
   // Dark Particle World Lift & Dissolve on Scroll
   const heroWorldY = useTransform(scrollYProgress, [0, 0.4], ["0%", "-25%"]);
   const heroWorldOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.1]);
@@ -65,50 +49,8 @@ export default function CinematicLandingPage() {
         <HeroScene scrollYProgress={scrollYProgress} />
       </motion.div>
 
-      {/* ── FLOATING MINIMAL NAVIGATION ── */}
-      <motion.header 
-        style={{ backgroundColor: navBg, borderColor: navBorder }}
-        className="fixed top-0 left-0 w-full z-50 transition-colors duration-300 backdrop-blur-xl border-b"
-      >
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-purple-500/20 group-hover:scale-105 transition-transform">
-              <span className="font-extrabold text-white text-base tracking-tighter">K</span>
-            </div>
-            <motion.span style={{ color: navText }} className="font-bold text-lg tracking-tight">
-              KHANI GYAN <span className="font-light opacity-80">AI</span>
-            </motion.span>
-          </Link>
-          
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-medium">
-            <motion.div style={{ color: navText }} className="flex items-center gap-7">
-              <Link href="/" className="opacity-90 hover:opacity-100 transition-opacity">Home</Link>
-              <Link href="/documents" className="opacity-75 hover:opacity-100 transition-opacity">Documents</Link>
-              <Link href="/assistant" className="opacity-75 hover:opacity-100 transition-opacity">AI Assistant</Link>
-              <Link href="/cross-document" className="opacity-75 hover:opacity-100 transition-opacity">Cross-Document</Link>
-              <Link href="/validation" className="opacity-75 hover:opacity-100 transition-opacity">Validation</Link>
-              <Link href="/reports" className="opacity-75 hover:opacity-100 transition-opacity">Reports</Link>
-              <Link href="/search" className="opacity-75 hover:opacity-100 transition-opacity">Search</Link>
-              <Link href="/government-resources" className="opacity-75 hover:opacity-100 transition-opacity">Gov Resources</Link>
-            </motion.div>
-          </nav>
-          
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/login" 
-              className="text-sm font-medium opacity-80 hover:opacity-100 transition-opacity px-3 py-2"
-            >
-              <motion.span style={{ color: navText }}>Log In</motion.span>
-            </Link>
-            <Link 
-              href="/dashboard" 
-              className="inline-flex items-center justify-center px-5 py-2.5 text-xs sm:text-sm font-semibold text-slate-900 bg-white rounded-full hover:shadow-[0_0_20px_rgba(255,255,255,0.4)] hover:scale-105 active:scale-95 transition-all shadow-md"
-            >
-              Launch App
-            </Link>
-          </div>
-        </div>
-      </motion.header>
+      {/* ── TOP NAVIGATION WITH HOVER SLIDE-DOWN MENUS ── */}
+      <TopNavbar />
 
       {/* ── HERO SECTION (DARK GPU PARTICLE OPENING) ── */}
       <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-6 text-center z-10 pt-28 pb-20">

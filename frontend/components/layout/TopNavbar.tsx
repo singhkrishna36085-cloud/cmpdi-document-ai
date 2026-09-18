@@ -54,6 +54,12 @@ interface NavGroup {
 
 const navigationGroups: NavGroup[] = [
   {
+    name: "Home",
+    href: "/",
+    icon: Sparkles,
+    isStandalone: true,
+  },
+  {
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,

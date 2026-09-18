@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 
 interface AiOrbProps {
   isThinking: boolean;
+  className?: string;
 }
 
 function MiniFacetedCore({ isThinking }: { isThinking: boolean }) {
@@ -60,9 +61,9 @@ function MiniFacetedCore({ isThinking }: { isThinking: boolean }) {
   );
 }
 
-export function AiOrb({ isThinking }: AiOrbProps) {
+export function AiOrb({ isThinking, className = "w-12 h-12" }: AiOrbProps) {
   return (
-    <div className="relative flex items-center justify-center w-12 h-12 shrink-0">
+    <div className={`relative flex items-center justify-center shrink-0 ${className}`}>
       {/* Background ambient glow */}
       <motion.div
         className="absolute inset-0 rounded-full blur-xl z-0"

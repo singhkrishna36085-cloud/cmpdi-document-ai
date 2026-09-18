@@ -27,6 +27,19 @@ from app.services.vector_search import get_index_status
 
 logger = logging.getLogger("dashboard_service")
 
+import re
+
+def _safe_float(val: Any, default: float = 0.0) -> float:
+    if not val:
+        return default
+    if isinstance(val, (int, float)):
+        return float(val)
+    val_str = str(val).replace(",", "").strip()
+    match = re.search(r"[-+]?\d*\.\d+|\d+", val_str)
+    if match:
+        return float(match.group(0))
+    return default
+
 
 def get_cutoff_date(date_range: str) -> Optional[datetime]:
     """Calculates UTC cutoff datetime based on requested date range string."""
@@ -465,16 +478,16 @@ async def get_dashboard_analytics(db: AsyncSession, date_range: str = "all", use
                 
                 # Parse numeric values cleanly
                 coal_raw = p_data.get("Raw_Coal_Produced_Tonnes") or p_data.get("actual_mt") or 0.0
-                coal_t = float(str(coal_raw).replace(",", "").strip()) if coal_raw else 0.0
+                coal_t = _safe_float(coal_raw)
                 
                 ob_raw = p_data.get("Overburden_Removed_M3") or 0.0
-                ob_m3 = float(str(ob_raw).replace(",", "").strip()) if ob_raw else 0.0
+                ob_m3 = _safe_float(ob_raw)
 
                 sr_raw = p_data.get("Stripping_Ratio") or (round(ob_m3 / coal_t, 2) if coal_t > 0 else 0.0)
-                sr = float(str(sr_raw).strip()) if sr_raw else 0.0
+                sr = _safe_float(sr_raw)
 
                 seam_raw = p_data.get("Average_Seam_Thickness_M") or 0.0
-                seam = float(str(seam_raw).strip()) if seam_raw else 0.0
+                seam = _safe_float(seam_raw)
 
                 total_coal += coal_t
                 total_ob += ob_m3
@@ -507,8 +520,8 @@ async def get_dashboard_analytics(db: AsyncSession, date_range: str = "all", use
                 }
                 mine_list.append(mine_record)
 
-                target_mt = float(p_data.get("Target_MT", coal_t / 1000000.0 if coal_t > 0 else 0.0))
-                actual_mt = float(p_data.get("Actual_MT", coal_t / 1000000.0 if coal_t > 0 else 0.0))
+                target_mt = _safe_float(p_data.get("Target_MT", coal_t / 1000000.0 if coal_t > 0 else 0.0))
+                actual_mt = _safe_float(p_data.get("Actual_MT", coal_t / 1000000.0 if coal_t > 0 else 0.0))
                 ach = (actual_mt / target_mt * 100.0) if target_mt > 0 else 100.0
                 parsed_metrics.append({
                     "period": mine_name,
