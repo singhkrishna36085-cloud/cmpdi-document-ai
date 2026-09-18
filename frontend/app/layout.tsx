@@ -84,6 +84,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  verification: {
+    google: "lUSJIv_gj0hh5DjMsKzyDT9aUb6rTo4YSRXUHWKAvkg",
+  },
 };
 
 const jsonLd = {
@@ -119,6 +122,10 @@ export default function RootLayout({
       className={`${inter.variable} ${rajdhani.variable} ${sansDisplay.variable} min-h-full antialiased dark`}
     >
       <head>
+        <meta
+          name="google-site-verification"
+          content="lUSJIv_gj0hh5DjMsKzyDT9aUb6rTo4YSRXUHWKAvkg"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
