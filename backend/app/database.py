@@ -1,3 +1,17 @@
+"""
+database.py - CMPDI / CIL Document AI
+Async PostgreSQL connection via SQLAlchemy + asyncpg.
+
+KEY DESIGN DECISIONS:
+- All query params (channel_binding, sslmode, ssl, pgbouncer, etc.) are STRIPPED
+  from DATABASE_URL before passing to SQLAlchemy / asyncpg.
+  asyncpg.connect() does NOT accept libpq-specific parameters.
+- The URL is REBUILT from its individual components (user, password, host, port, db),
+  guaranteeing that NO query string parameters survive into asyncpg.
+- SSL is handled via connect_args["ssl"] = True for cloud (non-localhost) hosts.
+- PgBouncer / Neon transaction pooler compatibility: statement_cache_size=0.
+"""
+
 import os
 import logging
 import urllib.parse
@@ -7,10 +21,15 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
 
+# Ensure startup logs are visible in Render / Docker / cloud environments
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 logger = logging.getLogger("database")
 
-# ── 1. Locate Database Connection String from Environment ─────────────────────
-# Detect standard DATABASE_URL or common cloud platform aliases (Render, Neon, Supabase, Vercel)
+# ── 1. Read raw Database URL from environment ─────────────────────────────────
+# Support Render, Neon, Supabase, Vercel, Railway env var names
 raw_db_url = (
     os.getenv("DATABASE_URL") or
     os.getenv("DATABASE_INTERNAL_URL") or
@@ -18,77 +37,158 @@ raw_db_url = (
     os.getenv("POSTGRES_URL") or
     os.getenv("POSTGRES_PRISMA_URL") or
     os.getenv("POSTGRES_URL_NON_POOLING") or
-    os.getenv("POSTGRESQL_URL")
-)
+    os.getenv("POSTGRESQL_URL") or
+    ""
+).strip()
 
-connect_args = {}
-url_source = "DATABASE_URL"
+# Diagnostic variables (non-sensitive — never contain password)
+connect_args: dict = {}
+url_source = "unknown"
 sanitized_host = "localhost"
 sanitized_port = "5432"
 sanitized_db = "cmpdi"
 ssl_enabled = False
 
-if not raw_db_url:
-    url_source = "POSTGRES_* components (fallback)"
-    DB_USER = os.getenv("POSTGRES_USER", "postgres")
-    DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "password")
-    DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
-    DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-    DB_NAME = os.getenv("POSTGRES_DB", "cmpdi")
-    DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    sanitized_host = DB_HOST
-    sanitized_port = DB_PORT
-    sanitized_db = DB_NAME
-else:
-    DATABASE_URL = raw_db_url.strip()
-    # Normalize scheme to asyncpg driver
-    if DATABASE_URL.startswith("postgresql://"):
-        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-    elif DATABASE_URL.startswith("postgres://"):
-        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
 
-    # Clean query string for asyncpg (translate sslmode -> connect_args and strip unsupported libpq params)
+def _extract_raw_userinfo(netloc: str) -> tuple[str, str]:
+    """
+    Extract the raw (already-percent-encoded) username and password from netloc.
+    Returns them as-is so we do not double-encode existing %-encoded chars.
+    Example: 'user:p%40ss@host:5432' -> ('user', 'p%40ss')
+    """
+    at_pos = netloc.rfind("@")
+    if at_pos == -1:
+        return "", ""
+    userinfo = netloc[:at_pos]
+    colon_pos = userinfo.find(":")
+    if colon_pos == -1:
+        return userinfo, ""
+    return userinfo[:colon_pos], userinfo[colon_pos + 1:]
+
+
+def _build_clean_url(raw: str) -> tuple[str, str, str, str, bool]:
+    """
+    Parse a raw PostgreSQL connection URL and rebuild it WITHOUT any query string.
+
+    This is the critical safety mechanism:
+    - Extracts: host, port, database, user, password (raw/encoded)
+    - Detects SSL requirement from sslmode/ssl query params
+    - Returns a clean URL with ONLY scheme://user:pass@host:port/db
+      — zero query params reach asyncpg.connect()
+
+    Returns: (clean_url, host, port, dbname, ssl_required)
+    """
+    url = raw.strip()
+
+    # Normalize scheme to postgresql+asyncpg
+    if url.startswith("postgres://"):
+        url = "postgresql+asyncpg://" + url[len("postgres://"):]
+    elif url.startswith("postgresql://"):
+        url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+    # If already postgresql+asyncpg:// or unknown scheme, keep as-is
+
     try:
-        parsed = urllib.parse.urlparse(DATABASE_URL)
-        sanitized_host = parsed.hostname or "unknown"
-        sanitized_port = str(parsed.port or "5432")
-        sanitized_db = parsed.path.lstrip("/") or "unknown"
-        qs = urllib.parse.parse_qs(parsed.query)
+        parsed = urllib.parse.urlparse(url)
+    except Exception as exc:
+        logger.error("Failed to parse DATABASE_URL: %s", exc)
+        return url, "unknown", "5432", "unknown", True  # assume SSL for safety
 
-        # Determine SSL requirement
-        is_local_host = sanitized_host.lower() in ("localhost", "127.0.0.1", "host.docker.internal", "db")
-        explicit_ssl_req = any(
-            k in qs for k in ("sslmode", "ssl")
-        ) or os.getenv("DB_SSL", "").lower() in ("true", "1", "require")
-        explicit_ssl_disable = (
-            qs.get("sslmode", [""])[0].lower() in ("disable", "false", "0") or
-            qs.get("ssl", [""])[0].lower() in ("disable", "false", "0") or
-            os.getenv("DB_SSL", "").lower() in ("false", "0", "disable")
-        )
+    # Extract raw (possibly percent-encoded) user/password from netloc
+    raw_user, raw_pass = _extract_raw_userinfo(parsed.netloc)
 
-        # Cloud hosts (Neon, Supabase, Render, Railway, AWS RDS, etc.) require SSL by default
-        if not explicit_ssl_disable and (explicit_ssl_req or not is_local_host):
-            connect_args["ssl"] = True
-            ssl_enabled = True
+    db_host = parsed.hostname or "localhost"
+    db_port = str(parsed.port or 5432)
+    db_name = (parsed.path or "/cmpdi").lstrip("/") or "cmpdi"
 
-        # Strip libpq-specific params unsupported by asyncpg
-        unsupported_params = {"sslmode", "ssl", "channel_binding", "pgbouncer", "target_session_attrs", "application_name"}
-        clean_query = "&".join(
-            [f"{k}={v[0]}" for k, v in qs.items() if k not in unsupported_params]
-        )
-        DATABASE_URL = urllib.parse.urlunparse(parsed._replace(query=clean_query))
-    except Exception as parse_err:
-        logger.warning(f"Notice on DATABASE_URL parsing: {parse_err}")
+    # Detect SSL requirement from query params BEFORE discarding them
+    qs = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+    sslmode_val = qs.get("sslmode", [""])[0].lower()
+    ssl_val = qs.get("ssl", [""])[0].lower()
+    db_ssl_env = os.getenv("DB_SSL", "").lower()
 
-# ── 2. Asyncpg Driver Connection Arguments ───────────────────────────────────
-# Statement cache size 0 is required for PgBouncer / Neon / Supabase transaction poolers
+    is_local = db_host.lower() in (
+        "localhost", "127.0.0.1", "::1", "host.docker.internal", "db", "postgres"
+    )
+    explicit_disable = (
+        sslmode_val in ("disable", "false", "0") or
+        ssl_val in ("disable", "false", "0", "no") or
+        db_ssl_env in ("false", "0", "disable", "no")
+    )
+    needs_ssl = not explicit_disable and (
+        sslmode_val in ("require", "prefer", "allow", "verify-ca", "verify-full") or
+        ssl_val in ("true", "1", "require") or
+        db_ssl_env in ("true", "1", "require") or
+        not is_local  # non-localhost → cloud → require SSL
+    )
+
+    # Rebuild URL from scratch — NO query params (this is what prevents the error)
+    if raw_user and raw_pass:
+        clean_url = f"postgresql+asyncpg://{raw_user}:{raw_pass}@{db_host}:{db_port}/{db_name}"
+    elif raw_user:
+        clean_url = f"postgresql+asyncpg://{raw_user}@{db_host}:{db_port}/{db_name}"
+    else:
+        clean_url = f"postgresql+asyncpg://{db_host}:{db_port}/{db_name}"
+
+    return clean_url, db_host, db_port, db_name, needs_ssl
+
+
+# ── 2. Build the final, clean DATABASE_URL ────────────────────────────────────
+if not raw_db_url:
+    # No URL env var: assemble from individual POSTGRES_* vars
+    url_source = "POSTGRES_* env vars (fallback)"
+    _user = os.getenv("POSTGRES_USER", "postgres")
+    _pass = urllib.parse.quote(os.getenv("POSTGRES_PASSWORD", "password"), safe="")
+    _host = os.getenv("POSTGRES_HOST", "localhost")
+    _port = os.getenv("POSTGRES_PORT", "5432")
+    _db = os.getenv("POSTGRES_DB", "cmpdi")
+    _user_enc = urllib.parse.quote(_user, safe="")
+
+    sanitized_host = _host
+    sanitized_port = _port
+    sanitized_db = _db
+
+    DATABASE_URL = f"postgresql+asyncpg://{_user_enc}:{_pass}@{_host}:{_port}/{_db}"
+
+    _is_local = _host.lower() in ("localhost", "127.0.0.1", "::1", "host.docker.internal", "db", "postgres")
+    _db_ssl = os.getenv("DB_SSL", "").lower()
+    if not _is_local or _db_ssl in ("true", "1", "require"):
+        connect_args["ssl"] = True
+        ssl_enabled = True
+else:
+    url_source = "DATABASE_URL env var"
+    DATABASE_URL, sanitized_host, sanitized_port, sanitized_db, ssl_enabled = _build_clean_url(raw_db_url)
+    if ssl_enabled:
+        connect_args["ssl"] = True
+
+# ── 3. asyncpg-compatible connect_args ────────────────────────────────────────
+# statement_cache_size=0: required for PgBouncer / Neon / Supabase transaction poolers
+# (avoids "prepared statement does not exist" errors after connection is recycled)
 connect_args["statement_cache_size"] = 0
-connect_args["timeout"] = int(os.getenv("DB_TIMEOUT", "15"))
+connect_args["timeout"] = int(os.getenv("DB_TIMEOUT", "30"))
+
+# ── 4. Safe diagnostic log (password is NEVER logged) ────────────────────────
+logger.info(
+    "PostgreSQL engine: host=%s port=%s db=%s ssl=%s source=%s connect_args_keys=%s",
+    sanitized_host, sanitized_port, sanitized_db,
+    ssl_enabled, url_source,
+    list(connect_args.keys()),
+)
+
+# Double-check: log whether the final URL has any query params
+_has_query = "?" in DATABASE_URL
+if _has_query:
+    logger.error(
+        "CRITICAL: DATABASE_URL still contains query parameters after cleanup! "
+        "This will cause asyncpg.connect() to fail. URL fragment after host: %s",
+        DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else DATABASE_URL,
+    )
+else:
+    logger.info("DATABASE_URL is clean — no query parameters (channel_binding safe).")
 
 DEBUG_MODE = os.getenv("DEBUG", "False").lower() in ("true", "1")
 
-# Connection pool settings for reliable cloud connections
-engine_kwargs = {
+# ── 5. Create the SQLAlchemy async engine ────────────────────────────────────
+engine_kwargs: dict = {
     "echo": DEBUG_MODE,
     "future": True,
     "pool_pre_ping": True,
@@ -97,14 +197,8 @@ engine_kwargs = {
 }
 
 if not DATABASE_URL.startswith("sqlite"):
-    engine_kwargs["pool_size"] = int(os.getenv("DB_POOL_SIZE", "10"))
-    engine_kwargs["max_overflow"] = int(os.getenv("DB_MAX_OVERFLOW", "20"))
-
-# Log safe sanitized database configuration (NEVER logs credentials or secrets)
-logger.info(
-    f"PostgreSQL async engine configured: host={sanitized_host}:{sanitized_port}, "
-    f"database={sanitized_db}, ssl={ssl_enabled}, source={url_source}"
-)
+    engine_kwargs["pool_size"] = int(os.getenv("DB_POOL_SIZE", "5"))
+    engine_kwargs["max_overflow"] = int(os.getenv("DB_MAX_OVERFLOW", "10"))
 
 engine = create_async_engine(DATABASE_URL, **engine_kwargs)
 AsyncSessionLocal = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
@@ -119,14 +213,14 @@ def get_sanitized_db_info() -> dict:
         "port": sanitized_port,
         "database": sanitized_db,
         "ssl_configured": ssl_enabled,
-        "is_cloud_host": sanitized_host.lower() not in ("localhost", "127.0.0.1", "host.docker.internal"),
+        "is_cloud_host": sanitized_host.lower() not in (
+            "localhost", "127.0.0.1", "::1", "host.docker.internal"
+        ),
         "source": url_source,
+        "connect_args_keys": list(connect_args.keys()),
     }
 
 
 async def get_db() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         yield session
-
-
-
