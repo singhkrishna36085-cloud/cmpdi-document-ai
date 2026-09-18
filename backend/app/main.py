@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
-from .database import get_db, AsyncSessionLocal, engine, Base
+from .database import get_db, AsyncSessionLocal, engine, Base, get_sanitized_db_info
 from .services.audit_service import ensure_audit_schema
 from .core.seed import seed_initial_users
 from .routers import documents as docs_router
@@ -126,16 +126,33 @@ def health_check():
 async def db_health_check(db: AsyncSession = Depends(get_db)):
     try:
         await db.execute(text("SELECT 1"))
-        return {"status": "ok", "detail": "PostgreSQL connection successful"}
+        return {
+            "status": "ok",
+            "detail": "PostgreSQL connection successful",
+            "diagnostics": get_sanitized_db_info()
+        }
     except Exception as exc:
-        raise HTTPException(status_code=503, detail="Database connection failed")
+        logger.error(f"Database health check failed (/api/health/db): {type(exc).__name__}: {exc}", exc_info=True)
+        db_info = get_sanitized_db_info()
+        hint = "Database connection error."
+        if db_info.get("host") in ("localhost", "127.0.0.1"):
+            hint = "DATABASE_URL is set to localhost. In production (Render), configure DATABASE_URL with your remote PostgreSQL connection string."
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "Database connection failed",
+                "error_type": type(exc).__name__,
+                "diagnostics": db_info,
+                "hint": hint,
+            }
+        )
 
 
 @app.get("/api/health/ready", tags=["health"])
 async def ready_health_check(db: AsyncSession = Depends(get_db)):
     """
     Production operational readiness health check.
-    Validates backend + database connection without leaking internal details.
+    Validates backend + database connection without leaking internal credentials.
     """
     try:
         await db.execute(text("SELECT 1"))
@@ -143,7 +160,16 @@ async def ready_health_check(db: AsyncSession = Depends(get_db)):
             "status": "ready",
             "database": "connected",
             "service": "cmpdi-document-ai",
+            "diagnostics": get_sanitized_db_info()
         }
-    except Exception:
-        raise HTTPException(status_code=503, detail="Service not ready: database connection failed")
+    except Exception as exc:
+        logger.error(f"Operational readiness check failed (/api/health/ready): {type(exc).__name__}: {exc}", exc_info=True)
+        db_info = get_sanitized_db_info()
+        hint = "Database connection failed."
+        if db_info.get("host") in ("localhost", "127.0.0.1"):
+            hint = "DATABASE_URL points to localhost. On Render, add your remote PostgreSQL DATABASE_URL in Environment Variables."
+        raise HTTPException(
+            status_code=503,
+            detail=f"Service not ready: database connection failed ({type(exc).__name__}: {hint})"
+        )
 
