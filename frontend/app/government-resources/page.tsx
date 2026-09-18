@@ -121,9 +121,6 @@ function GovernmentResourcesContent() {
 
   return (
     <div className="min-h-screen bg-white text-slate-800">
-      {/* Force white body for this page */}
-      <style dangerouslySetInnerHTML={{ __html: `body { background: #ffffff !important; }` }} />
-
       <main className="pt-[76px] pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 

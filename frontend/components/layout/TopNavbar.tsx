@@ -640,24 +640,25 @@ export function TopNavbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-[#090A0F]/95 backdrop-blur-2xl border-b border-white/[0.1] px-4 py-4 max-h-[calc(100vh-4rem)] overflow-y-auto"
+            className="lg:hidden bg-[#090A0F]/98 backdrop-blur-2xl border-b border-white/[0.1] px-4 py-5 max-h-[calc(100dvh-4rem)] overflow-y-auto shadow-[0_25px_60px_rgba(0,0,0,0.95)]"
           >
             <div className="flex flex-col gap-4">
               {navigationGroups.map((group) => (
                 <div key={group.name} className="flex flex-col gap-1">
-                  <div className="text-[10px] font-mono tracking-widest text-cyan-400 uppercase px-2">
+                  <div className="text-[11px] font-mono tracking-widest text-cyan-400 uppercase px-2 font-bold">
                     {group.name}
                   </div>
                   {group.isStandalone && group.href ? (
                     <Link
                       href={group.href}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium ${
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-colors ${
                         isActive(group.href)
-                          ? "bg-cyan-950/50 text-cyan-300 border border-cyan-500/30"
-                          : "text-slate-300 hover:bg-white/[0.05]"
+                          ? "bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                          : "text-slate-300 hover:bg-white/[0.06] active:bg-white/[0.1]"
                       }`}
                     >
-                      <group.icon className="w-4 h-4" />
+                      <group.icon className="w-4 h-4 text-cyan-400" />
                       <span>{group.name}</span>
                     </Link>
                   ) : (
@@ -665,16 +666,17 @@ export function TopNavbar() {
                       <Link
                         key={item.name}
                         href={item.href}
-                        className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium ${
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-colors ${
                           isActive(item.href)
-                            ? "bg-cyan-950/50 text-cyan-300 border border-cyan-500/30"
-                            : "text-slate-300 hover:bg-white/[0.05]"
+                            ? "bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                            : "text-slate-300 hover:bg-white/[0.06] active:bg-white/[0.1]"
                         }`}
                       >
-                        <item.icon className="w-4 h-4 text-slate-400" />
+                        <item.icon className={`w-4 h-4 ${isActive(item.href) ? "text-cyan-400" : "text-slate-400"}`} />
                         <span>{item.name}</span>
                         {item.badge && (
-                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 ml-auto">
+                          <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 ml-auto border border-cyan-500/30">
                             {item.badge}
                           </span>
                         )}

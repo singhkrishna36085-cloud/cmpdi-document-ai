@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Rajdhani, Noto_Sans_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -22,8 +22,16 @@ const sansDisplay = Noto_Sans_Display({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#030303",
+  colorScheme: "dark",
+};
+
 export const metadata: Metadata = {
-  title: "KhaniGyan-AI",
+  title: "CMPDI Document AI | KhaniGyan-AI",
   description: "AI-Assisted Geological, Mining & Production Reporting Platform",
 };
 
