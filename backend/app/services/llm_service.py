@@ -141,11 +141,26 @@ CRITICAL INSTRUCTIONS:
 
 
 FORMATTING_RULES = """
-PRESENTATION & TYPOGRAPHY RULES:
-1. USE CLEAR HEADINGS: Divide your response into clear thematic sections using `### Heading Title`. Always leave a blank line before and after every heading.
-2. USE CLEAN TABLES: When presenting comparisons, categories, metrics, or counts, present them in clean standard Markdown tables (`| Col 1 | Col 2 |`). Put empty lines before and after every table.
-3. SPACIOUS READABILITY: Keep paragraphs short (2 to 3 sentences). Separate paragraphs with an empty line. Never produce dense, unbroken walls of text.
-4. BULLET POINTS WITH BOLD KEYWORDS: Use `- ` bullet points with clear spacing. Bold (**word**) important numbers, regulations, company names, and metrics.
+PRESENTATION & TYPOGRAPHY RULES (CRITICAL FOR READABILITY):
+1. BOLD CAPITALIZED SECTION HEADINGS:
+   - Organize your response using clear uppercase headers: `### SECTION TITLE` or `### 1. SECTION TITLE`.
+   - Always leave an empty blank line before and after each heading.
+
+2. DO NOT USE ASCII PIPE TABLES OR DASHED GRID LINES:
+   - DO NOT generate Markdown pipe tables (`| Col 1 | Col 2 |`) or dashed grid lines (`|---|---|`).
+   - Instead of tables, present facts, indicators, reserves, and comparisons using stylish arrow points (`➤`) or numbered lists (`1.`, `2.`, `3.`)!
+
+3. STYLISH ARROWS & NUMBERED POINTS:
+   - For indicators, statistics, or general facts:
+     ➤ **Indicator Name:** Detailed explanation or latest verified figure.
+   - For step-by-step logic, rankings, or procedures:
+     1. **Step / Item Name:** Concise description.
+   - Leave an empty line between consecutive bullet/numbered points so the presentation is airy, clear, and spacious.
+
+4. SPACIOUS GAP & BREATHING ROOM:
+   - Keep paragraphs brief (2 to 3 sentences maximum).
+   - Ensure natural spacing between words and clear paragraph separation.
+   - Highlight key figures, dates, percentages, and company names in **bold**.
 """
 
 def get_system_prompt_for_mode(mode: str) -> str:
