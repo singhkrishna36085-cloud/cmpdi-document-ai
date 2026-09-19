@@ -42,57 +42,61 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
         fitz_module = None
 
     if fitz_module is not None:
-        doc = fitz_module.open(file_path)
-        page_count = len(doc)
-        chunks = []
-        full_text_list = []
-        
-        for page_idx in range(page_count):
-            page_num = page_idx + 1
-            page = doc[page_idx]
-            text = page.get_text("text").strip()
-            
-            # If page has minimal digital text, attempt OCR via PaddleOCR
-            if len(text) < 10:
-                ocr_engine = get_ocr_engine()
-                if ocr_engine:
-                    try:
-                        pix = page.get_pixmap(dpi=150)
-                        img_bytes = pix.tobytes("png")
-                        result = ocr_engine.ocr(img_bytes, cls=False)
-                        ocr_lines = []
-                        if result and result[0]:
-                            for line in result[0]:
-                                if line and len(line) >= 2 and line[1]:
-                                    ocr_lines.append(line[1][0])
-                        ocr_text = "\n".join(ocr_lines).strip()
-                        if ocr_text:
-                            text = f"[OCR Extracted Page {page_num}]\n" + ocr_text
-                    except Exception as e:
-                        logger.warning(f"OCR processing failed for PDF page {page_num}: {e}")
-            
-            if text:
-                chunks.append({
-                    "page_number": page_num,
-                    "sheet_name": None,
-                    "chunk_type": "text",
-                    "content": text
-                })
-                full_text_list.append(f"--- Page {page_num} ---\n{text}")
-        
-        doc.close()
-        full_text = "\n\n".join(full_text_list)
-        return {
-            "page_count": page_count,
-            "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "PyMuPDF"}),
-            "full_text": full_text,
-            "chunks": chunks
-        }
-    else:
         try:
-            import pypdf
-        except ImportError:
-            raise RuntimeError("Neither 'PyMuPDF' (fitz) nor 'pypdf' is installed. Please install PyMuPDF or pypdf.")
+            doc = fitz_module.open(file_path)
+            page_count = len(doc)
+            chunks = []
+            full_text_list = []
+            
+            for page_idx in range(page_count):
+                page_num = page_idx + 1
+                page = doc[page_idx]
+                text = page.get_text("text").strip()
+                
+                # If page has minimal digital text, attempt OCR via PaddleOCR
+                if len(text) < 10:
+                    ocr_engine = get_ocr_engine()
+                    if ocr_engine:
+                        try:
+                            pix = page.get_pixmap(dpi=150)
+                            img_bytes = pix.tobytes("png")
+                            result = ocr_engine.ocr(img_bytes, cls=False)
+                            ocr_lines = []
+                            if result and result[0]:
+                                for line in result[0]:
+                                    if line and len(line) >= 2 and line[1]:
+                                        ocr_lines.append(line[1][0])
+                            ocr_text = "\n".join(ocr_lines).strip()
+                            if ocr_text:
+                                text = f"[OCR Extracted Page {page_num}]\n" + ocr_text
+                        except Exception as e:
+                            logger.warning(f"OCR processing failed for PDF page {page_num}: {e}")
+                
+                if text:
+                    chunks.append({
+                        "page_number": page_num,
+                        "sheet_name": None,
+                        "chunk_type": "text",
+                        "content": text
+                    })
+                    full_text_list.append(f"--- Page {page_num} ---\n{text}")
+            
+            doc.close()
+            full_text = "\n\n".join(full_text_list)
+            return {
+                "page_count": page_count,
+                "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "PyMuPDF"}),
+                "full_text": full_text,
+                "chunks": chunks
+            }
+        except Exception as fitz_err:
+            logger.warning(f"PyMuPDF failed while parsing '{file_path}': {fitz_err}. Falling back to pypdf.")
+
+    # Fallback to pypdf parser
+    try:
+        import pypdf
+    except ImportError:
+        raise RuntimeError("PDF extraction parser unavailable. Please ensure 'pypdf' is installed.")
 
         reader = pypdf.PdfReader(file_path)
         page_count = len(reader.pages)

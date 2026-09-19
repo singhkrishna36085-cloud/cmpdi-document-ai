@@ -208,15 +208,49 @@ function DocumentViewerContent() {
     try {
       const formData = new FormData();
       formData.append("file", file);
+      
+      // Attempt re-upload on existing document endpoint
       const res = await fetchWithAuth(`/api/documents/${docId}/reupload`, {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || "Re-upload failed on backend.");
+
+      if (res.ok) {
+        await fetchDocumentData();
+        return;
       }
-      await fetchDocumentData();
+
+      // If backend returned 404 (endpoint still deploying on cloud), fall back seamlessly to main upload endpoint
+      if (res.status === 404) {
+        const fallbackData = new FormData();
+        fallbackData.append("file", file);
+        fallbackData.append("name", document?.name || file.name.replace(/\.[^/.]+$/, ""));
+        fallbackData.append("type", document?.type || "Geological Report");
+        fallbackData.append("source", document?.source || "CMPDI Central");
+        fallbackData.append("category", document?.category || "Operations");
+        fallbackData.append("date", document?.doc_date ? document.doc_date.substring(0, 10) : new Date().toISOString().substring(0, 10));
+        fallbackData.append("description", document?.description || "");
+        fallbackData.append("is_confidential", String(document?.is_confidential || false));
+
+        const uploadRes = await fetchWithAuth(`/api/documents/upload`, {
+          method: "POST",
+          body: fallbackData,
+        });
+
+        if (uploadRes.ok) {
+          const newDoc = await uploadRes.json();
+          const newId = newDoc?.document?.id;
+          if (newId) {
+            router.push(`/documents/viewer?id=${newId}`);
+            return;
+          }
+          await fetchDocumentData();
+          return;
+        }
+      }
+
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || "Re-upload failed on backend.");
     } catch (err: any) {
       setReuploadError(err.message || "Failed to re-upload file.");
     } finally {
@@ -802,15 +836,15 @@ function DocumentViewerContent() {
             </div>
           </div>
 
-          {document.processing_status === "failed" && document.error_message?.includes("File missing") ? (
+          {document.processing_status === "failed" ? (
             <div className="p-16 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4">
               <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto">
                 <AlertTriangle className="w-7 h-7" />
               </div>
               <div className="space-y-1.5 max-w-md mx-auto">
-                <h3 className="text-base font-bold text-slate-100">Physical File Cleared from Server Storage</h3>
+                <h3 className="text-base font-bold text-slate-100">Document Processing Incomplete</h3>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  During cloud server restart, temporary cached files are reset. Re-upload <span className="font-semibold text-slate-200">{document.original_filename}</span> below to view the live PDF and restore full chunk indexing.
+                  {document.error_message || "The original file needs to be re-uploaded to generate full document preview, OCR text, and AI embeddings."}
                 </p>
               </div>
               <button
