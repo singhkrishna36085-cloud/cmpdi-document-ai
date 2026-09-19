@@ -385,36 +385,34 @@ export function TopNavbar() {
             href="/dashboard" 
             className="flex items-center gap-3 group focus:outline-none"
           >
-            {/* Geometric Mineral Crest */}
-            <div className="relative flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-obsidian-700 via-obsidian-800 to-obsidian-900 border border-cyan-500/30 group-hover:border-cyan-400/60 shadow-[0_0_15px_rgba(6,182,212,0.2)] transition-all duration-300">
-              {/* Inner glowing pulse */}
-              <div className="absolute inset-0 rounded-lg bg-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative font-mono font-bold text-base bg-gradient-to-br from-white via-cyan-200 to-cyan-400 bg-clip-text text-transparent">
+            {/* Modern Mineral Crest */}
+            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-black border border-white/20 group-hover:border-white/60 shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-300">
+              <div className="absolute inset-0 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative font-display font-black text-xl text-white">
                 K
               </div>
-              {/* Tiny corner tech accents */}
-              <div className="absolute -top-[1px] -left-[1px] w-1.5 h-1.5 border-t border-l border-cyan-400" />
-              <div className="absolute -bottom-[1px] -right-[1px] w-1.5 h-1.5 border-b border-r border-emerald-400" />
+              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-white" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-cyan-400" />
             </div>
 
-            {/* Brand Title */}
+            {/* Brand Title: Pure White, Modern Display Font, Increased Size */}
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-bold tracking-wider text-white uppercase group-hover:text-cyan-200 transition-colors">
-                  Khani Gyan
+                <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(255,255,255,0.2)] group-hover:text-white/90 transition-colors">
+                  Khanij Gyan
                 </span>
-                <span className="text-[10px] font-mono tracking-widest px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 uppercase">
+                <span className="text-xs font-sans font-extrabold tracking-widest px-2 py-0.5 rounded bg-white text-slate-950 uppercase shadow-md">
                   AI
                 </span>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono tracking-wider uppercase hidden xl:block">
-                KhaniGyan-AI Intelligence System
+              <span className="text-[11px] text-slate-200 font-medium tracking-wider uppercase hidden xl:block">
+                KhanijGyan-AI Intelligence System
               </span>
             </div>
           </Link>
 
           {/* Live RAG Telemetry Pill */}
-          <div className="hidden 2xl:flex items-center gap-2 ml-3 px-2.5 py-1 rounded-full bg-emerald-950/30 border border-emerald-500/20 text-[10px] font-mono text-emerald-400">
+          <div className="hidden 2xl:flex items-center gap-2 ml-3 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30 text-[11px] font-mono text-emerald-300 font-medium">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
@@ -423,8 +421,8 @@ export function TopNavbar() {
           </div>
         </div>
 
-        {/* Center: Desktop Navigation Groups */}
-        <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2 justify-center flex-1">
+        {/* Center: Desktop Navigation Groups with White Text & Increased Font Size */}
+        <nav className="hidden lg:flex items-center gap-1.5 xl:gap-2.5 justify-center flex-1">
           {navigationGroups.map((group) => {
             const groupIsActive = isGroupActive(group);
 
@@ -434,18 +432,18 @@ export function TopNavbar() {
                 <Link
                   key={group.name}
                   href={group.href}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  className={`relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-[15px] font-bold tracking-tight transition-all duration-200 ${
                     active
-                      ? "text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                      : "text-slate-300 hover:text-white hover:bg-white/[0.04] border border-transparent hover:border-white/[0.06]"
+                      ? "text-white bg-white/15 border border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+                      : "text-white hover:text-white hover:bg-white/[0.08] border border-transparent hover:border-white/10"
                   }`}
                 >
-                  <group.icon className={`w-4 h-4 ${active ? "text-cyan-400" : "text-slate-400"}`} />
+                  <group.icon className={`w-4 h-4 ${active ? "text-white" : "text-white/90"}`} />
                   <span>{group.name}</span>
                   {active && (
                     <motion.div
                       layoutId="navActiveIndicator"
-                      className="absolute bottom-0 left-2 right-2 h-[2px] bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full"
+                      className="absolute bottom-0 left-2 right-2 h-[2px] bg-white rounded-full shadow-[0_0_8px_#ffffff]"
                       transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
                   )}
@@ -464,22 +462,22 @@ export function TopNavbar() {
               >
                 <button
                   onClick={() => setActiveDropdown(isOpen ? null : group.name)}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                  className={`relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-[15px] font-bold tracking-tight transition-all duration-200 cursor-pointer ${
                     isOpen || groupIsActive
-                      ? "text-cyan-300 bg-cyan-950/40 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.15)]"
-                      : "text-slate-300 hover:text-white hover:bg-white/[0.04] border border-transparent hover:border-white/[0.06]"
+                      ? "text-white bg-white/15 border border-white/30 shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+                      : "text-white hover:text-white hover:bg-white/[0.08] border border-transparent hover:border-white/10"
                   }`}
                 >
                   {group.icon && (
-                    <group.icon className={`w-4 h-4 ${groupIsActive ? "text-cyan-400" : "text-slate-400"}`} />
+                    <group.icon className={`w-4 h-4 ${groupIsActive ? "text-white" : "text-white/90"}`} />
                   )}
                   <span>{group.name}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 opacity-60 ${isOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isOpen ? "rotate-180 text-white" : "text-white/80"}`} />
 
                   {groupIsActive && (
                     <motion.div
                       layoutId="navActiveIndicator"
-                      className="absolute bottom-0 left-2 right-2 h-[2px] bg-gradient-to-r from-cyan-400 to-emerald-400 rounded-full"
+                      className="absolute bottom-0 left-2 right-2 h-[2px] bg-white rounded-full shadow-[0_0_8px_#ffffff]"
                       transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
                   )}
@@ -865,20 +863,20 @@ export function TopNavbar() {
             <div className="flex flex-col gap-4">
               {navigationGroups.map((group) => (
                 <div key={group.name} className="flex flex-col gap-1">
-                  <div className="text-[11px] font-mono tracking-widest text-cyan-400 uppercase px-2 font-bold">
+                  <div className="text-[11px] font-mono tracking-widest text-white/70 uppercase px-2 font-bold">
                     {group.name}
                   </div>
                   {group.isStandalone && group.href ? (
                     <Link
                       href={group.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-3 px-3.5 py-3 rounded-xl text-[15px] font-bold transition-colors ${
                         isActive(group.href)
-                          ? "bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                          : "text-slate-300 hover:bg-white/[0.06] active:bg-white/[0.1]"
+                          ? "bg-white/15 text-white border border-white/25 shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                          : "text-white hover:bg-white/[0.08] active:bg-white/[0.12]"
                       }`}
                     >
-                      <group.icon className="w-4 h-4 text-cyan-400" />
+                      <group.icon className="w-4 h-4 text-white" />
                       <span>{group.name}</span>
                     </Link>
                   ) : (
@@ -887,13 +885,13 @@ export function TopNavbar() {
                         key={item.name}
                         href={item.href}
                         onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-colors ${
+                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
                           isActive(item.href)
-                            ? "bg-cyan-950/60 text-cyan-300 border border-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                            : "text-slate-300 hover:bg-white/[0.06] active:bg-white/[0.1]"
+                            ? "bg-white/15 text-white border border-white/25 shadow-[0_0_15px_rgba(255,255,255,0.15)]"
+                            : "text-white/90 hover:text-white hover:bg-white/[0.08] active:bg-white/[0.12]"
                         }`}
                       >
-                        <item.icon className={`w-4 h-4 ${isActive(item.href) ? "text-cyan-400" : "text-slate-400"}`} />
+                        <item.icon className={`w-4 h-4 ${isActive(item.href) ? "text-white" : "text-white/80"}`} />
                         <span>{item.name}</span>
                         {item.badge && (
                           <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 ml-auto border border-cyan-500/30">
