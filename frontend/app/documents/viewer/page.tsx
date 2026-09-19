@@ -34,7 +34,8 @@ import {
   FolderOpen,
   UploadCloud,
   Trash2,
-  Loader2
+  Loader2,
+  Download
 } from "lucide-react";
 
 function DocumentViewerContent() {
@@ -45,7 +46,10 @@ function DocumentViewerContent() {
 
   // Document selection list (when no ID is selected or switching)
   const [docList, setDocList] = useState<DocumentDetail[]>([]);
-  const [activeTab, setActiveTab] = useState<"overview" | "content" | "structured" | "validation" | "processing">("overview");
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"preview" | "overview" | "content" | "structured" | "validation" | "processing">(
+    tabParam === "overview" || tabParam === "content" || tabParam === "structured" || tabParam === "validation" || tabParam === "processing" ? tabParam : "preview"
+  );
 
   // Real backend data states
   const [document, setDocument] = useState<DocumentDetail | null>(null);
@@ -83,6 +87,33 @@ function DocumentViewerContent() {
   const [reuploading, setReuploading] = useState<boolean>(false);
   const [reuploadError, setReuploadError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<boolean>(false);
+  const [downloading, setDownloading] = useState<boolean>(false);
+
+  const handleDownload = async () => {
+    if (!docId) return;
+    setDownloading(true);
+    try {
+      const res = await fetchWithAuth(`/api/documents/${docId}/file?download=true`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Download failed. File may have been cleared from cloud temporary storage.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = window.document.createElement("a");
+      a.href = url;
+      a.download = document?.original_filename || `document_${docId}`;
+      window.document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      window.document.body.removeChild(a);
+    } catch (err: any) {
+      alert(`Network error downloading: ${err.message}`);
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // Fetch real document details
   const fetchDocumentData = useCallback(async () => {
@@ -506,6 +537,17 @@ function DocumentViewerContent() {
             <Trash2 className="w-3.5 h-3.5" /> Delete
           </button>
 
+          {/* Download Original File */}
+          <button
+            onClick={handleDownload}
+            disabled={downloading}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-semibold border border-blue-500/30 transition-colors disabled:opacity-50"
+            title="Download source file"
+          >
+            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+            Download
+          </button>
+
           <Link
             href={`/assistant?doc_id=${document.id}`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 text-xs font-semibold border border-teal-500/20 transition-colors"
@@ -650,6 +692,17 @@ function DocumentViewerContent() {
       {/* Main Tab Navigation */}
       <div className="border-b border-slate-800 flex items-center gap-1 overflow-x-auto">
         <button
+          onClick={() => setActiveTab("preview")}
+          className={`px-4 py-2.5 text-xs font-bold transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
+            activeTab === "preview"
+              ? "border-teal-400 text-teal-400"
+              : "border-transparent text-slate-400 hover:text-slate-200"
+          }`}
+        >
+          <Eye className="w-4 h-4" /> Document File Preview
+        </button>
+
+        <button
           onClick={() => setActiveTab("overview")}
           className={`px-4 py-2.5 text-xs font-bold transition-colors border-b-2 flex items-center gap-2 whitespace-nowrap ${
             activeTab === "overview"
@@ -704,6 +757,81 @@ function DocumentViewerContent() {
           <Clock className="w-4 h-4" /> Pipeline Timeline
         </button>
       </div>
+
+      {/* Tab 0: ORIGINAL FILE / PDF PREVIEW */}
+      {activeTab === "preview" && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl bg-slate-900 border border-slate-800">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-mono px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 font-bold uppercase">
+                {document.type || "DOCUMENT"}
+              </span>
+              <span className="text-sm font-semibold text-slate-200">{document.original_filename}</span>
+              <span className="text-xs text-slate-500 font-mono">({formatFileSize(document.file_size)})</span>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <a
+                href={`/api/documents/${document.id}/file`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold border border-slate-700 transition-colors"
+                title="Open raw document in new browser tab"
+              >
+                <ExternalLink className="w-3.5 h-3.5" /> Open in New Tab
+              </a>
+
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 text-xs font-semibold border border-blue-500/30 transition-colors disabled:opacity-50"
+                title="Download original document"
+              >
+                {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
+                Download File
+              </button>
+
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={reuploading}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 text-xs font-semibold border border-teal-500/30 transition-colors"
+                title="Re-upload or replace this file"
+              >
+                <UploadCloud className="w-3.5 h-3.5" /> Replace File
+              </button>
+            </div>
+          </div>
+
+          {document.processing_status === "failed" && document.error_message?.includes("File missing") ? (
+            <div className="p-16 rounded-2xl bg-slate-900 border border-slate-800 text-center space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-7 h-7" />
+              </div>
+              <div className="space-y-1.5 max-w-md mx-auto">
+                <h3 className="text-base font-bold text-slate-100">Physical File Cleared from Server Storage</h3>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  During cloud server restart, temporary cached files are reset. Re-upload <span className="font-semibold text-slate-200">{document.original_filename}</span> below to view the live PDF and restore full chunk indexing.
+                </p>
+              </div>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={reuploading}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs shadow-lg transition-all"
+              >
+                <UploadCloud className="w-4 h-4" /> Re-upload File Now
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl">
+              <iframe
+                src={`/api/documents/${document.id}/file`}
+                className="w-full h-[850px] bg-slate-900"
+                title={document.name || document.original_filename}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Tab 1: OVERVIEW & METADATA */}
       {activeTab === "overview" && (

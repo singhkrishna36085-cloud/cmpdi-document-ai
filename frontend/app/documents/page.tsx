@@ -15,7 +15,8 @@ import {
   AlertTriangle, 
   Clock,
   Download,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 
 export default function DocumentsPage() {
@@ -24,6 +25,33 @@ export default function DocumentsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [downloadingId, setDownloadingId] = useState<number | null>(null);
+
+  const handleDownload = async (docId: number, filename: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDownloadingId(docId);
+    try {
+      const res = await fetchWithAuth(`/api/documents/${docId}/file?download=true`);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(err.detail || "Download failed. The file may have been cleared from cloud temporary storage.");
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || `document_${docId}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err: any) {
+      alert(`Network error during download: ${err.message}`);
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const handleDeleteDocument = async (docId: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -234,11 +262,24 @@ export default function DocumentsPage() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <Link
-                          href={`/documents/viewer?id=${doc.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                          href={`/documents/viewer?id=${doc.id}&tab=preview`}
+                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 text-sm"
+                          title="View Document & Intelligence"
                         >
                           <Eye className="w-4 h-4" /> View
                         </Link>
+                        <button
+                          onClick={(e) => handleDownload(doc.id, doc.original_filename, e)}
+                          disabled={downloadingId === doc.id}
+                          className="text-slate-500 hover:text-blue-600 transition-colors p-1 disabled:opacity-50"
+                          title="Download Original File"
+                        >
+                          {downloadingId === doc.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                          ) : (
+                            <Download className="w-4 h-4" />
+                          )}
+                        </button>
                         <button 
                           onClick={(e) => handleDeleteDocument(doc.id, e)}
                           className="text-slate-400 hover:text-rose-600 transition-colors p-1"

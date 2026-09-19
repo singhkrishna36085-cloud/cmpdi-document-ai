@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,6 +22,7 @@ from app.models import Document, DocumentChunk, StructuredExtraction, User
 from app.services.processor import process_document_file
 from app.services.structured_extractor import extract_structured_data
 from app.core.dependencies import get_optional_user, require_hod
+from app.core.jwt import decode_access_token
 from app.core.storage import get_upload_dir, find_file_on_disk
 
 router = APIRouter(prefix="/api/documents", tags=["documents"])
@@ -265,6 +266,86 @@ async def get_document(
     )
 
     return _doc_to_dict(doc)
+
+
+@router.get("/{document_id}/file")
+async def get_document_file(
+    document_id: int,
+    download: bool = False,
+    token: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    user: Optional[User] = Depends(get_optional_user)
+):
+    """
+    Streams the raw uploaded file for viewing (inline PDF/image/text) or download (attachment).
+    Accepts JWT authentication via Authorization header or ?token= query param (for iframes/tabs).
+    """
+    result = await db.execute(select(Document).where(Document.id == document_id))
+    doc = result.scalar_one_or_none()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    # If token query parameter provided, verify user
+    active_user = user
+    if not active_user and token:
+        try:
+            payload = decode_access_token(token)
+            if payload and payload.get("sub"):
+                res = await db.execute(select(User).where(User.id == int(payload["sub"])))
+                active_user = res.scalar_one_or_none()
+        except Exception:
+            pass
+
+    if doc.is_confidential and (not active_user or active_user.role != "HOD"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied. Confidential document restricted to HOD role."
+        )
+
+    full_path = find_file_on_disk(doc.file_path)
+    if not full_path or not os.path.exists(full_path):
+        raise HTTPException(
+            status_code=404,
+            detail=f"Original file '{doc.original_filename}' is missing from server disk (cleared during cloud server restart). Please re-upload the file."
+        )
+
+    ext = _get_ext(doc.original_filename or doc.file_path)
+    media_types = {
+        "pdf": "application/pdf",
+        "csv": "text/csv; charset=utf-8",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "xls": "application/vnd.ms-excel",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "doc": "application/msword",
+        "jpg": "image/jpeg",
+        "jpeg": "image/jpeg",
+        "png": "image/png",
+    }
+    media_type = media_types.get(ext, "application/octet-stream")
+    content_disposition_type = "attachment" if download else "inline"
+    filename = doc.original_filename or f"document_{doc.id}.{ext}"
+
+    try:
+        from app.services.audit_service import log_audit_event
+        await log_audit_event(
+            db,
+            action="DOCUMENT_DOWNLOAD" if download else "DOCUMENT_FILE_VIEW",
+            user=active_user,
+            resource_type="DOCUMENT",
+            resource_id=doc.id,
+            document_id=doc.id,
+            status="SUCCESS",
+            details={"name": doc.name, "filename": filename, "download": download}
+        )
+    except Exception:
+        pass
+
+    return FileResponse(
+        path=full_path,
+        media_type=media_type,
+        filename=filename,
+        content_disposition_type=content_disposition_type
+    )
 
 
 @router.post("/{document_id}/reupload", status_code=status.HTTP_200_OK)
