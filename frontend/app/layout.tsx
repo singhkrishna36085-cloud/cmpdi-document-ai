@@ -85,7 +85,10 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   verification: {
-    google: "lUSJIv_gj0hh5DjMsKzyDT9aUb6rTo4YSRXUHWKAvkg",
+    google: [
+      "lUSJIv_gj0hh5DjMsKzyDT9aUb6rTo4YSRXUHWKAvkg",
+      "KN4RebyNgEsNU6FjklRT75gTaX-4yzXYKJs7rrSYB38"
+    ],
   },
 };
 
@@ -125,6 +128,10 @@ export default function RootLayout({
         <meta
           name="google-site-verification"
           content="lUSJIv_gj0hh5DjMsKzyDT9aUb6rTo4YSRXUHWKAvkg"
+        />
+        <meta
+          name="google-site-verification"
+          content="KN4RebyNgEsNU6FjklRT75gTaX-4yzXYKJs7rrSYB38"
         />
         <script
           type="application/ld+json"
