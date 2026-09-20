@@ -380,32 +380,32 @@ export function TopNavbar() {
       <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4 max-w-[1920px] mx-auto">
         
         {/* Left: Brand / Logo */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <Link 
             href="/dashboard" 
-            className="flex items-center gap-3 group focus:outline-none"
+            className="flex items-center gap-2 sm:gap-3 group focus:outline-none"
           >
             {/* Modern Mineral Crest */}
-            <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-black border border-white/20 group-hover:border-white/60 shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-300">
-              <div className="absolute inset-0 rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative font-display font-black text-xl text-white">
+            <div className="relative flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-lg sm:rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-black border border-white/20 group-hover:border-white/60 shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-300">
+              <div className="absolute inset-0 rounded-lg sm:rounded-xl bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative font-display font-black text-lg sm:text-xl text-white">
                 K
               </div>
-              <div className="absolute -top-[1px] -left-[1px] w-2 h-2 border-t-2 border-l-2 border-white" />
-              <div className="absolute -bottom-[1px] -right-[1px] w-2 h-2 border-b-2 border-r-2 border-cyan-400" />
+              <div className="absolute -top-[1px] -left-[1px] w-1.5 sm:w-2 h-1.5 sm:h-2 border-t-2 border-l-2 border-white" />
+              <div className="absolute -bottom-[1px] -right-[1px] w-1.5 sm:w-2 h-1.5 sm:h-2 border-b-2 border-r-2 border-cyan-400" />
             </div>
 
-            {/* Brand Title: Pure White, Modern Display Font, Increased Size */}
+            {/* Brand Title: Pure White, Modern Display Font, Responsive Size */}
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-display text-xl sm:text-2xl font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(255,255,255,0.2)] group-hover:text-white/90 transition-colors">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-display text-base sm:text-xl md:text-2xl font-black tracking-tight text-white uppercase drop-shadow-[0_2px_12px_rgba(255,255,255,0.2)] group-hover:text-white/90 transition-colors whitespace-nowrap">
                   Khanij Gyan
                 </span>
-                <span className="text-xs font-sans font-extrabold tracking-widest px-2 py-0.5 rounded bg-white text-slate-950 uppercase shadow-md">
+                <span className="text-[10px] sm:text-xs font-sans font-extrabold tracking-widest px-1.5 sm:px-2 py-0.5 rounded bg-white text-slate-950 uppercase shadow-md">
                   AI
                 </span>
               </div>
-              <span className="text-[11px] text-slate-200 font-medium tracking-wider uppercase hidden xl:block">
+              <span className="text-[10px] sm:text-[11px] text-slate-200 font-medium tracking-wider uppercase hidden xl:block">
                 KhanijGyan-AI Intelligence System
               </span>
             </div>
@@ -861,6 +861,15 @@ export function TopNavbar() {
             className="lg:hidden bg-[#090A0F]/98 backdrop-blur-2xl border-b border-white/[0.1] px-4 py-5 max-h-[calc(100dvh-4rem)] overflow-y-auto shadow-[0_25px_60px_rgba(0,0,0,0.95)]"
           >
             <div className="flex flex-col gap-4">
+              {/* Mobile Quick Search Bar */}
+              <Link
+                href="/search"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] border border-white/15 text-xs text-white/90 font-medium transition-colors shadow-sm"
+              >
+                <SearchIcon className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>Search documents, boreholes, reports...</span>
+              </Link>
               {navigationGroups.map((group) => (
                 <div key={group.name} className="flex flex-col gap-1">
                   <div className="text-[11px] font-mono tracking-widest text-white/70 uppercase px-2 font-bold">
