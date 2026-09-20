@@ -22,7 +22,7 @@ const PIPELINE_STAGES = [
   { id: "READY", label: "Ready", icon: CheckCircle2 },
 ];
 
-export function DocumentUploader() {
+export function DocumentUploader({ lightTheme = false }: { lightTheme?: boolean }) {
   const [files, setFiles] = useState<FileItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
@@ -178,15 +178,15 @@ export function DocumentUploader() {
   return (
     <div className="space-y-6">
       {/* ── 8-Stage Interactive Visual Pipeline Header ───────────────────── */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4 shadow-xl">
-        <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
+      <div className={`p-6 rounded-2xl border space-y-4 shadow-xl ${lightTheme ? 'bg-white border-gray-200 shadow-gray-200/50' : 'bg-slate-900 border-slate-800'}`}>
+        <div className={`flex items-center justify-between border-b pb-3 ${lightTheme ? 'border-gray-200' : 'border-slate-800/80'}`}>
           <div className="flex items-center gap-2">
-            <Cpu className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">
-              Automated Document Ingestion & RAG Indexing Pipeline
+            <Cpu className="w-5 h-5 text-cyan-500" />
+            <h3 className={`text-sm font-bold uppercase tracking-wider ${lightTheme ? 'text-gray-800' : 'text-slate-100'}`}>
+              Automated Document Ingestion &amp; RAG Indexing Pipeline
             </h3>
           </div>
-          <span className="text-xs font-mono px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-semibold">
+          <span className={`text-xs font-mono px-2.5 py-0.5 rounded-full font-semibold ${lightTheme ? 'bg-cyan-50 text-cyan-600 border border-cyan-200' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'}`}>
             {isUploading ? "Pipeline Active" : "8 Stage Engine"}
           </span>
         </div>
@@ -201,15 +201,15 @@ export function DocumentUploader() {
                 key={stage.id}
                 className={`p-2.5 rounded-xl border text-center transition-all ${
                   isActive
-                    ? "bg-cyan-500/20 border-cyan-400 text-cyan-300 ring-2 ring-cyan-500/50 scale-105"
+                    ? "bg-cyan-50 border-cyan-400 text-cyan-600 ring-2 ring-cyan-300/50 scale-105"
                     : isPassed
-                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                    : "bg-slate-950 border-slate-800 text-slate-500"
+                    ? lightTheme ? "bg-emerald-50 border-emerald-200 text-emerald-600" : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : lightTheme ? "bg-gray-50 border-gray-200 text-gray-400" : "bg-slate-950 border-slate-800 text-slate-500"
                 }`}
               >
                 <Icon className={`w-4 h-4 mx-auto mb-1 ${isActive ? "animate-pulse" : ""}`} />
-                <span className="text-[10px] font-mono font-bold block">{stage.label}</span>
-                <span className="text-[9px] font-mono opacity-60">Step {idx + 1}</span>
+                <span className={`text-[10px] font-mono font-bold block ${lightTheme && !isActive && !isPassed ? 'text-gray-500' : ''}`}>{stage.label}</span>
+                <span className={`text-[9px] font-mono opacity-60`}>Step {idx + 1}</span>
               </div>
             );
           })}
@@ -224,11 +224,11 @@ export function DocumentUploader() {
         onDrop={onDrop}
         className={`relative group cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed p-10 transition-all duration-300 ${
           isDragging
-            ? "border-cyan-400 bg-cyan-950/30 scale-[1.01] shadow-2xl shadow-cyan-500/20"
-            : "border-slate-800 bg-slate-900/90 hover:border-cyan-500/50 hover:bg-slate-900/95"
+            ? lightTheme ? "border-cyan-400 bg-cyan-50 scale-[1.01] shadow-2xl shadow-cyan-200/40" : "border-cyan-400 bg-cyan-950/30 scale-[1.01] shadow-2xl shadow-cyan-500/20"
+            : lightTheme ? "border-gray-300 bg-gray-50 hover:border-cyan-400 hover:bg-cyan-50/50" : "border-slate-800 bg-slate-900/90 hover:border-cyan-500/50 hover:bg-slate-900/95"
         }`}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-blue-500/5 pointer-events-none" />
+        {!lightTheme && <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-blue-500/5 pointer-events-none" />}
 
         <div className="text-center relative z-10 space-y-4">
           {/* Cloud Upload Icon Button */}
@@ -239,16 +239,16 @@ export function DocumentUploader() {
               fileInputRef.current?.click();
             }}
             aria-label="Upload files"
-            className="w-16 h-16 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mx-auto group-hover:scale-110 group-hover:bg-cyan-500/20 group-hover:border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)] transition-all cursor-pointer"
+            className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto group-hover:scale-110 transition-all cursor-pointer ${lightTheme ? 'bg-cyan-50 border border-cyan-200 text-cyan-500 group-hover:bg-cyan-100 group-hover:border-cyan-400' : 'bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 group-hover:bg-cyan-500/20 group-hover:border-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.2)]'}`}
           >
-            <UploadCloud className={`h-8 w-8 transition-transform ${isDragging ? "animate-bounce text-cyan-300" : "group-hover:-translate-y-0.5"}`} />
+            <UploadCloud className={`h-8 w-8 transition-transform ${isDragging ? "animate-bounce" : "group-hover:-translate-y-0.5"}`} />
           </button>
 
           <div>
-            <span className="text-base font-bold text-slate-100 group-hover:text-cyan-300 transition-colors">
+            <span className={`text-base font-bold transition-colors ${lightTheme ? 'text-gray-800 group-hover:text-cyan-600' : 'text-slate-100 group-hover:text-cyan-300'}`}>
               Click to Browse Documents
             </span>
-            <span className="text-slate-400 text-sm font-medium pl-1.5">or drag and drop files here</span>
+            <span className={`text-sm font-medium pl-1.5 ${lightTheme ? 'text-gray-400' : 'text-slate-400'}`}>or drag and drop files here</span>
             <input
               id="file-upload"
               name="file-upload"
@@ -261,7 +261,7 @@ export function DocumentUploader() {
             />
           </div>
 
-          <p className="text-xs font-mono text-slate-400 max-w-md mx-auto">
+          <p className={`text-xs font-mono max-w-md mx-auto ${lightTheme ? 'text-gray-400' : 'text-slate-400'}`}>
             Supports Geological Reports, Mining Plans, Production Logs & Survey Files (PDF, DOCX, XLSX, CSV, ZIP up to 50 MB)
           </p>
         </div>
@@ -269,17 +269,17 @@ export function DocumentUploader() {
 
       {/* ── Global error banner ────────────────────────────────────────────── */}
       {globalError && (
-        <div className="flex items-center gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-xs text-rose-300 shadow-lg">
+        <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-xs shadow-lg ${lightTheme ? 'border-rose-200 bg-rose-50 text-rose-600' : 'border-rose-500/30 bg-rose-500/10 text-rose-300'}`}>
           <span className="shrink-0 text-base">⚠</span>
           <span className="flex-1">{globalError}</span>
-          <button onClick={() => setGlobalError(null)} className="shrink-0 text-rose-400 hover:text-rose-200">✕</button>
+          <button onClick={() => setGlobalError(null)} className={`shrink-0 ${lightTheme ? 'text-rose-500 hover:text-rose-700' : 'text-rose-400 hover:text-rose-200'}`}>✕</button>
         </div>
       )}
 
       {/* ── Success banner ─────────────────────────────────────────────────── */}
       {allDone && successCount > 0 && (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3.5 text-xs text-emerald-300 shadow-lg">
-          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+        <div className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 text-xs shadow-lg ${lightTheme ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'}`}>
+          <CheckCircle2 className={`h-5 w-5 shrink-0 ${lightTheme ? 'text-emerald-500' : 'text-emerald-400'}`} />
           <span>
             <strong>{successCount} document{successCount > 1 ? 's' : ''}</strong> successfully ingested into PostgreSQL & FAISS vector store.
           </span>
@@ -291,7 +291,7 @@ export function DocumentUploader() {
         <SectionCard
           title={`Selected Files (${files.length})`}
           action={
-            <Button variant="ghost" size="sm" onClick={clearAll} disabled={isUploading} className="text-slate-400 hover:text-slate-200">
+            <Button variant="ghost" size="sm" onClick={clearAll} disabled={isUploading} className={lightTheme ? "text-gray-400 hover:text-gray-600" : "text-slate-400 hover:text-slate-200"}>
               <X className="h-4 w-4 mr-2" />
               Clear All
             </Button>
@@ -308,8 +308,8 @@ export function DocumentUploader() {
             ))}
           </div>
 
-          <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-800">
-            <p className="text-xs font-mono text-slate-400">
+          <div className={`mt-6 flex items-center justify-between pt-4 border-t ${lightTheme ? 'border-gray-200' : 'border-slate-800'}`}>
+            <p className={`text-xs font-mono ${lightTheme ? 'text-gray-500' : 'text-slate-400'}`}>
               {validFilesReady} file{validFilesReady !== 1 ? 's' : ''} ready to process
             </p>
             <Button

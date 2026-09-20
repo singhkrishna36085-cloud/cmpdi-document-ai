@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Rajdhani, Noto_Sans_Display } from "next/font/google";
 import "./globals.css";
+import "@fontsource/open-sauce-sans/400.css";
+import "@fontsource/open-sauce-sans/600.css";
+import "@fontsource/open-sauce-sans/700.css";
+import "@fontsource/open-sauce-sans/800.css";
+import "@fontsource/open-sauce-sans/900.css";
+import "@fontsource/open-sauce-two/700.css";
+import "@fontsource/open-sauce-two/800.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 

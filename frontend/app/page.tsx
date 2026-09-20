@@ -44,7 +44,7 @@ export default function CinematicLandingPage() {
       {/* ── PERSISTENT 3D BACKGROUND CANVAS (GPU Particle World) ── */}
       <motion.div 
         style={{ y: heroWorldY, opacity: heroWorldOpacity }}
-        className="fixed inset-0 z-0 pointer-events-none"
+        className="fixed inset-0 z-0 pointer-events-auto"
       >
         <HeroScene scrollYProgress={scrollYProgress} />
       </motion.div>
@@ -53,15 +53,15 @@ export default function CinematicLandingPage() {
       <TopNavbar />
 
       {/* ── HERO SECTION (DARK GPU PARTICLE OPENING) ── */}
-      <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-6 text-center z-10 pt-28 pb-20">
-        <div className="max-w-4xl mx-auto flex flex-col items-center space-y-7">
+      <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-6 text-center z-10 pt-28 pb-20 pointer-events-none">
+        <div className="max-w-4xl mx-auto flex flex-col items-center space-y-7 pointer-events-none">
           
           {/* Pill Tag */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md shadow-sm pointer-events-auto"
           >
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
             <span className="text-xs font-semibold tracking-wider uppercase text-slate-200">
@@ -74,7 +74,7 @@ export default function CinematicLandingPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="font-display text-4xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.12] text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-200/90 drop-shadow-[0_2px_25px_rgba(255,255,255,0.12)] max-w-4xl"
+            className="font-open-sauce text-4xl sm:text-6xl lg:text-[4.5rem] font-extrabold tracking-[-0.02em] leading-[1.12] text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-200/90 drop-shadow-[0_2px_25px_rgba(255,255,255,0.12)] max-w-4xl"
           >
             Turn Complex Mining Data Into{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-teal-200">
@@ -97,7 +97,7 @@ export default function CinematicLandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.55 }}
-            className="flex flex-col sm:flex-row items-center gap-4 pt-4"
+            className="flex flex-col sm:flex-row items-center gap-4 pt-4 pointer-events-auto"
           >
             <Link
               href="/documents"
