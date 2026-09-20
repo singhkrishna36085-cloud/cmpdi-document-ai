@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PageHeader } from "@/components/ui/PageHeader";
 import { Button } from "@/components/ui/Button";
-import { SectionCard } from "@/components/ui/SectionCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { 
@@ -116,20 +114,22 @@ export default function TopicsPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
-      {/* Top Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-200 pb-4">
-        <PageHeader 
-          title="Word Cloud & Topic Intelligence" 
-          description="Discover dominant terms, key frequency distributions, and TF-IDF topic clusters across CMPDI/CIL document content."
-        />
+    <div className="space-y-6 pb-12 bg-slate-50 min-h-screen -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 text-slate-900">
+      {/* Header */}
+      <div className="bg-white rounded-lg border border-slate-200 p-6 shadow-sm flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1">Word Cloud & Topic Intelligence</h1>
+          <p className="text-sm text-slate-500 max-w-2xl">
+            Discover dominant terms, key frequency distributions, and TF-IDF topic clusters across CMPDI/CIL document content.
+          </p>
+        </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           <Button
             variant="secondary"
             size="md"
             onClick={() => setShowDocSelector(!showDocSelector)}
-            className="flex items-center gap-2 text-gray-700 border-gray-300"
+            className="flex items-center gap-2 text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 shadow-sm"
           >
             <Filter className="w-4 h-4 text-blue-600" />
             <span>{useAllDocs ? "All Documents" : `${selectedDocIds.length} Selected`}</span>
@@ -141,7 +141,7 @@ export default function TopicsPage() {
             size="md"
             onClick={handleAnalyze}
             disabled={isAnalyzing}
-            className="bg-blue-700 hover:bg-blue-800 text-white font-medium flex items-center gap-2 shadow-sm"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium flex items-center gap-2 shadow-sm"
           >
             {isAnalyzing ? (
               <>
@@ -150,7 +150,7 @@ export default function TopicsPage() {
               </>
             ) : (
               <>
-                <Sparkles className="w-4 h-4 text-cyan-300" />
+                <Sparkles className="w-4 h-4 text-white" />
                 <span>Analyze Documents</span>
               </>
             )}
@@ -160,8 +160,8 @@ export default function TopicsPage() {
 
       {/* Document Selection Drawer / Panel */}
       {showDocSelector && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-4 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm space-y-4 animate-in fade-in duration-150">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <h4 className="text-sm font-bold text-gray-900">Document Scope Filter</h4>
               <p className="text-xs text-gray-500">Choose specific CMPDI documents for NLP topic extraction or analyze all processed documents.</p>
@@ -292,12 +292,16 @@ export default function TopicsPage() {
             
             {/* Word Cloud PNG Image Display */}
             <div className="lg:col-span-7">
-              <SectionCard 
-                title="Document Word Cloud" 
-                description="Visual frequency distribution generated from processed document text."
-              >
+              <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 rounded-full bg-blue-600" />
+                    Document Word Cloud
+                  </h3>
+                  <p className="text-xs text-slate-500">Visual frequency distribution generated from processed document text.</p>
+                </div>
                 {analysis.wordcloud_image ? (
-                  <div className="p-3 bg-white border border-gray-200 rounded-xl flex items-center justify-center overflow-hidden shadow-2xs">
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
                     <img
                       src={analysis.wordcloud_image}
                       alt="CMPDI Document Word Cloud"
@@ -305,31 +309,35 @@ export default function TopicsPage() {
                     />
                   </div>
                 ) : (
-                  <div className="py-16 text-center text-xs text-gray-500 bg-gray-50 rounded-xl">
+                  <div className="py-16 text-center text-xs text-slate-500 bg-slate-50 rounded-xl">
                     Word Cloud PNG generation unavailable.
                   </div>
                 )}
-              </SectionCard>
+              </div>
             </div>
 
             {/* Top Frequency Terms Table */}
             <div className="lg:col-span-5">
-              <SectionCard 
-                title="Top Terms & Frequency" 
-                description="Highest frequency domain terms extracted from context."
-              >
+              <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <span className="inline-block h-2 w-2 rounded-full bg-blue-600" />
+                    Top Terms & Frequency
+                  </h3>
+                  <p className="text-xs text-slate-500">Highest frequency domain terms extracted from context.</p>
+                </div>
                 <div className="max-h-[380px] overflow-y-auto pr-1">
-                  <table className="min-w-full divide-y divide-gray-200 text-left text-xs">
-                    <thead className="bg-gray-50 text-gray-600 font-semibold sticky top-0">
+                  <table className="min-w-full divide-y divide-slate-200 text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold sticky top-0">
                       <tr>
                         <th scope="col" className="px-3 py-2.5">Term</th>
                         <th scope="col" className="px-3 py-2.5 text-right">Frequency</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 bg-white">
+                    <tbody className="divide-y divide-slate-100 bg-white">
                       {analysis.word_frequencies.slice(0, 15).map((item, idx) => (
-                        <tr key={idx} className="hover:bg-gray-50/80 transition-colors">
-                          <td className="px-3 py-2 font-mono font-medium text-gray-900 capitalize">
+                        <tr key={idx} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-3 py-2 font-mono font-medium text-slate-900 capitalize">
                             {item.term}
                           </td>
                           <td className="px-3 py-2 text-right font-semibold text-blue-700 font-mono">
@@ -340,47 +348,51 @@ export default function TopicsPage() {
                     </tbody>
                   </table>
                 </div>
-              </SectionCard>
+              </div>
             </div>
 
           </div>
 
           {/* Topic Identification Cards Section */}
-          <SectionCard 
-            title="Extracted Topic Clusters & Floating Keyword Nodes" 
-            description="Algorithmic TF-IDF topic themes discovered across CMPDI document text."
-          >
+          <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <span className="inline-block h-2 w-2 rounded-full bg-blue-600" />
+                Extracted Topic Clusters & Floating Keyword Nodes
+              </h3>
+              <p className="text-xs text-slate-500">Algorithmic TF-IDF topic themes discovered across CMPDI document text.</p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {analysis.topics.map((topic) => (
                 <div
                   key={topic.topic_id}
-                  className="bg-slate-950/80 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 hover:border-cyan-500/50 transition-all flex flex-col justify-between group backdrop-blur-xl hover:-translate-y-1"
+                  className="bg-slate-50 border border-slate-200 rounded-lg p-5 shadow-xs space-y-4 hover:border-blue-300 transition-all flex flex-col justify-between group hover:shadow-sm"
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="font-mono text-xs font-bold text-cyan-300 bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/30">
+                      <span className="font-mono text-xs font-bold text-blue-700 bg-blue-100/70 px-2.5 py-1 rounded-md border border-blue-200">
                         Cluster #{topic.topic_id}
                       </span>
-                      <span className="text-xs font-mono text-slate-400">
+                      <span className="text-xs font-mono text-slate-500">
                         {topic.document_count} Document{topic.document_count !== 1 ? "s" : ""}
                       </span>
                     </div>
 
-                    <h4 className="text-sm font-bold text-slate-100 group-hover:text-cyan-300 transition-colors leading-snug font-mono">
+                    <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug font-sans">
                       {topic.topic_name}
                     </h4>
                   </div>
 
                   {/* Floating Animated Keywords Badges */}
                   <div className="space-y-2">
-                    <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
                       Floating Keywords:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {topic.keywords.map((kw, kIdx) => (
                         <span
                           key={kIdx}
-                          className="px-2.5 py-1 rounded-xl bg-slate-900 text-cyan-300 text-xs font-mono border border-slate-800 hover:border-cyan-500/40 hover:bg-cyan-500/10 transition-all cursor-pointer shadow-sm"
+                          className="px-2.5 py-1 rounded-md bg-white text-slate-700 text-xs font-mono border border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 transition-all cursor-pointer shadow-2xs"
                         >
                           {kw}
                         </span>
@@ -390,12 +402,12 @@ export default function TopicsPage() {
 
                   {/* Source Documents list */}
                   {topic.source_documents && topic.source_documents.length > 0 && (
-                    <div className="pt-3.5 border-t border-slate-800/80 space-y-1.5">
-                      <span className="text-[11px] text-slate-400 font-mono font-medium block">Contributing Documents:</span>
+                    <div className="pt-3.5 border-t border-slate-200 space-y-1.5">
+                      <span className="text-[11px] text-slate-500 font-medium block">Contributing Documents:</span>
                       <div className="space-y-1">
                         {topic.source_documents.map((srcDoc, sIdx) => (
-                          <div key={sIdx} className="flex items-center gap-1.5 text-xs text-slate-300 truncate font-mono">
-                            <FileText className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <div key={sIdx} className="flex items-center gap-1.5 text-xs text-slate-700 truncate font-mono">
+                            <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                             <span className="truncate">{srcDoc.original_filename}</span>
                           </div>
                         ))}
@@ -405,17 +417,21 @@ export default function TopicsPage() {
                 </div>
               ))}
             </div>
-          </SectionCard>
+          </div>
 
           {/* Analyzed Source Documents Table */}
           {analysis.source_documents && analysis.source_documents.length > 0 && (
-            <SectionCard 
-              title="Analyzed Source Documents" 
-              description="Documents evaluated during this topic analysis."
-            >
+            <div className="bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full bg-blue-600" />
+                  Analyzed Source Documents
+                </h3>
+                <p className="text-xs text-slate-500">Documents evaluated during this topic analysis.</p>
+              </div>
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-800 text-left text-xs font-mono">
-                  <thead className="bg-slate-950 text-slate-400 uppercase font-bold text-[11px]">
+                <table className="min-w-full divide-y divide-slate-200 text-left text-xs font-mono">
+                  <thead className="bg-slate-50 text-slate-600 uppercase font-semibold text-[11px]">
                     <tr>
                       <th scope="col" className="px-4 py-3">Doc ID</th>
                       <th scope="col" className="px-4 py-3">Filename</th>
@@ -424,20 +440,20 @@ export default function TopicsPage() {
                       <th scope="col" className="px-4 py-3 text-right">Chunks Analyzed</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 bg-slate-900/40">
+                  <tbody className="divide-y divide-slate-100 bg-white">
                     {analysis.source_documents.map((sDoc) => (
-                      <tr key={sDoc.document_id} className="hover:bg-slate-950/60 transition-colors">
-                        <td className="px-4 py-3 font-bold text-cyan-400">#{sDoc.document_id}</td>
-                        <td className="px-4 py-3 font-semibold text-slate-100">{sDoc.original_filename}</td>
-                        <td className="px-4 py-3 uppercase text-slate-400">{sDoc.type}</td>
-                        <td className="px-4 py-3 text-slate-400">{sDoc.category || "General"}</td>
-                        <td className="px-4 py-3 text-right font-bold text-cyan-300">{sDoc.chunk_count}</td>
+                      <tr key={sDoc.document_id} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-blue-600">#{sDoc.document_id}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-900">{sDoc.original_filename}</td>
+                        <td className="px-4 py-3 uppercase text-slate-500">{sDoc.type}</td>
+                        <td className="px-4 py-3 text-slate-500">{sDoc.category || "General"}</td>
+                        <td className="px-4 py-3 text-right font-bold text-slate-800">{sDoc.chunk_count}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </SectionCard>
+            </div>
           )}
 
         </div>
