@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { TopNavbar } from "@/components/layout/TopNavbar";
-import { HeroScene } from "@/components/3d/HeroScene";
+import { Gemini3DAurora } from "@/components/3d/Gemini3DAurora";
 import { Geological3DKnowledgeCore } from "@/components/3d/Geological3DKnowledgeCore";
 import { 
   ArrowRight, 
@@ -19,66 +21,78 @@ import {
   Database,
   ShieldCheck,
   Zap,
-  ExternalLink
+  ExternalLink,
+  Cpu,
+  BarChart3,
+  TrendingUp
 } from "lucide-react";
-import { useRef } from "react";
 
-export default function CinematicLandingPage() {
-  const containerRef = useRef<HTMLDivElement>(null);
+export default function GeminiCinematicLandingPage() {
+  const router = useRouter();
+  const [promptInput, setPromptInput] = useState("");
 
-  // Global scroll progress
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  });
+  const handlePromptSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (promptInput.trim()) {
+      router.push(`/assistant?prompt=${encodeURIComponent(promptInput.trim())}`);
+    } else {
+      router.push("/assistant");
+    }
+  };
 
-  // Dark Particle World Lift & Dissolve on Scroll
-  const heroWorldY = useTransform(scrollYProgress, [0, 0.4], ["0%", "-25%"]);
-  const heroWorldOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.1]);
+  const samplePrompts = [
+    { text: "Which project produced highest coal in Q1 2026?", tag: "Production" },
+    { text: "Compare Gevra Expansion vs Nigahi stripping ratio", tag: "Analytics" },
+    { text: "Audit DGMS safety near-miss hazards at Ukni OC", tag: "Compliance" },
+    { text: "List mines with average seam thickness >8m", tag: "Geology" },
+  ];
 
   return (
-    <div 
-      ref={containerRef}
-      className="relative min-h-screen bg-[#000000] text-white font-sans overflow-x-hidden selection:bg-purple-500/30 selection:text-purple-900"
-    >
-      {/* ── PERSISTENT 3D BACKGROUND CANVAS (GPU Particle World) ── */}
-      <motion.div 
-        style={{ y: heroWorldY, opacity: heroWorldOpacity }}
-        className="fixed inset-0 z-0 pointer-events-none"
-      >
-        <HeroScene scrollYProgress={scrollYProgress} />
-      </motion.div>
-
-      {/* ── TOP NAVIGATION WITH HOVER SLIDE-DOWN MENUS ── */}
+    <div className="relative min-h-screen bg-[#000000] text-white font-sans overflow-x-hidden selection:bg-purple-500/30 selection:text-purple-200">
+      
+      {/* ── TOP NAVIGATION WITH UPDATED WHITE BRANDING ── */}
       <TopNavbar />
 
-      {/* ── HERO SECTION (DARK GPU PARTICLE OPENING) ── */}
-      <section className="relative min-h-[92vh] flex flex-col items-center justify-center px-6 text-center z-10 pt-28 pb-20">
-        <div className="max-w-4xl mx-auto flex flex-col items-center space-y-7">
+      {/* ── GEMINI 3D HERO SECTION ── */}
+      <section className="relative min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-24 pb-20 overflow-hidden">
+        
+        {/* Background Ambient Color Blooms (Gemini Nebula) */}
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[700px] sm:w-[950px] h-[550px] bg-gradient-to-tr from-cyan-600/20 via-violet-600/25 to-pink-600/15 blur-[130px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/3 -left-48 w-[450px] h-[450px] bg-blue-600/15 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute top-1/2 -right-48 w-[500px] h-[500px] bg-purple-600/15 blur-[120px] rounded-full pointer-events-none" />
+
+        {/* Real-time WebGL 3D Quantum Aurora Ribbon */}
+        <Gemini3DAurora />
+
+        {/* Hero Content Container */}
+        <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center text-center space-y-8 mt-4 sm:mt-8">
           
-          {/* Pill Tag */}
+          {/* Gemini Pill Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/5 backdrop-blur-md shadow-sm"
+            transition={{ duration: 0.7 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/[0.04] backdrop-blur-xl shadow-[0_0_25px_rgba(255,255,255,0.06)]"
           >
             <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="text-xs font-semibold tracking-wider uppercase text-slate-200">
-              KHANI GYAN AI • GEOLOGICAL INTELLIGENCE
+            <span className="text-xs font-semibold tracking-wider uppercase text-slate-200 font-mono">
+              KHANIJGYAN AI • NEXT-GEN MINING INTELLIGENCE
             </span>
           </motion.div>
 
-          {/* Main Headline */}
+          {/* Main Gemini Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 25 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="font-display text-4xl sm:text-6xl lg:text-[4.5rem] font-bold tracking-[-0.03em] leading-[1.12] text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-200/90 drop-shadow-[0_2px_25px_rgba(255,255,255,0.12)] max-w-4xl"
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="font-display text-4xl sm:text-6xl lg:text-[5rem] font-black tracking-[-0.035em] leading-[1.08] max-w-5xl"
           >
-            Turn Complex Mining Data Into{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 via-white to-teal-200">
-              Intelligent Decisions.
+            <span className="text-white drop-shadow-[0_2px_20px_rgba(255,255,255,0.15)]">
+              The Most Capable AI for
+            </span>
+            <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-violet-300 to-amber-200 drop-shadow-[0_0_45px_rgba(139,92,246,0.35)]">
+              Geological & Mining Intelligence.
             </span>
           </motion.h1>
 
@@ -86,513 +100,346 @@ export default function CinematicLandingPage() {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.4 }}
-            className="text-xl sm:text-2xl text-white font-normal sm:font-medium max-w-3xl leading-relaxed tracking-[-0.01em] drop-shadow-[0_2px_15px_rgba(0,0,0,0.6)]"
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-base sm:text-xl text-slate-300 font-normal max-w-3xl leading-relaxed tracking-tight"
           >
-            AI-powered document intelligence for geological, mining, production and technical reporting.
+            Multi-document RAG search, borehole log analysis, reserve computations, and automated DGMS compliance auditing — grounded with 100% verifiable source citations.
           </motion.p>
+
+          {/* ── GEMINI SIGNATURE FLOATING PROMPT BAR ── */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.45 }}
+            className="w-full max-w-3xl pt-2"
+          >
+            <form 
+              onSubmit={handlePromptSubmit}
+              className="relative flex items-center rounded-full bg-[#0a0c16]/80 backdrop-blur-2xl border border-white/20 p-2 sm:p-2.5 shadow-[0_15px_40px_rgba(0,0,0,0.6),0_0_30px_rgba(6,182,212,0.15)] focus-within:border-cyan-400 focus-within:shadow-[0_0_35px_rgba(6,182,212,0.3)] transition-all"
+            >
+              <div className="flex items-center pl-3.5 pr-2 text-cyan-400">
+                <Sparkles className="w-5 h-5 animate-pulse" />
+              </div>
+
+              <input
+                type="text"
+                value={promptInput}
+                onChange={(e) => setPromptInput(e.target.value)}
+                placeholder="Ask KhanijGyan AI anything about borehole logs, stripping ratio, or reserves..."
+                className="flex-1 bg-transparent text-white placeholder:text-slate-400 text-sm sm:text-base outline-none px-2 font-medium"
+              />
+
+              <button
+                type="submit"
+                className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-400 hover:from-cyan-400 hover:to-teal-300 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:scale-105 active:scale-95 cursor-pointer shrink-0"
+              >
+                <span>Ask AI</span>
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </button>
+            </form>
+
+            {/* Quick Interactive Prompt Chips */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-3.5">
+              {samplePrompts.map((chip, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => router.push(`/assistant?prompt=${encodeURIComponent(chip.text)}`)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-cyan-500/40 text-xs text-slate-300 hover:text-white transition-all shadow-xs cursor-pointer"
+                >
+                  <span className="text-[10px] font-mono font-bold text-cyan-400 uppercase">{chip.tag}:</span>
+                  <span className="truncate max-w-[240px] sm:max-w-none">{chip.text}</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
 
           {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.55 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
             className="flex flex-col sm:flex-row items-center gap-4 pt-4"
           >
             <Link
               href="/documents"
-              className="group relative inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-slate-950 bg-white rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_10px_35px_rgba(255,255,255,0.25)]"
+              className="group relative inline-flex items-center justify-center px-8 py-3.5 text-sm sm:text-base font-bold text-slate-950 bg-white rounded-full transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.3)]"
             >
-              <span>Explore Platform</span>
+              <span>Explore Document Workspace</span>
               <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
             </Link>
             
             <Link
-              href="/assistant"
-              className="group inline-flex items-center justify-center px-8 py-4 text-base font-medium text-white border border-white/20 rounded-full bg-white/5 backdrop-blur-xl transition-all hover:bg-white/15 hover:scale-[1.02] active:scale-95"
+              href="/dashboard"
+              className="group inline-flex items-center justify-center px-8 py-3.5 text-sm sm:text-base font-bold text-white border border-white/20 rounded-full bg-white/[0.04] backdrop-blur-xl transition-all hover:bg-white/[0.1] hover:border-white/30 hover:scale-[1.02] active:scale-95"
             >
-              <MessageSquare className="w-4 h-4 mr-2.5 text-purple-400" />
-              <span>Ask Khani Gyan AI</span>
+              <BarChart3 className="w-4 h-4 mr-2 text-cyan-400" />
+              <span>Operations Dashboard</span>
             </Link>
           </motion.div>
 
-          {/* Scroll Indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.9 }}
-            className="pt-6 flex flex-col items-center gap-2 text-slate-400 text-xs font-medium"
-          >
-            <span>Scroll to enter fluid intelligence</span>
-            <ChevronDown className="w-4 h-4 animate-bounce text-slate-400" />
-          </motion.div>
+          {/* Scroll cue */}
+          <div className="pt-6 flex flex-col items-center gap-1.5 text-slate-400 text-xs font-mono">
+            <span>SCROLL TO EXPLORE SPATIAL INTELLIGENCE</span>
+            <ChevronDown className="w-4 h-4 animate-bounce text-cyan-400" />
+          </div>
+
         </div>
       </section>
 
-      {/* ── WHITE INTERFACE REVEALED UNDERNEATH ── */}
-      <div className="relative z-20 bg-[#FFFFFF] text-slate-900 rounded-t-[3.5rem] shadow-[0_-30px_70px_rgba(0,0,0,0.4)] pt-16 pb-28">
+      {/* ── GEMINI BENTO GRID: CAPABILITIES & ARCHITECTURE ── */}
+      <section className="relative z-20 py-24 sm:py-32 border-t border-white/[0.08] bg-[#030409]">
         
-        <div className="max-w-7xl mx-auto px-6 sm:px-8">
+        {/* Subtle Ambient Radial Blooms */}
+        <div className="absolute top-1/4 right-0 w-96 h-96 bg-purple-600/10 blur-[130px] pointer-events-none" />
+        <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-cyan-600/10 blur-[130px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           
-          {/* ── SECTION 1: FROM REPORTS TO KNOWLEDGE WITH 3D FLUID JELLY ── */}
-          <section className="py-20 sm:py-28">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-              
-              {/* Left Column: Spacious Typography & Value Proposition */}
-              <motion.div
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="lg:col-span-6 space-y-7"
-              >
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-xs font-semibold">
-                  <Zap className="w-3.5 h-3.5 text-purple-600" />
-                  <span>Living Neural Geology</span>
-                </div>
-
-                <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight leading-[1.12] text-slate-900">
-                  From Reports to Knowledge.
-                </h2>
-                
-                <p className="text-lg sm:text-xl font-light leading-relaxed text-slate-600">
-                  Transform complex mining documents into structured, searchable and actionable intelligence.
-                </p>
-
-                <div className="pt-3 flex items-center gap-6">
-                  <Link
-                    href="/documents"
-                    className="inline-flex items-center gap-2 text-base font-semibold text-purple-600 hover:text-purple-700 group transition-colors"
-                  >
-                    <span>Explore Document Workspace</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </div>
-              </motion.div>
-
-              {/* Right Column: 3D Geological Knowledge Core Visual */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.92, y: 30 }}
-                whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-                className="lg:col-span-6 flex items-center justify-center relative"
-              >
-                <div className="w-full relative">
-                  <Geological3DKnowledgeCore />
-                </div>
-              </motion.div>
-
+          {/* Section Header in Gemini Style */}
+          <div className="text-center max-w-3xl mx-auto space-y-4">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-xs font-mono font-bold uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Core Architecture</span>
             </div>
-          </section>
+            <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+              Engineered for Geological Precision.
+            </h2>
+            <p className="text-base sm:text-lg text-slate-400 leading-relaxed font-light">
+              Every document format flows effortlessly through OCR, structured extraction, cross-verification, and dense semantic indexing.
+            </p>
+          </div>
 
-          {/* ── SECTION 2: DOCUMENT INTELLIGENCE PIPELINE ── */}
-          <section className="py-24 sm:py-32 border-t border-slate-100">
-            <motion.div
-              initial={{ opacity: 0, y: 35 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.8 }}
-              className="text-center max-w-3xl mx-auto space-y-4 mb-20"
-            >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                <Layers className="w-3.5 h-3.5 text-blue-600" />
-                <span>Multi-Format Ingestion</span>
+          {/* Bento Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            {/* Bento Card 1 (Span 8): Multimodal Ingestion Engine */}
+            <div className="lg:col-span-8 p-7 sm:p-9 rounded-3xl bg-[#090b14]/80 backdrop-blur-2xl border border-white/[0.1] hover:border-white/25 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-bold">
+                    01 • INGESTION & OCR
+                  </span>
+                  <div className="p-2.5 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                  Multimodal Extraction Engine
+                </h3>
+                <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl font-light">
+                  Process PDF reports, multi-sheet Excel workbooks, digitized borehole depth logs, and core scan imagery with sub-second accuracy and automated tabular reconstruction.
+                </p>
               </div>
-              <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900">
-                Document Intelligence.
-              </h2>
-              <p className="text-lg sm:text-xl font-light text-slate-600">
-                Every document format flows effortlessly through OCR, structured extraction, cross-verification, and semantic indexing.
-              </p>
-            </motion.div>
 
-            {/* Pipeline Visual Flow */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-              {[
-                {
-                  step: "01",
-                  title: "Ingestion",
-                  desc: "PDF, DOCX, Excel spreadsheets, core scan images, and multi-page technical archives.",
-                  icon: FileText,
-                  color: "from-blue-500 to-cyan-400"
-                },
-                {
-                  step: "02",
-                  title: "Extraction",
-                  desc: "High-accuracy OCR, multi-level table parsing, borehole depth tables, and seam mapping.",
-                  icon: Database,
-                  color: "from-purple-500 to-indigo-500"
-                },
-                {
-                  step: "03",
-                  title: "Rule Validation",
-                  desc: "Automated geological tolerance checks, reserve tally verification, and error flagging.",
-                  icon: ShieldCheck,
-                  color: "from-emerald-500 to-teal-400"
-                },
-                {
-                  step: "04",
-                  title: "Knowledge Vector",
-                  desc: "FAISS embeddings + chunked indexing for sub-second cross-document reasoning.",
-                  icon: Sparkles,
-                  color: "from-pink-500 to-rose-400"
-                }
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 35, scale: 0.95 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: false, amount: 0.15 }}
-                  transition={{ duration: 0.7, delay: idx * 0.1 }}
-                  className="relative rounded-3xl bg-slate-50/70 p-8 border border-slate-200/80 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-6">
-                      <span className="text-xs font-bold text-slate-400 tracking-wider">STEP {item.step}</span>
-                      <div className={`w-10 h-10 rounded-2xl bg-gradient-to-tr ${item.color} flex items-center justify-center shadow-md`}>
-                        <item.icon className="w-5 h-5 text-white" />
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-semibold text-slate-900 mb-3">{item.title}</h3>
-                    <p className="text-sm font-light text-slate-500 leading-relaxed">{item.desc}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </section>
-
-          {/* ── SECTION 3: ASK KHANI GYAN AI CONVERSATIONAL INTERFACE ── */}
-          <section className="py-24 sm:py-32 border-t border-slate-100">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-14 items-center">
-              
-              <motion.div
-                initial={{ opacity: 0, x: -40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.8 }}
-                className="lg:col-span-5 space-y-6"
-              >
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
-                  <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Evidence-Backed RAG</span>
+              {/* Visual Demo Bar */}
+              <div className="mt-8 p-4 rounded-2xl bg-black/40 border border-white/[0.08] flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-mono font-bold">PDF Reports</span>
+                  <span className="px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-mono font-bold">XLSX Mine Plans</span>
+                  <span className="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-mono font-bold">DOCX Boreholes</span>
+                  <span className="px-3 py-1 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20 text-xs font-mono font-bold">Core Scans</span>
                 </div>
-
-                <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900 leading-[1.12]">
-                  Ask Your Archive Anything.
-                </h2>
-                
-                <p className="text-lg font-light leading-relaxed text-slate-600">
-                  Pose natural questions across thousands of geological reports. Receive exact answers with line-level evidence references, verified page numbers, and direct source downloads.
-                </p>
-
-                <div className="pt-4">
-                  <Link
-                    href="/assistant"
-                    className="inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold text-white bg-slate-950 rounded-full hover:bg-slate-800 hover:scale-105 active:scale-95 transition-all shadow-md"
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    <span>Ask Khani Gyan AI</span>
-                  </Link>
+                <div className="flex items-center gap-2 text-xs font-mono text-emerald-400">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>PaddleOCR & PyMuPDF Online</span>
                 </div>
-              </motion.div>
-
-              {/* AI Chat Card Mockup */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 30 }}
-                whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.8 }}
-                className="lg:col-span-7"
-              >
-                <div className="rounded-3xl bg-slate-50 border border-slate-200/90 p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.04)] space-y-6">
-                  
-                  {/* User Prompt */}
-                  <div className="flex gap-4 items-start">
-                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-700 shrink-0">
-                      U
-                    </div>
-                    <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none px-5 py-3 text-sm text-slate-800 font-medium max-w-xl shadow-sm">
-                      What was the proven geological coal reserve for Kusmunda OC Expansion, and what stripping ratio was approved in the 2023 mine plan?
-                    </div>
-                  </div>
-
-                  {/* AI Response with Evidence */}
-                  <div className="flex gap-4 items-start">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shrink-0 shadow-md">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-4 max-w-xl">
-                      <div className="bg-purple-50/80 border border-purple-100 rounded-2xl rounded-tl-none p-5 text-sm text-slate-700 leading-relaxed shadow-sm">
-                        As per the approved Kusmunda Geological & Mining Assessment Report:
-                        <ul className="mt-2 space-y-1.5 list-disc list-inside font-normal">
-                          <li><strong>Total Proven Reserves:</strong> <strong>1,482.35 MT</strong> across Seams I, II, and III.</li>
-                          <li><strong>Approved Stripping Ratio:</strong> <strong>1.42 m³/tonne</strong> for the 50.00 MTPA expansion horizon.</li>
-                        </ul>
-                      </div>
-
-                      {/* Evidence Badges */}
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs text-slate-600 shadow-sm font-medium">
-                          <FileText className="w-3.5 h-3.5 text-purple-500" />
-                          <span>Kusmunda_Geol_Report_2023.pdf • Page 24</span>
-                        </div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-semibold">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>100% Verified Match</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-              </motion.div>
-
-            </div>
-          </section>
-
-          {/* ── SECTION 4: CROSS-DOCUMENT INTELLIGENCE ── */}
-          <section className="py-24 sm:py-32 border-t border-slate-100">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-14 items-center">
-              
-              {/* Visual Cross-Doc Node Graph */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 30 }}
-                whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.8 }}
-                className="lg:col-span-7 order-2 lg:order-1"
-              >
-                <div className="rounded-3xl bg-slate-900 text-white p-8 sm:p-10 shadow-[0_25px_60px_rgba(0,0,0,0.12)] relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-80 h-80 bg-purple-500/10 blur-[100px] rounded-full pointer-events-none" />
-                  
-                  <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-2.5">
-                      <GitCompare className="w-5 h-5 text-purple-400" />
-                      <span className="text-sm font-semibold text-slate-200">Cross-Document Correlation Engine</span>
-                    </div>
-                    <span className="text-xs font-mono text-purple-300 bg-purple-950/80 px-3 py-1 rounded-full border border-purple-800/50">
-                      LIVE AUDIT
-                    </span>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Doc A */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-4 h-4 text-blue-400" />
-                        <div>
-                          <div className="text-sm font-medium text-slate-100">Historical Borehole Log (BH-14)</div>
-                          <div className="text-xs text-slate-400">Seam Top: 142.40m • Seam Thickness: 8.20m</div>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-400 font-mono">1998 Archive</span>
-                    </div>
-
-                    {/* Connected Relation */}
-                    <div className="flex items-center justify-center">
-                      <div className="px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center gap-1.5">
-                        <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                        <span>0.40m Thickness Discrepancy Flagged</span>
-                      </div>
-                    </div>
-
-                    {/* Doc B */}
-                    <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60">
-                      <div className="flex items-center gap-3">
-                        <FileText className="w-4 h-4 text-cyan-400" />
-                        <div>
-                          <div className="text-sm font-medium text-slate-100">Modern Mine Plan (2024 Expansion)</div>
-                          <div className="text-xs text-slate-400">Seam Top: 142.45m • Seam Thickness: 7.80m</div>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-400 font-mono">Active Plan</span>
-                    </div>
-                  </div>
-
-                </div>
-              </motion.div>
-
-              {/* Right Copy */}
-              <motion.div
-                initial={{ opacity: 0, x: 40 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: false, amount: 0.2 }}
-                transition={{ duration: 0.8 }}
-                className="lg:col-span-5 order-1 lg:order-2 space-y-6"
-              >
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-700 text-xs font-semibold">
-                  <GitCompare className="w-3.5 h-3.5 text-cyan-600" />
-                  <span>Multi-Source Verification</span>
-                </div>
-
-                <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900 leading-[1.12]">
-                  Cross-Document Intelligence.
-                </h2>
-                
-                <p className="text-lg font-light leading-relaxed text-slate-600">
-                  Never miss a conflict. Automatically cross-reference technical figures across geological reports, mine plans, feasibility studies, and environmental clearances.
-                </p>
-
-                <div className="pt-2">
-                  <Link
-                    href="/cross-document"
-                    className="inline-flex items-center gap-2 text-base font-semibold text-cyan-700 hover:text-cyan-800 group"
-                  >
-                    <span>Explore Cross-Doc Analysis</span>
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Link>
-                </div>
-              </motion.div>
-
-            </div>
-          </section>
-
-          {/* ── SECTION 5: VALIDATION & DATA QUALITY ── */}
-          <section className="py-24 sm:py-32 border-t border-slate-100">
-            <motion.div
-              initial={{ opacity: 0, y: 35 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: false, amount: 0.2 }}
-              transition={{ duration: 0.8 }}
-              className="text-center max-w-3xl mx-auto space-y-4 mb-16"
-            >
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Strict Rule Engine</span>
               </div>
-              <h2 className="text-4xl sm:text-6xl font-semibold tracking-tight text-slate-900">
-                Validation & Quality Assurance.
-              </h2>
-              <p className="text-lg font-light text-slate-600">
-                Deterministic validation engine evaluates 100+ geological rules, strip ratio physics, and reserve accounting constraints.
-              </p>
-            </motion.div>
-
-            {/* Validation Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  title: "Depth Consistency",
-                  rule: "Stratigraphic Order Rule #12",
-                  status: "100% Passed",
-                  desc: "Validates that borehole lithology layers follow true physical deposition sequence.",
-                  color: "text-emerald-700 bg-emerald-50 border-emerald-200"
-                },
-                {
-                  title: "Reserve Reconciliation",
-                  rule: "UNFC Standard Rule #04",
-                  status: "Audited",
-                  desc: "Reconciles proven vs indicated coal reserves across contiguous block leaseholds.",
-                  color: "text-purple-700 bg-purple-50 border-purple-200"
-                },
-                {
-                  title: "Production Tolerance",
-                  rule: "Monthly DGMS Target Rule #28",
-                  status: "Active Monitoring",
-                  desc: "Detects reporting anomalies between weighbridge tallies and dispatch manifests.",
-                  color: "text-blue-700 bg-blue-50 border-blue-200"
-                }
-              ].map((v, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                  viewport={{ once: false, amount: 0.15 }}
-                  transition={{ duration: 0.7, delay: idx * 0.1 }}
-                  className="rounded-3xl bg-slate-50/70 p-7 border border-slate-200/80 shadow-[0_10px_30px_rgba(0,0,0,0.02)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.05)] transition-all"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full border ${v.color}`}>
-                      {v.status}
-                    </span>
-                    <span className="text-xs font-mono text-slate-400">{v.rule}</span>
-                  </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">{v.title}</h3>
-                  <p className="text-sm text-slate-500 font-light leading-relaxed">{v.desc}</p>
-                </motion.div>
-              ))}
             </div>
 
-            <div className="text-center pt-10">
+            {/* Bento Card 2 (Span 4): Evidence Grounded RAG */}
+            <div className="lg:col-span-4 p-7 sm:p-9 rounded-3xl bg-[#090b14]/80 backdrop-blur-2xl border border-white/[0.1] hover:border-white/25 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase tracking-widest text-violet-400 font-bold">
+                    02 • VERIFIED CITATIONS
+                  </span>
+                  <div className="p-2.5 rounded-2xl bg-violet-500/10 text-violet-400 border border-violet-500/20">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-extrabold text-white tracking-tight">
+                  Zero-Hallucination Grounding
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed font-light">
+                  Every answer links to exact document IDs, sheet names, page numbers, and cosine similarity relevance match scores.
+                </p>
+              </div>
+
+              {/* Mock Citation Card */}
+              <div className="mt-8 p-4 rounded-2xl bg-violet-950/20 border border-violet-500/30 space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-violet-300 font-semibold">Kusmunda_Geol_2023.pdf</span>
+                  <span className="text-emerald-400 font-bold">100% Match</span>
+                </div>
+                <p className="text-[11px] text-slate-300 font-mono">
+                  Proven Coal Reserves: 1,482.35 MT (Seam I, II, III) • SR: 1.42 m³/t
+                </p>
+              </div>
+            </div>
+
+            {/* Bento Card 3 (Span 4): Automated Compliance Quarantine */}
+            <div className="lg:col-span-4 p-7 sm:p-9 rounded-3xl bg-[#090b14]/80 backdrop-blur-2xl border border-white/[0.1] hover:border-white/25 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase tracking-widest text-amber-400 font-bold">
+                    03 • COMPLIANCE AUDIT
+                  </span>
+                  <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                </div>
+                <h3 className="text-2xl font-extrabold text-white tracking-tight">
+                  DGMS Rule Audits
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed font-light">
+                  10 operational compliance algorithms actively inspect stripping ratio math, positive tonnage, and seam thickness tolerances.
+                </p>
+              </div>
+
+              <div className="mt-8 p-4 rounded-2xl bg-black/40 border border-white/[0.08] flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Discrepancy Status:</span>
+                <span className="text-emerald-400 font-bold">0 Blocking Flags</span>
+              </div>
+            </div>
+
+            {/* Bento Card 4 (Span 8): Cross-Mine Operational Analytics */}
+            <div className="lg:col-span-8 p-7 sm:p-9 rounded-3xl bg-[#090b14]/80 backdrop-blur-2xl border border-white/[0.1] hover:border-white/25 transition-all shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col justify-between group">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono uppercase tracking-widest text-teal-400 font-bold">
+                    04 • ANALYTICS
+                  </span>
+                  <div className="p-2.5 rounded-2xl bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
+                  Cross-Mine Performance Matrix
+                </h3>
+                <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl font-light">
+                  Instant aggregation across Q1 2026 dataset: 15,167,000 Tonnes raw coal produced and 39,880,000 m³ overburden removed across all 7 authoritative mine sites.
+                </p>
+              </div>
+
+              {/* Metrics Pills */}
+              <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.08]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Gevra (SECL)</span>
+                  <span className="text-white font-bold text-sm">3,915,000 t</span>
+                </div>
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.08]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Nigahi (NCL)</span>
+                  <span className="text-white font-bold text-sm">2,840,000 t</span>
+                </div>
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.08]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Lakhanpur (MCL)</span>
+                  <span className="text-white font-bold text-sm">2,215,000 t</span>
+                </div>
+                <div className="p-3 rounded-xl bg-black/40 border border-white/[0.08]">
+                  <span className="text-slate-400 block text-[10px] uppercase">Piparwar (CCL)</span>
+                  <span className="text-white font-bold text-sm">2,150,000 t</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 3: LIVING 3D NEURAL GEOLOGY CORE ── */}
+      <section className="py-24 sm:py-32 border-t border-white/[0.08] bg-[#020205] relative overflow-hidden">
+        
+        {/* Soft Background Aurora */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-tr from-cyan-900/10 via-purple-900/15 to-transparent blur-[160px] pointer-events-none" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            
+            {/* Left Column: Descriptive Typography */}
+            <div className="lg:col-span-5 space-y-6 text-left">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-purple-950/40 border border-purple-500/30 text-purple-300 text-xs font-mono font-bold uppercase">
+                <Zap className="w-3.5 h-3.5 text-purple-400" />
+                <span>Spatial 3D Intelligence</span>
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+                Inspect Geological Layers in Real-Time 3D.
+              </h2>
+              <p className="text-base text-slate-400 font-light leading-relaxed">
+                Interact with stratigraphic formations, inspect borehole logs with depth physics, and explore multi-layer coal reserves through our custom WebGL neural engine.
+              </p>
+              <div className="pt-2">
+                <Link
+                  href="/knowledge-base"
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white font-bold text-sm border border-white/20 transition-all hover:scale-105 active:scale-95 shadow-md"
+                >
+                  <span>Open Vector Knowledge Base</span>
+                  <ArrowRight className="w-4 h-4 text-cyan-400" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Column: 3D Geological Knowledge Core */}
+            <div className="lg:col-span-7 flex items-center justify-center relative">
+              <div className="w-full relative">
+                <Geological3DKnowledgeCore />
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ── SECTION 4: GEMINI-STYLE LAUNCH BANNER & FOOTER ── */}
+      <section className="py-24 sm:py-32 border-t border-white/[0.08] bg-[#000000] relative">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
+          
+          <div className="p-10 sm:p-16 rounded-3xl bg-gradient-to-b from-[#0c0f1d] to-[#04050a] border border-white/[0.15] shadow-[0_25px_80px_rgba(0,0,0,0.8),0_0_40px_rgba(139,92,246,0.15)] relative overflow-hidden space-y-6">
+            
+            {/* Top Glow Accent Line */}
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
+
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-bold uppercase">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+              <span>CMPDI & Coal India Limited</span>
+            </div>
+
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white max-w-2xl mx-auto leading-tight">
+              Ready to Transform Your Geological Archives?
+            </h2>
+
+            <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto font-light leading-relaxed">
+              Experience the authoritative AI platform engineered for exploration reports, borehole analysis, stripping ratio compliance, and mining operations.
+            </p>
+
+            <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/validation"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:text-emerald-800"
+                href="/documents"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full bg-white text-slate-950 font-bold text-base shadow-[0_0_25px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 transition-all"
               >
-                <span>View Full Validation Audit Dashboard</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Launch Document Workspace</span>
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Link>
+              
+              <Link
+                href="/assistant"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-white font-bold text-base border border-white/20 hover:scale-105 active:scale-95 transition-all"
+              >
+                <MessageSquare className="w-4 h-4 mr-2.5 text-cyan-400" />
+                <span>Ask KhanijGyan AI</span>
               </Link>
             </div>
-          </section>
 
-          {/* ── SECTION 6: GOVERNMENT RESOURCES & OFFICIAL DIRECTORY ── */}
-          <section className="py-24 sm:py-32 border-t border-slate-100">
-            <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white p-10 sm:p-14 relative overflow-hidden shadow-[0_30px_70px_rgba(0,0,0,0.12)]">
-              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
-              
-              <div className="max-w-3xl space-y-6 relative z-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-slate-200">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Ministry of Coal Portal Sync</span>
-                </div>
+          </div>
 
-                <h2 className="text-3xl sm:text-5xl font-semibold tracking-tight leading-tight">
-                  Official Ministry & CMPDI Public Resources.
-                </h2>
-                
-                <p className="text-base sm:text-lg text-slate-300 font-light leading-relaxed">
-                  Direct access to verified Ministry of Coal statistics, Coal India Limited policies, National Mineral Index circulars, and environmental compliance notices.
-                </p>
-
-                <div className="pt-4 flex flex-wrap gap-4">
-                  <Link
-                    href="/government-resources"
-                    className="inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold text-slate-900 bg-white rounded-full hover:scale-105 active:scale-95 transition-all shadow-lg"
-                  >
-                    <span>Open Government Portal Directory</span>
-                    <ExternalLink className="w-4 h-4 ml-2" />
-                  </Link>
-                  
-                  <Link
-                    href="/search"
-                    className="inline-flex items-center justify-center px-7 py-3.5 text-sm font-medium text-white border border-white/20 rounded-full hover:bg-white/10 transition-all"
-                  >
-                    <Search className="w-4 h-4 mr-2 text-cyan-400" />
-                    <span>Semantic Document Search</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </section>
+          {/* Footer Copyright */}
+          <div className="mt-16 text-center text-xs font-mono text-slate-500 space-y-2">
+            <p>© {new Date().getFullYear()} KhanijGyan AI • Central Mine Planning & Design Institute (CMPDI) / CIL</p>
+            <p className="text-slate-600">Enterprise AI for Geological Exploration, Borehole Analysis & DGMS Compliance</p>
+          </div>
 
         </div>
+      </section>
 
-        {/* ── MINIMAL FOOTER ── */}
-        <footer className="border-t border-slate-100 py-12 px-6 sm:px-8 mt-16">
-          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-slate-500">
-            <div className="flex items-center gap-3">
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-cyan-400 flex items-center justify-center text-white font-bold text-xs">
-                K
-              </div>
-              <span className="font-semibold text-slate-700">Khani Gyan AI</span>
-              <span>• Ministry of Coal Document Intelligence Suite</span>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <Link href="/documents" className="hover:text-slate-900 transition-colors">Documents</Link>
-              <Link href="/assistant" className="hover:text-slate-900 transition-colors">AI Assistant</Link>
-              <Link href="/validation" className="hover:text-slate-900 transition-colors">Validation</Link>
-              <Link href="/reports" className="hover:text-slate-900 transition-colors">Reports</Link>
-              <Link href="/government-resources" className="hover:text-slate-900 transition-colors">Gov Portals</Link>
-            </div>
-
-            <div>
-              © {new Date().getFullYear()} Khani Gyan AI. All rights reserved.
-            </div>
-          </div>
-        </footer>
-
-      </div>
     </div>
   );
 }
