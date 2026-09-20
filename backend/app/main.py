@@ -38,7 +38,8 @@ async def on_startup():
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-        logger.info("Database schema initialized successfully.")
+            await conn.execute(text("ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_bytes BYTEA;"))
+        logger.info("Database schema initialized and file_bytes column verified.")
     except Exception as exc:
         logger.warning(f"Database schema check notice: {exc}")
 

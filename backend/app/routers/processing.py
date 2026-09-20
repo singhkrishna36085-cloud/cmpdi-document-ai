@@ -57,6 +57,17 @@ async def process_document_endpoint(
     _check_doc_access(doc, user)
 
     full_path = find_file_on_disk(doc.file_path)
+
+    # 1. If physical file is missing from disk, restore it from persistent PostgreSQL file_bytes
+    if (not full_path or not os.path.exists(full_path)) and getattr(doc, "file_bytes", None):
+        upload_dir = get_upload_dir()
+        full_path = os.path.join(upload_dir, doc.file_path)
+        try:
+            with open(full_path, "wb") as f:
+                f.write(doc.file_bytes)
+        except Exception:
+            pass
+
     if not full_path or not os.path.exists(full_path):
         # Check if chunks already exist in DB
         chunks_res = await db.execute(select(DocumentChunk).where(DocumentChunk.document_id == document_id))

@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -120,6 +120,7 @@ async def upload_document(
         doc_date=doc_date,
         description=description or "",
         file_path=safe_name,   # relative; reconstruct full path when needed
+        file_bytes=contents,   # persistent binary in DB across ephemeral cloud restarts
         file_size=file_size,
         processing_status="pending",
         is_confidential=bool(is_confidential),
@@ -303,11 +304,16 @@ async def get_document_file(
         )
 
     full_path = find_file_on_disk(doc.file_path)
-    if not full_path or not os.path.exists(full_path):
-        raise HTTPException(
-            status_code=404,
-            detail=f"Original file '{doc.original_filename}' is missing from server disk (cleared during cloud server restart). Please re-upload the file."
-        )
+
+    # 1. If physical file is missing from disk, restore it from persistent PostgreSQL file_bytes
+    if (not full_path or not os.path.exists(full_path)) and getattr(doc, "file_bytes", None):
+        upload_dir = get_upload_dir()
+        full_path = os.path.join(upload_dir, doc.file_path)
+        try:
+            with open(full_path, "wb") as f:
+                f.write(doc.file_bytes)
+        except Exception:
+            pass
 
     ext = _get_ext(doc.original_filename or doc.file_path)
     media_types = {
@@ -340,12 +346,47 @@ async def get_document_file(
     except Exception:
         pass
 
-    return FileResponse(
-        path=full_path,
-        media_type=media_type,
-        filename=filename,
-        content_disposition_type=content_disposition_type
+    # A. If file is on disk, stream directly
+    if full_path and os.path.exists(full_path):
+        return FileResponse(
+            path=full_path,
+            media_type=media_type,
+            filename=filename,
+            content_disposition_type=content_disposition_type
+        )
+
+    # B. If file is in DB memory (file_bytes), stream directly from bytes
+    if getattr(doc, "file_bytes", None):
+        return Response(
+            content=doc.file_bytes,
+            media_type=media_type,
+            headers={"Content-Disposition": f"{content_disposition_type}; filename=\"{filename}\""}
+        )
+
+    # C. Graceful fallback: If file was wiped on cloud restart and not in file_bytes, but extracted text exists:
+    if doc.extracted_text:
+        report_text = f"# CMPDI DOCUMENT INTELLIGENCE ARCHIVE\n# Title: {doc.name}\n# Filename: {doc.original_filename}\n# Category: {doc.category}\n# Date: {doc.doc_date}\n\n{doc.extracted_text}"
+        return Response(
+            content=report_text.encode("utf-8"),
+            media_type="text/plain; charset=utf-8",
+            headers={"Content-Disposition": f"{content_disposition_type}; filename=\"{doc.name or 'document'}_extracted_text.txt\""}
+        )
+
+    raise HTTPException(
+        status_code=404,
+        detail=f"Original file '{doc.original_filename}' is not stored on disk. Please use the Re-upload button in Document Intelligence to restore it."
     )
+
+
+@router.get("/{document_id}/download")
+async def download_document_file(
+    document_id: int,
+    token: Optional[str] = None,
+    db: AsyncSession = Depends(get_db),
+    user: Optional[User] = Depends(get_optional_user)
+):
+    """Direct alias endpoint to download document as an attachment."""
+    return await get_document_file(document_id=document_id, download=True, token=token, db=db, user=user)
 
 
 @router.post("/{document_id}/reupload", status_code=status.HTTP_200_OK)
@@ -394,6 +435,7 @@ async def reupload_document(
         await out_file.write(contents)
 
     doc.file_path = safe_name
+    doc.file_bytes = contents  # persistent binary in DB
     doc.file_size = file_size
     if file.filename:
         doc.original_filename = file.filename

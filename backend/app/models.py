@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Boolean, LargeBinary
 from sqlalchemy.orm import relationship
 from .database import Base
 from datetime import datetime
@@ -31,6 +31,7 @@ class Document(Base):
     doc_date = Column(DateTime, nullable=True)
     description = Column(Text, nullable=True)
     file_path = Column(String, nullable=False)      # relative path inside uploads/
+    file_bytes = Column(LargeBinary, nullable=True)  # persistent binary storage across ephemeral cloud restarts
     file_size = Column(Integer, nullable=True)       # bytes
     created_at = Column(DateTime, default=datetime.utcnow)
 
