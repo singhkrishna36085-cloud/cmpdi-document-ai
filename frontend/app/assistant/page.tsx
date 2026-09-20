@@ -527,88 +527,83 @@ function AssistantContent() {
   };
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-8">
+    <div className="min-h-[calc(100vh-8rem)] bg-white text-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-[0_20px_60px_rgba(0,0,0,0.06)] space-y-6 max-w-6xl mx-auto pb-8">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-800 pb-4">
-        <PageHeader 
-          title="AI Document Assistant" 
-          description="Ask questions across official CMPDI reports, live internet search, or global engineering intelligence."
-        />
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-teal-500/10 text-teal-400 text-xs font-semibold border border-teal-500/20">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Hybrid Autonomous AI</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold mb-2">
+            <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+            <span>HYBRID AUTONOMOUS AI</span>
           </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+            AI Document Assistant
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-slate-600 max-w-3xl">
+            Ask questions across official CMPDI reports, live internet search, or global engineering intelligence.
+          </p>
+        </div>
 
-          <div className="text-xs font-mono px-2.5 py-1 rounded-full bg-slate-900 text-slate-300 border border-slate-800">
-            Role: <span className={isHod ? "text-amber-400 font-bold" : "text-teal-400 font-bold"}>{user?.role || "NORMAL_USER"}</span>
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-xs font-mono px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+            Role: <span className={isHod ? "text-amber-600 font-bold" : "text-blue-600 font-bold"}>{user?.role || "NORMAL_USER"}</span>
           </div>
 
           {messages.length > 0 && (
-            <Button
-              variant="secondary"
-              size="sm"
+            <button
               onClick={handleClearChat}
-              className="flex items-center gap-1.5 text-slate-400 hover:text-rose-400 border-slate-800 bg-slate-900"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-slate-600 hover:text-rose-600 border border-slate-200 bg-slate-50 hover:bg-rose-50 transition-colors shadow-sm cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
               <span>Clear Chat</span>
-            </Button>
+            </button>
           )}
         </div>
       </div>
 
       {/* Security Context Banner */}
-      <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 flex flex-wrap items-center justify-between gap-2 shadow-sm">
-        <div className="flex items-center gap-2">
-          <ShieldAlert className="w-4 h-4 text-teal-400 shrink-0" />
-          <span>Multi-source reasoning enabled: Official CMPDI reports + Live Web Grounding + Global Engineering Intelligence.</span>
+      <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200 text-xs text-slate-700 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <ShieldAlert className="w-4 h-4 text-blue-600 shrink-0" />
+          <span className="font-medium">Multi-source reasoning enabled: Official CMPDI reports + Live Web Grounding + Global Engineering Intelligence.</span>
         </div>
         {paramDocId && (
-          <span className="font-mono text-teal-400 bg-teal-500/10 px-2 py-0.5 rounded border border-teal-500/20">
+          <span className="font-mono text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full border border-blue-300 font-semibold">
             Filtering Context: Doc #{paramDocId}
           </span>
         )}
       </div>
 
-      {/* Main Chat Container */}
-      <div className="relative bg-gradient-to-b from-[#090f22] via-[#070b18] to-[#050811] rounded-2xl sm:rounded-3xl border border-cyan-500/20 shadow-[0_20px_70px_rgba(0,0,0,0.7)] flex flex-col min-h-[600px] overflow-hidden backdrop-blur-xl">
-        {/* Neon Hairline Accent Header Line */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
+      {/* Main Chat Container in Pure White Theme */}
+      <div className="relative bg-slate-50/50 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm flex flex-col min-h-[620px] overflow-hidden">
+        {/* Subtle Accent Line */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
         
         {/* Chat History Messages */}
         <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-6 max-h-[620px]">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-10 px-4 space-y-6 relative z-10">
               
-              {/* Breathing Neural Core Crest (Pure CSS & SVG, zero 3D crystal/rhombus shapes) */}
+              {/* Crest Icon in Clean White / Light Blue */}
               <div className="relative mb-1">
-                <div className="absolute -inset-4 rounded-full bg-cyan-500/10 blur-xl animate-pulse" />
-                <div className="relative w-20 h-20 rounded-full bg-gradient-to-b from-[#0f2142] to-[#070e1c] border border-cyan-500/40 flex items-center justify-center shadow-[0_0_35px_rgba(6,182,212,0.25)]">
-                  <div className="absolute inset-1 rounded-full border border-cyan-400/20 animate-spin" style={{ animationDuration: "16s" }} />
-                  <div className="absolute inset-2.5 rounded-full border border-teal-400/15" />
-                  <div className="relative flex items-center justify-center w-11 h-11 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
-                    <Bot className="w-6 h-6 text-cyan-400" />
-                  </div>
+                <div className="w-16 h-16 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 shadow-sm">
+                  <Bot className="w-8 h-8 text-blue-600" />
                 </div>
               </div>
 
-
               {/* Title & Subtitle */}
               <div className="max-w-xl mx-auto space-y-2">
-                <div className="text-xs font-mono text-cyan-400 font-bold uppercase tracking-widest">
+                <div className="text-xs font-mono text-blue-600 font-bold uppercase tracking-widest">
                   {greeting}, Mining Engineer
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-sans">
+                <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-sans">
                   What geological data would you like to analyze?
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-lg mx-auto">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
                   Connected to dense FAISS vector embeddings, authorized PostgreSQL chunks, and live government engineering reports.
                 </p>
               </div>
 
-              {/* Dynamic Mode-Specific Prompt Cards */}
+              {/* Dynamic Mode-Specific Prompt Cards in Pure White */}
               <div className="w-full max-w-3xl grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2 text-left">
                 {(MODE_CARDS_MAP[selectedMode] || MODE_CARDS_MAP.all).map((card, idx) => {
                   const Icon = card.icon;
@@ -616,25 +611,25 @@ function AssistantContent() {
                     <button
                       key={idx}
                       onClick={() => handleSubmit(card.prompt)}
-                      className="group relative flex flex-col justify-between p-4 rounded-2xl bg-[#0a1224]/80 hover:bg-[#0e1a38] border border-cyan-500/15 hover:border-cyan-400/50 transition-all duration-200 shadow-[0_4px_20px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_rgba(6,182,212,0.15)] text-left cursor-pointer overflow-hidden"
+                      className="group relative flex flex-col justify-between p-4 rounded-2xl bg-white hover:bg-slate-50 border border-slate-200 hover:border-blue-400 transition-all duration-200 shadow-sm hover:shadow-md text-left cursor-pointer overflow-hidden"
                     >
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all">
+                          <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 group-hover:scale-110 group-hover:bg-blue-100 transition-all">
                             <Icon className="w-4 h-4" />
                           </div>
-                          <span className="text-[10px] font-mono tracking-widest text-cyan-400/90 uppercase font-bold">
+                          <span className="text-[10px] font-mono tracking-widest text-blue-600 uppercase font-bold">
                             {card.category}
                           </span>
                         </div>
-                        <ArrowRight className="w-4 h-4 text-slate-600 group-hover:text-cyan-300 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
                       </div>
 
                       <div>
-                        <h4 className="text-xs sm:text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">
+                        <h4 className="text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
                           {card.title}
                         </h4>
-                        <p className="text-[11px] text-slate-400 line-clamp-2 mt-1 leading-relaxed group-hover:text-slate-300">
+                        <p className="text-[11px] text-slate-500 line-clamp-2 mt-1 leading-relaxed group-hover:text-slate-600">
                           {card.desc}
                         </p>
                       </div>
@@ -644,17 +639,17 @@ function AssistantContent() {
               </div>
 
               {/* Capabilities row */}
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-3 text-[11px] font-mono text-slate-400">
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-3 text-[11px] font-mono text-slate-500">
                 <span className="inline-flex items-center gap-1.5">
-                  <Database className="w-3.5 h-3.5 text-cyan-400" /> FAISS Dense Vectors
+                  <Database className="w-3.5 h-3.5 text-blue-600" /> FAISS Dense Vectors
                 </span>
-                <span className="text-slate-600">•</span>
+                <span className="text-slate-300">•</span>
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldAlert className="w-3.5 h-3.5 text-emerald-400" /> PostgreSQL Verification
+                  <ShieldAlert className="w-3.5 h-3.5 text-emerald-600" /> PostgreSQL Verification
                 </span>
-                <span className="text-slate-600">•</span>
+                <span className="text-slate-300">•</span>
                 <span className="inline-flex items-center gap-1.5">
-                  <Globe className="w-3.5 h-3.5 text-blue-400" /> Live Web Grounding
+                  <Globe className="w-3.5 h-3.5 text-indigo-600" /> Live Web Grounding
                 </span>
               </div>
             </div>
@@ -674,42 +669,42 @@ function AssistantContent() {
                   <div className="flex items-center gap-2 px-1 text-xs">
                     <div className={`w-5 h-5 rounded-md flex items-center justify-center ${
                       isUser
-                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/30"
-                        : "bg-cyan-500/15 text-cyan-400 border border-cyan-500/30"
+                        ? "bg-blue-100 text-blue-700 border border-blue-200"
+                        : "bg-blue-50 text-blue-600 border border-blue-200"
                     }`}>
                       {isUser ? <UserIcon className="w-3 h-3" /> : <Bot className="w-3 h-3" />}
                     </div>
-                    <span className="font-bold text-slate-300 font-mono">
-                      {isUser ? "You" : "KHANI GYAN AI"}
+                    <span className="font-bold text-slate-700 font-mono">
+                      {isUser ? "You" : "KHANIJ GYAN AI"}
                     </span>
                     {!isUser && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
                         ONLINE
                       </span>
                     )}
-                    <span className="text-[11px] font-mono text-slate-500">{msg.timestamp}</span>
+                    <span className="text-[11px] font-mono text-slate-400">{msg.timestamp}</span>
                   </div>
 
                   {/* Message Bubble / Card */}
                   {isUser ? (
-                    <div className="max-w-2xl bg-gradient-to-r from-cyan-950/80 to-[#0c1a36] text-slate-100 border border-cyan-500/30 rounded-2xl rounded-tr-none p-4 shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
-                      <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                    <div className="max-w-2xl bg-blue-600 text-white border border-blue-500 rounded-2xl rounded-tr-none p-4 shadow-sm">
+                      <div className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-white">
                         {msg.content}
                       </div>
                     </div>
                   ) : (
-                    <div className="w-full max-w-4xl bg-[#090f22]/90 backdrop-blur-md text-slate-100 border border-cyan-500/20 rounded-2xl rounded-tl-none p-5 sm:p-6 shadow-[0_10px_40px_rgba(0,0,0,0.5)] space-y-4">
+                    <div className="w-full max-w-4xl bg-white text-slate-900 border border-slate-200 rounded-2xl rounded-tl-none p-5 sm:p-6 shadow-sm space-y-4">
                       {/* Top row: Status badges & Engine */}
-                      <div className="pb-3 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+                      <div className="pb-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex flex-wrap items-center gap-2">
                           {msg.mode && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 font-mono">
-                              {msg.mode === "doc" && <FileText className="w-3 h-3 text-emerald-400" />}
-                              {msg.mode === "web" && <Globe className="w-3 h-3 text-cyan-400" />}
-                              {msg.mode === "calc" && <Cpu className="w-3 h-3 text-amber-400" />}
-                              {msg.mode === "safety" && <ShieldAlert className="w-3 h-3 text-purple-400" />}
-                              {(!["doc", "web", "calc", "safety"].includes(msg.mode)) && <Sparkles className="w-3 h-3 text-teal-400" />}
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                              {msg.mode === "doc" && <FileText className="w-3 h-3 text-emerald-600" />}
+                              {msg.mode === "web" && <Globe className="w-3 h-3 text-blue-600" />}
+                              {msg.mode === "calc" && <Cpu className="w-3 h-3 text-amber-600" />}
+                              {msg.mode === "safety" && <ShieldAlert className="w-3 h-3 text-purple-600" />}
+                              {(!["doc", "web", "calc", "safety"].includes(msg.mode)) && <Sparkles className="w-3.5 h-3.5 text-blue-600" />}
                               <span>
                                 {msg.mode === "doc" ? "CMPDI Documents Mode" :
                                  msg.mode === "web" ? "Live Web Intel Mode" :
@@ -719,99 +714,99 @@ function AssistantContent() {
                             </span>
                           )}
                           {msg.source_type === "document" && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
                               <FileText className="w-3 h-3" /> Verified Document Evidence
                             </span>
                           )}
                           {msg.source_type === "web" && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 font-mono">
                               <Globe className="w-3 h-3" /> Live Web Grounding
                             </span>
                           )}
                           {msg.source_type === "hybrid" && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 font-mono">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 font-mono">
                               <Sparkles className="w-3 h-3" /> Hybrid Multi-Source Intelligence
                             </span>
                           )}
                           {msg.source_type === "global_ai" && (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 font-mono">
                               <Sparkles className="w-3 h-3" /> AI Global Knowledge Engine
                             </span>
                           )}
                           {(!msg.source_type && msg.status === "success") && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
                               <CheckCircle className="w-3 h-3" /> Answer Generated
                             </span>
                           )}
                           {msg.status === "not_found" && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700 font-mono">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 font-mono">
                               <HelpCircle className="w-3 h-3" /> General Knowledge Response
                             </span>
                           )}
                           {(msg.status === "server_error" || msg.status === "network_error") && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 font-mono">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 font-mono">
                               <AlertCircle className="w-3 h-3" /> Error Response
                             </span>
                           )}
                         </div>
 
-                        <div className="text-[11px] font-mono text-slate-400">
-                          Engine: <span className="text-cyan-300 font-bold">{msg.provider || "Gemini 2.5 RAG"}</span>
+                        <div className="text-[11px] font-mono text-slate-500">
+                          Engine: <span className="text-blue-600 font-bold">{msg.provider || "Gemini 2.5 RAG"}</span>
                         </div>
                       </div>
 
-                      {/* DeepSeek/Claude Style Neural Reasoning Accordion */}
-                      <div className="rounded-xl border border-cyan-500/20 bg-[#070c18] overflow-hidden">
+                      {/* Neural Reasoning Accordion in Light Theme */}
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
                         <button
                           onClick={() => toggleReasoning(msg.id)}
-                          className="w-full flex items-center justify-between px-3.5 py-2.5 bg-cyan-950/30 hover:bg-cyan-900/30 text-xs text-cyan-300 font-mono transition-colors text-left cursor-pointer"
+                          className="w-full flex items-center justify-between px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200/80 text-xs text-slate-700 font-mono transition-colors text-left cursor-pointer"
                         >
                           <div className="flex items-center gap-2">
-                            <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                            <span className="font-semibold tracking-wide">Neural Reasoning & Evidence Trace</span>
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                            <Cpu className="w-3.5 h-3.5 text-blue-600" />
+                            <span className="font-semibold tracking-wide text-slate-900">Neural Reasoning & Evidence Trace</span>
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-blue-100 text-blue-700 border border-blue-200 font-semibold">
                               {msg.sources && msg.sources.length > 0 ? `${msg.sources.length} Chunks Matched` : "Synthesized"}
                             </span>
                           </div>
-                          {openReasoning[msg.id] ? <ChevronUp className="w-3.5 h-3.5 text-cyan-400" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
+                          {openReasoning[msg.id] ? <ChevronUp className="w-3.5 h-3.5 text-slate-600" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-400" />}
                         </button>
 
                         {openReasoning[msg.id] && (
-                          <div className="p-3 text-[11px] font-mono text-slate-300 space-y-2.5 border-t border-cyan-500/15 bg-slate-950/70">
+                          <div className="p-3 text-[11px] font-mono text-slate-600 space-y-2.5 border-t border-slate-200 bg-white">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[10px]">
-                              <div className="p-2 rounded-lg bg-[#0b1426] border border-slate-800">
-                                <div className="text-slate-500">PROVIDER / ENGINE</div>
-                                <div className="text-cyan-300 font-bold mt-0.5">{msg.provider || "DeepSeek / Gemini 2.5"}</div>
+                              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                                <div className="text-slate-400">PROVIDER / ENGINE</div>
+                                <div className="text-blue-700 font-bold mt-0.5">{msg.provider || "DeepSeek / Gemini 2.5"}</div>
                               </div>
-                              <div className="p-2 rounded-lg bg-[#0b1426] border border-slate-800">
-                                <div className="text-slate-500">MODEL ARCHITECTURE</div>
-                                <div className="text-slate-200 font-bold mt-0.5">{msg.model || "gemini-2.5-flash"}</div>
+                              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                                <div className="text-slate-400">MODEL ARCHITECTURE</div>
+                                <div className="text-slate-800 font-bold mt-0.5">{msg.model || "gemini-2.5-flash"}</div>
                               </div>
-                              <div className="p-2 rounded-lg bg-[#0b1426] border border-slate-800">
-                                <div className="text-slate-500">RETRIEVAL STRATEGY</div>
-                                <div className="text-emerald-400 font-bold mt-0.5">
+                              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">
+                                <div className="text-slate-400">RETRIEVAL STRATEGY</div>
+                                <div className="text-emerald-700 font-bold mt-0.5">
                                   {msg.source_type === "document" ? "FAISS Dense Index" : msg.source_type === "web" ? "Live SerpAPI Grounding" : "Hybrid Fusion Engine"}
                                 </div>
                               </div>
                             </div>
-                            <div className="p-2.5 rounded-lg bg-[#09101f] border border-cyan-500/10 text-slate-400 text-[11px] leading-relaxed">
-                              <span className="text-cyan-400 font-bold">Execution Trace: </span>
+                            <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
+                              <span className="text-blue-700 font-bold">Execution Trace: </span>
                               Vector similarity evaluated across CMPDI geological archives &rarr; Contextual filtering applied &rarr; Cross-encoder verification &rarr; Anti-hallucination grounded brief generated.
                             </div>
                           </div>
                         )}
                       </div>
 
-                      {/* Main Markdown Content */}
-                      <div className="text-slate-100 font-sans text-sm leading-relaxed">
-                        <MarkdownViewer content={msg.content} />
+                      {/* Main Markdown Content in Light Mode */}
+                      <div className="text-slate-900 font-sans text-sm leading-relaxed">
+                        <MarkdownViewer content={msg.content} variant="light" />
                       </div>
 
                       {/* Web Grounding Sources */}
                       {hasWebSources && (
-                        <div className="mt-4 pt-3.5 border-t border-slate-800">
-                          <div className="flex items-center gap-2 text-xs font-bold text-cyan-300 mb-2 font-mono">
-                            <Globe className="w-3.5 h-3.5 text-cyan-400" />
+                        <div className="mt-4 pt-3.5 border-t border-slate-200">
+                          <div className="flex items-center gap-2 text-xs font-bold text-blue-700 mb-2 font-mono">
+                            <Globe className="w-3.5 h-3.5 text-blue-600" />
                             <span>Live Web Grounding Sources ({msg.web_sources?.length})</span>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
@@ -821,10 +816,10 @@ function AssistantContent() {
                                 href={ws.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/40 hover:bg-slate-900 transition-all text-xs text-slate-300 group font-mono"
+                                className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:border-blue-400 hover:bg-white transition-all text-xs text-slate-700 group font-mono shadow-sm"
                               >
-                                <span className="truncate group-hover:text-cyan-300">{ws.title || ws.url}</span>
-                                <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-cyan-400 shrink-0" />
+                                <span className="truncate group-hover:text-blue-700 font-medium">{ws.title || ws.url}</span>
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
                               </a>
                             ))}
                           </div>
@@ -833,8 +828,8 @@ function AssistantContent() {
 
                       {/* Backend Error Alert Banner */}
                       {msg.error && (
-                        <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-300 text-xs flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                           <div>
                             <strong className="font-bold">Error Detail:</strong> {msg.error}
                           </div>
@@ -843,16 +838,16 @@ function AssistantContent() {
 
                       {/* Evidence & Source Citations Section */}
                       {hasSources && (
-                        <div className="mt-4 pt-3.5 border-t border-slate-800/80">
+                        <div className="mt-4 pt-3.5 border-t border-slate-200">
                           <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2 text-xs font-bold text-slate-200">
-                              <Database className="w-3.5 h-3.5 text-cyan-400" />
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+                              <Database className="w-3.5 h-3.5 text-blue-600" />
                               <span>Evidence Citations & Traceability ({msg.sources?.length})</span>
                             </div>
 
                             <button
                               onClick={() => toggleSourceExpand(msg.id)}
-                              className="text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1 cursor-pointer font-mono"
+                              className="text-xs text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 cursor-pointer font-mono"
                             >
                               <span>{isExpanded ? "Collapse Details" : "View Retrieved Chunks"}</span>
                               {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -867,30 +862,30 @@ function AssistantContent() {
                               return (
                                 <div
                                   key={idx}
-                                  className="bg-slate-950 border border-slate-800/90 rounded-xl p-3 text-xs space-y-2 hover:border-cyan-500/40 transition-all shadow-md group"
+                                  className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-2 hover:border-blue-400 transition-all shadow-sm group"
                                 >
                                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                    <div className="flex items-center gap-2 font-bold text-slate-200 truncate">
-                                      <FileText className="w-4 h-4 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
+                                    <div className="flex items-center gap-2 font-bold text-slate-900 truncate">
+                                      <FileText className="w-4 h-4 text-blue-600 shrink-0 group-hover:scale-110 transition-transform" />
                                       <span className="truncate">{src.original_filename || src.document_name || "CMPDI Document"}</span>
                                     </div>
 
                                     <div className="flex items-center gap-2 shrink-0 font-mono">
-                                      <span className="px-2.5 py-0.5 rounded-md bg-slate-900 text-slate-300 border border-slate-800 text-[11px]">
+                                      <span className="px-2.5 py-0.5 rounded-md bg-white text-slate-700 border border-slate-200 text-[11px] font-medium">
                                         {refText}
                                       </span>
                                       
-                                      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-[11px]">
+                                      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[11px]">
                                         <span className="font-bold">Match: {scorePct}%</span>
-                                        <div className="w-12 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-slate-700">
-                                          <div className="h-full bg-cyan-400 rounded-full" style={{ width: `${scorePct}%` }} />
+                                        <div className="w-12 h-1.5 bg-slate-200 rounded-full overflow-hidden border border-slate-300">
+                                          <div className="h-full bg-blue-600 rounded-full" style={{ width: `${scorePct}%` }} />
                                         </div>
                                       </div>
 
                                       {src.document_id && (
                                         <Link
                                           href={`/documents/viewer?id=${src.document_id}`}
-                                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-[11px] transition-all shadow-sm"
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-all shadow-sm"
                                         >
                                           View <ExternalLink className="w-3 h-3" />
                                         </Link>
@@ -899,8 +894,8 @@ function AssistantContent() {
                                   </div>
 
                                   {isExpanded && (
-                                    <div className="mt-2.5 pt-2 border-t border-slate-800 text-slate-300 text-[11px] font-mono bg-slate-900/90 p-3 rounded-xl border border-slate-800/80">
-                                      <div className="text-cyan-400 font-sans font-bold text-[10px] uppercase tracking-wider mb-1">
+                                    <div className="mt-2.5 pt-2 border-t border-slate-200 text-slate-700 text-[11px] font-mono bg-white p-3 rounded-xl border border-slate-200 shadow-inner">
+                                      <div className="text-blue-700 font-sans font-bold text-[10px] uppercase tracking-wider mb-1">
                                         Context Block (Doc #{src.document_id}, Chunk #{src.chunk_id}):
                                       </div>
                                       {msg.retrievedChunks?.[idx]?.content || "Retrieved vector content match."}
@@ -913,16 +908,16 @@ function AssistantContent() {
                         </div>
                       )}
 
-                      {/* Modern Interactive Action Bar */}
-                      <div className="pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                      {/* Interactive Action Bar */}
+                      <div className="pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
                         <div className="flex items-center gap-2">
                           <span className="text-[11px] font-mono text-slate-500">Helpful?</span>
                           <button
                             onClick={() => handleFeedback(msg.id, "up")}
                             className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                               feedbackMap[msg.id] === "up"
-                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.3)]"
-                                : "bg-slate-900/80 text-slate-400 hover:text-emerald-400 border-slate-800 hover:border-emerald-500/30"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-300 shadow-sm"
+                                : "bg-slate-100 text-slate-600 hover:text-emerald-700 border-slate-200 hover:border-emerald-300"
                             }`}
                             title="Helpful & Accurate"
                           >
@@ -932,8 +927,8 @@ function AssistantContent() {
                             onClick={() => handleFeedback(msg.id, "down")}
                             className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
                               feedbackMap[msg.id] === "down"
-                                ? "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
-                                : "bg-slate-900/80 text-slate-400 hover:text-rose-400 border-slate-800 hover:border-rose-500/30"
+                                ? "bg-rose-50 text-rose-700 border-rose-300 shadow-sm"
+                                : "bg-slate-100 text-slate-600 hover:text-rose-700 border-slate-200 hover:border-rose-300"
                             }`}
                             title="Inaccurate or Irrelevant"
                           >
@@ -944,13 +939,13 @@ function AssistantContent() {
                         <div className="flex items-center gap-2 font-mono">
                           <button
                             onClick={() => handleCopy(msg.id, msg.content)}
-                            className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/30 transition-all flex items-center gap-1.5 text-xs cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-1.5 text-xs cursor-pointer"
                             title="Copy answer"
                           >
                             {copiedId === msg.id ? (
                               <>
-                                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                                <span className="text-emerald-400">Copied</span>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="text-emerald-700 font-bold">Copied</span>
                               </>
                             ) : (
                               <>
@@ -967,7 +962,7 @@ function AssistantContent() {
                               if (prevUserQuery) handleSubmit(prevUserQuery);
                             }}
                             disabled={isLoading}
-                            className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/30 transition-all flex items-center gap-1.5 text-xs cursor-pointer disabled:opacity-50"
+                            className="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-1.5 text-xs cursor-pointer disabled:opacity-50"
                             title="Regenerate this answer"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
@@ -976,7 +971,7 @@ function AssistantContent() {
 
                           <button
                             onClick={() => handlePrintBrief(msg.content, msg.timestamp)}
-                            className="px-2.5 py-1.5 rounded-lg text-slate-400 hover:text-cyan-300 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/30 transition-all flex items-center gap-1.5 text-xs cursor-pointer"
+                            className="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-1.5 text-xs cursor-pointer"
                             title="Print or Save Brief"
                           >
                             <Printer className="w-3.5 h-3.5" />
@@ -992,29 +987,28 @@ function AssistantContent() {
             })
           )}
 
-          {/* Modern Thinking Step-by-Step State */}
+          {/* Thinking Step-by-Step State */}
           {isLoading && (
             <div className="flex flex-col items-start space-y-2">
               <div className="flex items-center gap-2 px-1 text-xs">
-                <span className="font-bold font-mono text-cyan-400">KHANI GYAN AI</span>
-                <span className="text-[11px] font-mono text-slate-400">Synthesizing...</span>
+                <span className="font-bold font-mono text-blue-600">KHANIJ GYAN AI</span>
+                <span className="text-[11px] font-mono text-slate-500">Synthesizing...</span>
               </div>
-              <div className="bg-[#0a1224]/90 border border-cyan-500/30 rounded-2xl rounded-tl-none p-4 shadow-[0_0_30px_rgba(6,182,212,0.1)] max-w-lg space-y-3">
+              <div className="bg-white border border-blue-200 rounded-2xl rounded-tl-none p-4 shadow-sm max-w-lg space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 shrink-0">
-                    <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
-                    <span className="absolute inset-0 rounded-xl bg-cyan-400/20 animate-ping opacity-30" />
+                  <div className="relative flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 border border-blue-200 text-blue-600 shrink-0">
+                    <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold font-mono text-cyan-200 tracking-wide">
+                    <p className="text-xs font-bold font-mono text-blue-700 tracking-wide">
                       NEURAL REASONING ACTIVE
                     </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{loadingStep}</p>
+                    <p className="text-[11px] text-slate-600 mt-0.5">{loadingStep}</p>
                   </div>
                 </div>
                 {/* Visual mini progress pipeline */}
-                <div className="h-1 w-full bg-slate-800/80 rounded-full overflow-hidden border border-slate-700/40">
-                  <div className="h-full bg-gradient-to-r from-cyan-400 via-teal-400 to-blue-500 rounded-full w-2/3 animate-pulse" />
+                <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                  <div className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 rounded-full w-2/3 animate-pulse" />
                 </div>
               </div>
             </div>
@@ -1023,8 +1017,8 @@ function AssistantContent() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Modern Floating Command Dock */}
-        <div className="p-4 sm:p-5 bg-gradient-to-t from-[#060a14] via-[#080e1e] to-transparent border-t border-cyan-500/15 space-y-2.5">
+        {/* Floating Command Dock in Clean White Theme */}
+        <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 space-y-2.5">
           {/* Quick Mode Switcher Pills */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             {ASSISTANT_MODES.map((mode) => {
@@ -1036,12 +1030,12 @@ function AssistantContent() {
                   onClick={() => setSelectedMode(mode.id)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono transition-all shrink-0 cursor-pointer ${
                     isActive
-                      ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)] font-bold"
-                      : "bg-[#0b1426]/70 text-slate-400 hover:text-slate-200 border border-slate-800 hover:border-slate-700"
+                      ? "bg-blue-600 text-white border border-blue-600 shadow-sm font-bold"
+                      : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-100"
                   }`}
                   title={mode.hint}
                 >
-                  <ModeIcon className={`w-3.5 h-3.5 ${isActive ? "text-cyan-400" : "text-slate-500"}`} />
+                  <ModeIcon className={`w-3.5 h-3.5 ${isActive ? "text-white" : "text-slate-500"}`} />
                   <span>{mode.label}</span>
                 </button>
               );
@@ -1049,13 +1043,13 @@ function AssistantContent() {
           </div>
 
           {validationError && (
-            <div className="px-3.5 py-2 bg-rose-500/10 text-rose-300 text-xs font-mono font-bold rounded-xl border border-rose-500/25 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <div className="px-3.5 py-2 bg-rose-50 text-rose-700 text-xs font-mono font-bold rounded-xl border border-rose-200 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{validationError}</span>
             </div>
           )}
 
-          <div className="relative rounded-2xl sm:rounded-3xl bg-[#0b1329]/95 backdrop-blur-xl border border-cyan-500/25 p-2.5 sm:p-3.5 shadow-[0_10px_35px_rgba(0,0,0,0.5)] focus-within:border-cyan-400/60 focus-within:shadow-[0_0_25px_rgba(6,182,212,0.15)] transition-all">
+          <div className="relative rounded-2xl sm:rounded-3xl bg-white border border-slate-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 p-2.5 sm:p-3.5 shadow-sm transition-all">
             
             {/* Top row: Textarea */}
             <textarea
@@ -1078,48 +1072,48 @@ function AssistantContent() {
                   : "Ask a question across CMPDI reports, borehole data, or engineering calculations..."
               }
               rows={2}
-              className="w-full resize-none bg-transparent px-3 py-1.5 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50 leading-relaxed font-sans"
+              className="w-full resize-none bg-transparent px-3 py-1.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none disabled:opacity-50 leading-relaxed font-sans"
             />
 
             {/* Bottom Controls Bar */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2 px-2 border-t border-white/[0.06]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2 px-2 border-t border-slate-100">
               <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono border ${
                   selectedMode === "doc"
-                    ? "bg-emerald-950/70 border-emerald-500/40 text-emerald-300"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-700 font-semibold"
                     : selectedMode === "web"
-                    ? "bg-cyan-950/70 border-cyan-500/40 text-cyan-300"
+                    ? "bg-blue-50 border-blue-200 text-blue-700 font-semibold"
                     : selectedMode === "calc"
-                    ? "bg-amber-950/70 border-amber-500/40 text-amber-300"
+                    ? "bg-amber-50 border-amber-200 text-amber-700 font-semibold"
                     : selectedMode === "safety"
-                    ? "bg-purple-950/70 border-purple-500/40 text-purple-300"
-                    : "bg-cyan-950/60 border-cyan-500/30 text-cyan-300"
+                    ? "bg-purple-50 border-purple-200 text-purple-700 font-semibold"
+                    : "bg-blue-50 border-blue-200 text-blue-700 font-semibold"
                 }`}>
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />
                   Mode: {ASSISTANT_MODES.find(m => m.id === selectedMode)?.label || "Hybrid"}
                 </span>
 
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700/60 text-slate-300 text-[10px] font-mono">
-                  <Database className="w-3 h-3 text-cyan-400" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-mono">
+                  <Database className="w-3.5 h-3.5 text-blue-600" />
                   RAG: FAISS + PostgreSQL
                 </span>
 
                 {paramDocId && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-500/30 text-purple-300 text-[10px] font-mono">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 border border-purple-200 text-purple-700 text-[10px] font-mono">
                     Doc #{paramDocId}
                   </span>
                 )}
               </div>
 
               <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                <span className="text-[10px] font-mono text-slate-400 hidden md:inline">
-                  Return <kbd className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-bold">↵</kbd> to send
+                <span className="text-[10px] font-mono text-slate-500 hidden md:inline">
+                  Return <kbd className="px-1.5 py-0.5 rounded bg-slate-100 border border-slate-300 text-slate-700 font-bold">↵</kbd> to send
                 </span>
 
                 <button
                   onClick={() => handleSubmit()}
                   disabled={isLoading || !inputValue.trim()}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 via-teal-400 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-bold text-xs font-mono tracking-wider transition-all shadow-[0_0_15px_rgba(6,182,212,0.25)] hover:shadow-[0_0_25px_rgba(6,182,212,0.4)] hover:scale-[1.02] active:scale-95 cursor-pointer ml-auto sm:ml-0"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-xs font-mono tracking-wider transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer ml-auto sm:ml-0"
                 >
                   <span>TRANSMIT</span>
                   <Send className="w-3.5 h-3.5" />
