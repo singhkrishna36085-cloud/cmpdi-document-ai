@@ -208,12 +208,17 @@ async def upload_document(
             )
             db.add(s_record)
             
-        doc.processing_status = "completed"
+        if not saved_chunks:
+            doc.processing_status = "failed"
+            doc.error_message = "No readable text content or pages could be extracted from this document."
+        else:
+            doc.processing_status = "completed"
+            doc.error_message = None
+
         doc.processing_completed_at = datetime.utcnow()
         doc.extracted_text = extraction_res.get("full_text", "")
         doc.page_count = extraction_res.get("page_count", 1)
         doc.meta_info = extraction_res.get("meta_info", "{}")
-        doc.error_message = None
         await db.commit()
         await db.refresh(doc)
 
@@ -512,12 +517,17 @@ async def reupload_document(
             )
             db.add(s_record)
 
-        doc.processing_status = "completed"
+        if not saved_chunks:
+            doc.processing_status = "failed"
+            doc.error_message = "No readable text content or pages could be extracted from this document."
+        else:
+            doc.processing_status = "completed"
+            doc.error_message = None
+
         doc.processing_completed_at = datetime.utcnow()
         doc.extracted_text = extraction_res.get("full_text", "")
         doc.page_count = extraction_res.get("page_count", 1)
         doc.meta_info = extraction_res.get("meta_info", "{}")
-        doc.error_message = None
         await db.commit()
         await db.refresh(doc)
     except Exception as exc:

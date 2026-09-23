@@ -599,15 +599,15 @@ export default function ProcessingPage() {
                 </div>
 
                 {/* Error Banner if Failed */}
-                {selectedDoc.processing_status === "failed" && (
+                {(selectedDoc.processing_status === "failed" || processingDetails?.overall_status === "failed") && (
                   <div className="p-4 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs space-y-3">
                     <div className="flex items-center justify-between text-rose-700 font-bold">
                       <span className="flex items-center gap-1.5">
-                        <AlertTriangle className="w-4 h-4" /> Processing Failed / File Missing
+                        <AlertTriangle className="w-4 h-4" /> Processing Alert / Action Required
                       </span>
                     </div>
                     <p className="font-mono text-[11px] leading-relaxed break-all text-rose-900 bg-rose-100/60 p-2 rounded border border-rose-200">
-                      {selectedDoc.error_message || "Document processing failed."}
+                      {processingDetails?.error_message || selectedDoc.error_message || "Document extraction produced 0 chunks. Please re-upload or retry."}
                     </p>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <input
@@ -722,8 +722,18 @@ export default function ProcessingPage() {
 
                   <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
                     <span className="text-slate-600">Vector Store Status</span>
-                    <span className="font-semibold text-emerald-700">
-                      {processingDetails?.chunks_count ? `${processingDetails.chunks_count} FAISS Chunks` : "Pending"}
+                    <span className={`font-semibold ${
+                      (processingDetails?.chunks_count ?? 0) > 0
+                        ? "text-emerald-700"
+                        : selectedDoc.processing_status === "failed" || processingDetails?.overall_status === "failed"
+                        ? "text-rose-600"
+                        : "text-amber-600"
+                    }`}>
+                      {(processingDetails?.chunks_count ?? 0) > 0
+                        ? `${processingDetails?.chunks_count} FAISS Chunks`
+                        : selectedDoc.processing_status === "failed" || processingDetails?.overall_status === "failed"
+                        ? "Failed (0 Chunks)"
+                        : "Pending Indexing"}
                     </span>
                   </div>
                 </div>

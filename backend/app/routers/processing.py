@@ -12,7 +12,7 @@ import asyncio
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -22,7 +22,7 @@ from app.models import Document, DocumentChunk, StructuredExtraction, User
 from app.core.dependencies import get_optional_user
 from app.services.processor import process_document_file
 from app.services.structured_extractor import extract_structured_data
-
+from app.routers.documents import auto_reindex_background_task
 from app.core.storage import get_upload_dir, find_file_on_disk
 
 router = APIRouter(prefix="/api/documents", tags=["processing"])
@@ -41,6 +41,7 @@ def _check_doc_access(doc: Document, user: Optional[User]):
 @router.post("/{document_id}/process", status_code=status.HTTP_200_OK)
 async def process_document_endpoint(
     document_id: int,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     user: Optional[User] = Depends(get_optional_user)
 ):
@@ -72,7 +73,7 @@ async def process_document_endpoint(
         # Check if chunks already exist in DB
         chunks_res = await db.execute(select(DocumentChunk).where(DocumentChunk.document_id == document_id))
         chunks = chunks_res.scalars().all()
-        if chunks or doc.extracted_text:
+        if chunks:
             doc.processing_status = "completed"
             doc.error_message = None
             await db.commit()
@@ -85,11 +86,11 @@ async def process_document_endpoint(
             }
 
         doc.processing_status = "failed"
-        doc.error_message = f"File missing from disk: {doc.file_path}"
+        doc.error_message = f"File missing from disk: {doc.file_path}. Please re-upload the file."
         await db.commit()
         raise HTTPException(
             status_code=404,
-            detail=f"File missing from disk: {doc.file_path}. The file was removed during a cloud server restart. Please re-upload the file."
+            detail=f"File missing from disk: {doc.file_path}. Please re-upload the file to regenerate extraction chunks."
         )
 
     # Mark as processing
@@ -136,12 +137,18 @@ async def process_document_endpoint(
             db.add(s_record)
             
         # Update document record
-        doc.processing_status = "completed"
+        if not saved_chunks:
+            doc.processing_status = "failed"
+            doc.error_message = "No readable text content or pages could be extracted from this document."
+        else:
+            doc.processing_status = "completed"
+            doc.error_message = None
+            background_tasks.add_task(auto_reindex_background_task)
+
         doc.processing_completed_at = datetime.utcnow()
         doc.extracted_text = extraction_res.get("full_text", "")
         doc.page_count = extraction_res.get("page_count", 1)
         doc.meta_info = extraction_res.get("meta_info", "{}")
-        doc.error_message = None
         
         await db.commit()
         await db.refresh(doc)
@@ -419,10 +426,18 @@ async def get_document_processing_details(
     ext_count = len(ext_count_res.scalars().all())
 
     # Build derived pipeline stages based on real database state
-    status_str = doc.processing_status or "pending"
-    is_completed = (status_str == "completed")
-    is_failed = (status_str == "failed")
-    is_processing = (status_str == "processing")
+    raw_status = doc.processing_status or "pending"
+    # If recorded as completed but 0 chunks were extracted, report as failed so dashboard and stages never contradict
+    if raw_status == "completed" and chunks_count == 0:
+        overall_status = "failed"
+        effective_error = doc.error_message or "Extraction produced 0 chunks. The file may be an unreadable image or empty. Please re-upload or re-process."
+    else:
+        overall_status = raw_status
+        effective_error = doc.error_message
+
+    is_completed = (overall_status == "completed")
+    is_failed = (overall_status == "failed")
+    is_processing = (overall_status == "processing")
 
     stages = [
         {
@@ -435,37 +450,37 @@ async def get_document_processing_details(
         {
             "stage_id": 2,
             "name": "OCR / Document Extraction",
-            "status": "completed" if (is_completed or chunks_count > 0) else ("failed" if is_failed else ("processing" if is_processing else "pending")),
+            "status": "completed" if chunks_count > 0 else ("failed" if is_failed else ("processing" if is_processing else "pending")),
             "timestamp": doc.processing_started_at.isoformat() if doc.processing_started_at else None,
-            "details": f"Page count: {doc.page_count or 1}"
+            "details": f"Page count: {doc.page_count or 1}" if chunks_count > 0 else (effective_error or "Extraction failed")
         },
         {
             "stage_id": 3,
             "name": "Text & Table Extraction",
-            "status": "completed" if (is_completed or chunks_count > 0) else ("failed" if is_failed else "pending"),
+            "status": "completed" if chunks_count > 0 else ("failed" if is_failed else ("processing" if is_processing else "pending")),
             "timestamp": doc.processing_completed_at.isoformat() if doc.processing_completed_at else None,
-            "details": f"Extracted {chunks_count} content chunks"
+            "details": f"Extracted {chunks_count} content chunks" if chunks_count > 0 else "0 chunks extracted"
         },
         {
             "stage_id": 4,
             "name": "Structured Data Extraction",
-            "status": "completed" if ext_count > 0 else ("failed" if is_failed else ("completed" if is_completed else "pending")),
+            "status": "completed" if ext_count > 0 else ("failed" if is_failed else ("processing" if is_processing else ("completed" if is_completed else "pending"))),
             "timestamp": doc.processing_completed_at.isoformat() if doc.processing_completed_at else None,
-            "details": f"Extracted {ext_count} structured fields/records"
+            "details": f"Extracted {ext_count} structured fields/records" if ext_count > 0 else ("Skipped: no text chunks available" if chunks_count == 0 else "0 structured records")
         },
         {
             "stage_id": 5,
             "name": "Validation & Conflict Check",
-            "status": "completed" if is_completed else ("failed" if is_failed else "pending"),
+            "status": "completed" if (is_completed and chunks_count > 0) else ("failed" if is_failed else ("processing" if is_processing else "pending")),
             "timestamp": doc.processing_completed_at.isoformat() if doc.processing_completed_at else None,
-            "details": "Validated against format, completeness, and cross-document rules"
+            "details": "Validated against format, completeness, and cross-document rules" if chunks_count > 0 else "Validation skipped: 0 records"
         },
         {
             "stage_id": 6,
             "name": "Knowledge Base / Vector Index",
-            "status": "completed" if (is_completed and chunks_count > 0) else "pending",
+            "status": "completed" if (is_completed and chunks_count > 0) else ("failed" if is_failed else ("processing" if is_processing else "pending")),
             "timestamp": doc.processing_completed_at.isoformat() if doc.processing_completed_at else None,
-            "details": f"Indexed {chunks_count} vector chunks into FAISS store"
+            "details": f"Indexed {chunks_count} vector chunks into FAISS store" if chunks_count > 0 else "Cannot index: 0 content chunks extracted"
         }
     ]
 
@@ -473,10 +488,10 @@ async def get_document_processing_details(
         "document_id": doc.id,
         "name": doc.name,
         "original_filename": doc.original_filename,
-        "overall_status": status_str,
+        "overall_status": overall_status,
         "processing_started_at": doc.processing_started_at.isoformat() if doc.processing_started_at else None,
         "processing_completed_at": doc.processing_completed_at.isoformat() if doc.processing_completed_at else None,
-        "error_message": doc.error_message,
+        "error_message": effective_error,
         "page_count": doc.page_count,
         "chunks_count": chunks_count,
         "structured_records_count": ext_count,

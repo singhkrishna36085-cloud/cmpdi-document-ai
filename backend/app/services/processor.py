@@ -116,7 +116,7 @@ def extract_text_and_map_with_gemini_vision(image_bytes: bytes, page_num: int = 
             }
         }
         
-        resp = requests.post(endpoint, json=payload, timeout=45)
+        resp = requests.post(endpoint, json=payload, timeout=12)
         if resp.status_code == 200:
             data = resp.json()
             candidates = data.get("candidates", [])
@@ -133,7 +133,49 @@ def extract_text_and_map_with_gemini_vision(image_bytes: bytes, page_num: int = 
     return ""
 
 
+def _chunk_text(text: str, max_chars: int = 700, overlap: int = 100) -> List[str]:
+    """Splits long text into overlapping chunks for high-precision FAISS semantic retrieval."""
+    clean = text.strip()
+    if not clean:
+        return []
+    if len(clean) <= max_chars:
+        return [clean]
+
+    chunks = []
+    # Try splitting by double newlines (paragraphs) first
+    paragraphs = [p.strip() for p in clean.split("\n\n") if p.strip()]
+    current_chunk = ""
+
+    for p in paragraphs:
+        if len(current_chunk) + len(p) + 2 <= max_chars:
+            current_chunk = f"{current_chunk}\n\n{p}".strip()
+        else:
+            if current_chunk:
+                chunks.append(current_chunk)
+            if len(p) > max_chars:
+                # Subdivide very long paragraph
+                start = 0
+                while start < len(p):
+                    end = start + max_chars
+                    chunks.append(p[start:end].strip())
+                    start += (max_chars - overlap)
+                current_chunk = ""
+            else:
+                current_chunk = p
+
+    if current_chunk:
+        chunks.append(current_chunk)
+
+    return chunks if chunks else [clean]
+
+
 def process_pdf(file_path: str) -> Dict[str, Any]:
+    """
+    Turbo-Fast PDF Extraction Engine.
+    Uses PyMuPDF (fitz) for instant C++ extraction (under 0.1s for most documents).
+    Only invokes multimodal vision/OCR on truly blank or scanned pages.
+    Guarantees non-empty chunk creation for all readable pages.
+    """
     fitz_module = None
     try:
         import fitz  # PyMuPDF
@@ -154,42 +196,40 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
                 page = doc[page_idx]
                 text = page.get_text("text").strip()
                 
-                # Check if page has low digital text density OR contains images/maps
-                image_list = page.get_images()
-                is_sparse_or_map = (len(text) < 150) or (len(image_list) > 0)
-                
-                # 1. Attempt High-Tech Gemini Multimodal Vision AI for maps and faint text
                 vision_analysis = ""
-                if is_sparse_or_map:
-                    try:
-                        # Rasterize page at high resolution (200 DPI)
-                        pix = page.get_pixmap(dpi=200)
-                        img_bytes = pix.tobytes("jpeg")
-                        vision_analysis = extract_text_and_map_with_gemini_vision(img_bytes, page_num)
-                    except Exception as ve:
-                        logger.warning(f"Vision rasterization notice on page {page_num}: {ve}")
-                
-                # 2. Local PaddleOCR fallback if vision API wasn't available and text is minimal
-                if not vision_analysis and len(text) < 15:
-                    ocr_engine = get_ocr_engine()
-                    if ocr_engine:
+                # Fast path: If digital text is rich (> 30 chars), do NOT run heavy vision/OCR!
+                # Only if text is minimal (< 30 chars) and page has images/maps, check multimodal vision
+                if len(text) < 30:
+                    image_list = page.get_images()
+                    if image_list or len(text) == 0:
                         try:
+                            # Rasterize at 150 DPI for fast network transfer
                             pix = page.get_pixmap(dpi=150)
-                            img_bytes = pix.tobytes("png")
-                            result = ocr_engine.ocr(img_bytes, cls=False)
-                            ocr_lines = []
-                            if result and result[0]:
-                                for line in result[0]:
-                                    if line and len(line) >= 2 and line[1]:
-                                        ocr_lines.append(line[1][0])
-                            ocr_text = "\n".join(ocr_lines).strip()
-                            if ocr_text:
-                                text = f"[OCR Extracted Page {page_num}]\n" + ocr_text
-                        except Exception as e:
-                            logger.warning(f"Local OCR failed for PDF page {page_num}: {e}")
+                            img_bytes = pix.tobytes("jpeg")
+                            vision_analysis = extract_text_and_map_with_gemini_vision(img_bytes, page_num)
+                        except Exception as ve:
+                            logger.warning(f"Vision rasterization notice on page {page_num}: {ve}")
 
-                # Combine digital text and vision analysis for maximum fidelity
-                final_page_content = ""
+                    # Local OCR fallback only if vision was empty and still no text
+                    if not vision_analysis and len(text) < 15:
+                        ocr_engine = get_ocr_engine()
+                        if ocr_engine:
+                            try:
+                                pix = page.get_pixmap(dpi=150)
+                                img_bytes = pix.tobytes("png")
+                                result = ocr_engine.ocr(img_bytes, cls=False)
+                                ocr_lines = []
+                                if result and result[0]:
+                                    for line in result[0]:
+                                        if line and len(line) >= 2 and line[1]:
+                                            ocr_lines.append(line[1][0])
+                                ocr_text = "\n".join(ocr_lines).strip()
+                                if ocr_text:
+                                    text = f"[OCR Extracted Page {page_num}]\n" + ocr_text
+                            except Exception as e:
+                                logger.warning(f"Local OCR failed for PDF page {page_num}: {e}")
+
+                # Combine text and any vision analysis
                 if text and vision_analysis:
                     final_page_content = f"{text}\n\n{vision_analysis}"
                 elif vision_analysis:
@@ -197,21 +237,28 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
                 elif text:
                     final_page_content = text
                 else:
-                    final_page_content = f"[Geological Document Page {page_num}: Visual Chart / Map Archive]"
+                    final_page_content = f"[Document Page {page_num}: Mining Report / Graphic Archive]"
                 
-                chunks.append({
-                    "page_number": page_num,
-                    "sheet_name": None,
-                    "chunk_type": "vision" if vision_analysis else "text",
-                    "content": final_page_content
-                })
+                # Granular chunking for high-precision FAISS matching
+                page_subchunks = _chunk_text(final_page_content, max_chars=750, overlap=100)
+                if not page_subchunks:
+                    page_subchunks = [final_page_content]
+
+                for sc in page_subchunks:
+                    chunks.append({
+                        "page_number": page_num,
+                        "sheet_name": None,
+                        "chunk_type": "vision" if vision_analysis else "text",
+                        "content": sc
+                    })
+
                 full_text_list.append(f"--- Page {page_num} ---\n{final_page_content}")
             
             doc.close()
             full_text = "\n\n".join(full_text_list)
             return {
-                "page_count": page_count,
-                "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "PyMuPDF + Gemini Vision"}),
+                "page_count": max(page_count, 1),
+                "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "PyMuPDF Turbo"}),
                 "full_text": full_text,
                 "chunks": chunks
             }

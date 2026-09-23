@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.models import Document, DocumentChunk, StructuredExtraction, ValidationResult, DocumentConflict, User
 from app.core.dependencies import get_optional_user, get_allowed_document_ids, require_hod, get_current_user
-from app.services.validator import validate_single_extraction, detect_cross_document_conflicts
+from app.services.validator import validate_single_extraction, detect_cross_document_conflicts, validate_document_topological_integrity
 from app.services.structured_extractor import extract_structured_data
 from app.services.audit_service import log_audit_event
 
@@ -164,6 +164,26 @@ async def validate_document_endpoint(
             )
             db.add(vr)
             val_findings.append(vr)
+
+    # 1.5 Run topological integrity validation (layer stacking & wireframe non-intersection)
+    topo_findings = validate_document_topological_integrity(doc_ext_dicts)
+    for tf in topo_findings:
+        vr = ValidationResult(
+            document_id=doc.id,
+            extraction_id=tf.get("extraction_id"),
+            chunk_id=tf.get("chunk_id"),
+            rule_type=tf.get("rule_type", "topological_integrity"),
+            severity=tf.get("severity", "error"),
+            field_name=tf.get("field_name"),
+            invalid_value=tf.get("invalid_value"),
+            message=tf.get("message", ""),
+            page_number=tf.get("page_number"),
+            sheet_name=tf.get("sheet_name"),
+            source_reference=tf.get("source_reference"),
+            status="OPEN"
+        )
+        db.add(vr)
+        val_findings.append(vr)
 
     # 2. Run cross-document conflict detection against all extractions
     all_ext_res = await db.execute(select(StructuredExtraction))
@@ -406,6 +426,153 @@ async def get_validation_overview(
         "rule_type_distribution": rule_type_distribution,
         "status_distribution": status_distribution,
         "recent_issues": [_format_validation_issue(r) for r in recent_issues]
+    }
+
+
+@validation_center_router.post("/audit-all", status_code=status.HTTP_200_OK)
+async def audit_all_documents_endpoint(
+    db: AsyncSession = Depends(get_db),
+    user: Optional[User] = Depends(get_optional_user)
+):
+    """
+    Executes an automated end-to-end audit across all documents in the repository.
+    Applies the full Core Audit Suite:
+    1. Stripping Ratio Math & Spatial Depth Anomaly Detection (SR = Waste / Ore)
+    2. Seam Thickness Bounds & Geometric Inversion Checks (t = z1 - z2 corrected)
+    3. Negative Overburden Flags & Topography Elevation Validations (Topography Z - Unit Top Z >= 0)
+    4. Topological Integrity & Chronological Stratigraphic Stacking (From_m(next) >= To_m(prev))
+    5. Completeness, Formatting, and Cross-Document Conflict Detection
+    """
+    doc_res = await db.execute(select(Document))
+    all_docs = doc_res.scalars().all()
+    
+    total_audited = 0
+    total_issues = 0
+    
+    for doc in all_docs:
+        ext_res = await db.execute(select(StructuredExtraction).where(StructuredExtraction.document_id == doc.id))
+        doc_extractions = ext_res.scalars().all()
+        if not doc_extractions:
+            chunks_res = await db.execute(select(DocumentChunk).where(DocumentChunk.document_id == doc.id))
+            chunks = chunks_res.scalars().all()
+            if chunks:
+                structured_items = extract_structured_data(chunks)
+                for item in structured_items:
+                    s_record = StructuredExtraction(
+                        document_id=doc.id,
+                        chunk_id=item.get("chunk_id"),
+                        page_number=item.get("page_number"),
+                        sheet_name=item.get("sheet_name"),
+                        source_reference=item.get("source_reference"),
+                        entity_type=item.get("entity_type", "key_value"),
+                        data=item.get("data", "{}")
+                    )
+                    db.add(s_record)
+                await db.flush()
+                ext_res = await db.execute(select(StructuredExtraction).where(StructuredExtraction.document_id == doc.id))
+                doc_extractions = ext_res.scalars().all()
+
+        doc_ext_dicts = [
+            {
+                "id": ext.id,
+                "document_id": ext.document_id,
+                "chunk_id": ext.chunk_id,
+                "page_number": ext.page_number,
+                "sheet_name": ext.sheet_name,
+                "source_reference": ext.source_reference,
+                "entity_type": ext.entity_type,
+                "data": ext.data
+            }
+            for ext in doc_extractions
+        ]
+
+        # Clear existing validation results for this document
+        await db.execute(delete(ValidationResult).where(ValidationResult.document_id == doc.id))
+
+        # 1. Run single-extraction validation rules
+        for item in doc_ext_dicts:
+            findings = validate_single_extraction(item)
+            for f in findings:
+                vr = ValidationResult(
+                    document_id=doc.id,
+                    extraction_id=f.get("extraction_id"),
+                    chunk_id=f.get("chunk_id"),
+                    rule_type=f.get("rule_type", "completeness"),
+                    severity=f.get("severity", "warning"),
+                    field_name=f.get("field_name"),
+                    invalid_value=f.get("invalid_value"),
+                    message=f.message if hasattr(f, "message") else f.get("message", ""),
+                    page_number=f.get("page_number"),
+                    sheet_name=f.get("sheet_name"),
+                    source_reference=f.get("source_reference"),
+                    status="OPEN"
+                )
+                db.add(vr)
+                total_issues += 1
+
+        # 1.5 Run topological integrity
+        topo_findings = validate_document_topological_integrity(doc_ext_dicts)
+        for tf in topo_findings:
+            vr = ValidationResult(
+                document_id=doc.id,
+                extraction_id=tf.get("extraction_id"),
+                chunk_id=tf.get("chunk_id"),
+                rule_type=tf.get("rule_type", "topological_integrity"),
+                severity=tf.get("severity", "error"),
+                field_name=tf.get("field_name"),
+                invalid_value=tf.get("invalid_value"),
+                message=tf.get("message", ""),
+                page_number=tf.get("page_number"),
+                sheet_name=tf.get("sheet_name"),
+                source_reference=tf.get("source_reference"),
+                status="OPEN"
+            )
+            db.add(vr)
+            total_issues += 1
+
+        total_audited += 1
+
+    # Re-detect cross document conflicts
+    all_ext_res = await db.execute(select(StructuredExtraction))
+    all_ext_dicts = [
+        {
+            "id": e.id,
+            "document_id": e.document_id,
+            "chunk_id": e.chunk_id,
+            "page_number": e.page_number,
+            "sheet_name": e.sheet_name,
+            "source_reference": e.source_reference,
+            "entity_type": e.entity_type,
+            "data": e.data
+        }
+        for e in all_ext_res.scalars().all()
+    ]
+    conflicts = detect_cross_document_conflicts(all_ext_dicts)
+    await db.execute(delete(DocumentConflict))
+    for c in conflicts:
+        dc = DocumentConflict(
+            doc_a_id=c.get("doc_a_id"),
+            doc_b_id=c.get("doc_b_id"),
+            extraction_a_id=c.get("extraction_a_id"),
+            extraction_b_id=c.get("extraction_b_id"),
+            entity_type=c.get("entity_type", "entity"),
+            entity_identifier=c.get("entity_identifier", ""),
+            field_name=c.get("field_name", ""),
+            val_a=c.get("val_a"),
+            val_b=c.get("val_b"),
+            source_ref_a=c.get("source_ref_a"),
+            source_ref_b=c.get("source_ref_b"),
+            message=c.get("message", "")
+        )
+        db.add(dc)
+
+    await db.commit()
+
+    return {
+        "status": "completed",
+        "audited_documents_count": total_audited,
+        "total_issues_identified": total_issues,
+        "total_conflicts_detected": len(conflicts)
     }
 
 
