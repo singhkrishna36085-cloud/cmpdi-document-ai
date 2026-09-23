@@ -12,7 +12,7 @@ import aiofiles
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, BackgroundTasks
 from fastapi.responses import JSONResponse, FileResponse, Response
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,6 +28,37 @@ from app.core.storage import get_upload_dir, find_file_on_disk
 router = APIRouter(prefix="/api/documents", tags=["documents"])
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "xlsx", "csv", "jpg", "jpeg", "png", "zip"}
+
+async def auto_reindex_background_task():
+    """Background task to completely rebuild the FAISS index after a document change."""
+    from app.database import async_session_maker
+    from app.services.vector_search import index_chunks
+    
+    async with async_session_maker() as db:
+        res = await db.execute(
+            select(DocumentChunk, Document)
+            .join(Document, DocumentChunk.document_id == Document.id)
+            .order_by(DocumentChunk.id)
+        )
+        rows = res.all()
+        
+        chunk_dicts = []
+        for chunk, doc in rows:
+            chunk_dicts.append({
+                "id": chunk.id,
+                "document_id": chunk.document_id,
+                "original_filename": doc.original_filename,
+                "document_name": doc.name,
+                "page_number": chunk.page_number,
+                "sheet_name": chunk.sheet_name,
+                "chunk_type": chunk.chunk_type,
+                "source_reference": f"Page {chunk.page_number}" if chunk.page_number else (f"Sheet: {chunk.sheet_name}" if chunk.sheet_name else "Document text"),
+                "content": chunk.content
+            })
+            
+        if chunk_dicts:
+            await asyncio.to_thread(index_chunks, chunk_dicts)
+
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
 
@@ -63,6 +94,7 @@ def _doc_to_dict(doc: Document) -> dict:
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED)
 async def upload_document(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     name: str = Form(...),
     type: str = Form(...),
@@ -212,6 +244,7 @@ async def upload_document(
             details={"error": str(exc)}
         )
 
+    background_tasks.add_task(auto_reindex_background_task)
     return JSONResponse(status_code=201, content={"status": "uploaded", "document": _doc_to_dict(doc)})
 
 
@@ -392,6 +425,7 @@ async def download_document_file(
 @router.post("/{document_id}/reupload", status_code=status.HTTP_200_OK)
 async def reupload_document(
     document_id: int,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     user: Optional[User] = Depends(get_optional_user)
@@ -492,12 +526,14 @@ async def reupload_document(
         await db.commit()
         await db.refresh(doc)
 
+    background_tasks.add_task(auto_reindex_background_task)
     return {"status": "reuploaded", "document": _doc_to_dict(doc)}
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_200_OK)
 async def delete_document(
     document_id: int,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     user: Optional[User] = Depends(get_optional_user)
 ):
@@ -528,4 +564,5 @@ async def delete_document(
     await db.delete(doc)
     await db.commit()
 
+    background_tasks.add_task(auto_reindex_background_task)
     return {"status": "deleted", "document_id": document_id}
