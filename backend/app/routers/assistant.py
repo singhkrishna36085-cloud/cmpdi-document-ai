@@ -34,6 +34,7 @@ class AssistantQueryRequest(BaseModel):
     query: str = Field(..., description="Natural language question/query string")
     top_k: Optional[int] = Field(default=5, ge=1, le=50, description="Number of context chunks to retrieve (1-50)")
     doc_id: Optional[int] = Field(default=None, description="Optional document_id filter")
+    mode: Optional[str] = Field(default=None, description="Optional search mode override: doc, rag, web, all, calc, safety")
     provider: Optional[str] = Field(default=None, description="Optional LLM provider override (groq, gemini, ollama, openai, custom)")
     model: Optional[str] = Field(default=None, description="Optional model identifier override")
     api_key: Optional[str] = Field(default=None, description="Optional API key override")
@@ -114,8 +115,18 @@ async def assistant_query_endpoint(
             history_dicts = [{"role": h.role, "content": h.content} for h in req.history]
             query_clean = await rewrite_query(query_clean, history_dicts, req.provider, req.model, req.api_key)
 
-        # 2. Classify intent
-        route_mode = classify_query_intent(query_clean)
+        # 2. Classify intent or apply explicit client mode
+        client_mode = (req.mode or "").lower()
+        if client_mode in ["doc", "rag"]:
+            route_mode = "RAG"
+        elif client_mode == "web":
+            route_mode = "WEB"
+        elif client_mode == "calc":
+            route_mode = "CALCULATION"
+        elif client_mode == "safety":
+            route_mode = "RAG"
+        else:
+            route_mode = classify_query_intent(query_clean)
 
         # 2.5 Check Official Government Resources Registry
         import json
@@ -216,11 +227,11 @@ async def assistant_query_endpoint(
 
         retrieved_chunks = []
         raw_chunks = []
-        if route_mode != "GENERAL":
+        if route_mode != "WEB":
             try:
                 retrieval_res = await asyncio.to_thread(retrieve_rag_context, query_clean, effective_top_k, allowed_doc_ids)
                 raw_chunks = retrieval_res.get("retrieved_chunks", [])
-                retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.25]
+                retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.15]
             except Exception as e:
                 logger.warning(f"RAG retrieval fallback: {e}")
                 raw_chunks = []
@@ -296,12 +307,13 @@ async def assistant_query_endpoint(
 
         from app.services.audit_service import log_audit_event
 
-        # Intelligent Autonomous Fallback:
-        # If no specific document chunks match, DO NOT reject the query.
-        # Instead, promote to GENERAL / WEB mode so the assistant answers using its
-        # global intelligence and live web search capabilities!
-        if not retrieved_chunks and not summary_header and route_mode in ["RAG", "CALCULATION"]:
-            route_mode = "GENERAL"
+        # Strict Document Grounding:
+        # If no specific document chunks match and we are in RAG/document mode, do NOT switch to GENERAL/WEB.
+        # Retain RAG mode so generate_llm_answer produces a grounded message that information was not found in uploaded docs.
+        # Only switch if client explicitly requested general mode.
+        if not retrieved_chunks and not summary_header:
+            if client_mode in ["all", "general"] and route_mode not in ["RAG"]:
+                route_mode = "GENERAL"
 
         # Format context for LLM
         from app.services.rag_service import format_context_for_llm
@@ -360,10 +372,12 @@ async def assistant_query_endpoint(
                 # Provide structured chunk evidence summary as grounded fallback
                 top_c = retrieved_chunks[0]
                 answer_text = f"Based on verified CMPDI records ({top_c.get('source_reference', 'Knowledge Base')}):\n\n{top_c.get('content_text', '')[:500]}..."
+            elif route_mode in ["RAG", "CALCULATION"] or client_mode in ["doc", "rag"]:
+                answer_text = "I searched your uploaded document archive and geological maps, but could not find information regarding this query in your uploaded files. Please verify that the relevant document or map has been uploaded to your document repository."
             elif llm_res.get("error"):
                 answer_text = f"CMPDI AI Assistant Response:\n\n{query_clean}\n\n[Note: {llm_res.get('error')}]"
             else:
-                answer_text = "I have processed your query against the CMPDI knowledge repository and global reasoning engine."
+                answer_text = "I have processed your query against the CMPDI knowledge repository."
 
         try:
             await log_audit_event(

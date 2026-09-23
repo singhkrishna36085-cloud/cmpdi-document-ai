@@ -5,53 +5,26 @@ from typing import List, Dict, Any, Optional
 def classify_query_intent(query: str) -> str:
     """
     Classify the intent of the user's query deterministically.
-    Modes: RAG, WEB, GENERAL, MIXED, CALCULATION
+    Always prioritizes uploaded document RAG context first.
+    Modes: RAG, WEB, CALCULATION, GENERAL
     """
-    q = query.lower()
+    q = query.lower().strip()
     
-    # Define keywords
-    cmpdi_keywords = [
-        "cmpdi", "cil", "coal", "mining", "production", "overburden", "stripping ratio",
-        "geological", "seam", "tonnes", "borehole", "dataset", "document", "report",
-        "page", "reference", "gevra", "nigahi", "wani", "lithology", "reserves", "thickness",
-        "ash content", "gcv", "drilling", "project", "mine", "q1", "block c", "north karanpura"
+    # Only route to WEB if user explicitly asks for live internet/google search
+    explicit_web_triggers = [
+        "search web", "google search", "search internet", "search google",
+        "live web search", "browse web", "check internet", "internet se"
     ]
+    if any(trigger in q for trigger in explicit_web_triggers):
+        return "WEB"
     
     calc_keywords = ['calculate', 'compute', 'sum', 'difference', 'multiply', 'divide', 'add', 'math', '%']
-    
-    web_keywords = [
-        "latest", "news", "today", "yesterday", "recent", "current", "guidelines 2026", "2025", "2026",
-        "market price", "stock", "tender", "press release", "ministry announcement", "internet", "google"
-    ]
-
-    general_keywords = [
-        "python", "c++", "c program", "javascript", "api", "machine learning", "ai", "artificial intelligence",
-        "deep learning", "recursion", "database", "sql", "explain", "what is the difference between", 
-        "rag", "what are", "who is", "how does", "capital of", "why is", "tell me about", "define",
-        "how to", "write a", "code", "summary of", "history of"
-    ]
-    
-    has_calc = any(kw in q for kw in calc_keywords) or re.search(r'\d+\s*[\+\-\*\/]\s*\d+', q)
-    has_cmpdi = any(re.search(rf'\b{kw}\b', q) for kw in cmpdi_keywords)
-    has_web = any(re.search(rf'\b{kw}\b', q) for kw in web_keywords)
-    has_general = any(re.search(rf'\b{kw}\b', q) for kw in general_keywords)
-    
+    has_calc = any(kw in q for kw in calc_keywords) or bool(re.search(r'\d+\s*[\+\-\*\/]\s*\d+', q))
     if has_calc:
-        if has_cmpdi:
-            return "CALCULATION"
-        return "GENERAL"
+        return "CALCULATION"
         
-    if has_web:
-        return "WEB"
-
-    if has_cmpdi and has_general:
-        return "MIXED"
-        
-    if has_cmpdi:
-        return "RAG"
-        
-    # If no CMPDI keywords, it's a GENERAL question
-    return "GENERAL"
+    # By default, EVERY user question in this assistant routes to RAG (Uploaded Document Knowledge)
+    return "RAG"
 
 async def rewrite_query(query: str, history: List[Dict[str, str]], provider: Optional[str] = None, model: Optional[str] = None, api_key: Optional[str] = None) -> str:
     """

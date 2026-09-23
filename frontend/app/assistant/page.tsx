@@ -292,7 +292,7 @@ function AssistantContent() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [selectedMode, setSelectedMode] = useState<string>("all");
+  const [selectedMode, setSelectedMode] = useState<string>("doc");
   const [feedbackMap, setFeedbackMap] = useState<Record<string, "up" | "down">>({});
   const [openReasoning, setOpenReasoning] = useState<Record<string, boolean>>({});
 
@@ -438,6 +438,7 @@ function AssistantContent() {
         body: JSON.stringify({
           query: finalQuery,
           top_k: 5,
+          mode: selectedMode,
           doc_id: docIdFilter || undefined
         })
       });

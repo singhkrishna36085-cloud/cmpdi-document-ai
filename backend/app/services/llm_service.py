@@ -208,24 +208,27 @@ def generate_llm_answer(
     key = api_key or get_default_api_key(provider_name)
     url = base_url or os.getenv("LLM_BASE_URL", "")
 
-    # For pure RAG where context is empty, promote to GENERAL mode so the user gets a helpful answer
     effective_mode = mode
-    if mode == "RAG" and (not formatted_context or not formatted_context.strip()):
-        effective_mode = "GENERAL"
-
     sys_prompt = get_system_prompt_for_mode(effective_mode)
     
-    if effective_mode in ["GENERAL", "WEB"] or not formatted_context or not formatted_context.strip():
-        user_prompt = f"User Question: {query}"
+    if formatted_context and formatted_context.strip():
+        user_prompt = (
+            f"User Question: {query}\n\n"
+            f"Retrieved Document & Geological Map Context Blocks:\n{formatted_context}\n\n"
+            f"Task:\n"
+            f"Answer the user question based on the verified context blocks above.\n"
+            f"- If relevant coal, seam, borehole, or map details are present, explain them clearly with exact numbers and page citations.\n"
+            f"- If the answer is NOT present in the provided context, state clearly: 'This specific information is not mentioned in your uploaded documents.'\n"
+            f"- Do NOT invent figures or cite external web articles unless the user explicitly requested web search."
+        )
+    elif mode == "WEB":
+        user_prompt = f"User Question: {query}\n\nTask: Provide the latest live web information with citations."
     else:
         user_prompt = (
             f"User Question: {query}\n\n"
-            f"Retrieved CMPDI Document Context Blocks:\n{formatted_context}\n\n"
-            f"Task:\n"
-            f"Answer the user question based on the verified context blocks above.\n"
-            f"- If relevant coal, seam, geological, or report details are present, summarize them clearly.\n"
-            f"- If exact figures are missing, summarize what IS verified and explain any related background.\n"
-            f"- Cite source document references where available."
+            f"Notice: No matching document context was found in the uploaded archive for this query. "
+            f"Please inform the user that this specific information was not found in their uploaded documents, "
+            f"and ask them to verify if the relevant file or map has been uploaded to the document vault."
         )
 
     # Auto-route between Groq and Gemini if chosen provider key is absent
@@ -256,6 +259,7 @@ def generate_llm_answer(
             "error": f"API Key missing for LLM provider '{provider_name}'. Please set LLM_API_KEY or {provider_name.upper()}_API_KEY in environment variables."
         }
 
+    enable_web = (mode == "WEB")
     try:
         res = None
         if provider_name == "groq":
@@ -264,12 +268,12 @@ def generate_llm_answer(
             if res.get("status") != "success" and os.getenv("GEMINI_API_KEY"):
                 gem_key = get_default_api_key("gemini")
                 logger.info("Groq call failed; attempting fallback to Gemini...")
-                res_gem = _call_gemini(user_prompt, "gemini-1.5-flash", gem_key, timeout, sys_prompt)
+                res_gem = _call_gemini(user_prompt, "gemini-1.5-flash", gem_key, timeout, sys_prompt, enable_web_search=enable_web)
                 if res_gem.get("status") == "success":
                     return res_gem
             return res
         elif provider_name == "gemini":
-            res = _call_gemini(user_prompt, model_name, key, timeout, sys_prompt)
+            res = _call_gemini(user_prompt, model_name, key, timeout, sys_prompt, enable_web_search=enable_web)
             # If Gemini failed and Groq key is configured, fallback to Groq
             if res.get("status") != "success" and os.getenv("GROQ_API_KEY"):
                 groq_k = get_default_api_key("groq")
@@ -393,35 +397,35 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
     }
 
 
-def _call_gemini(user_prompt: str, model: str, api_key: str, timeout: int, sys_prompt: str) -> Dict[str, Any]:
+def _call_gemini(user_prompt: str, model: str, api_key: str, timeout: int, sys_prompt: str, enable_web_search: bool = False) -> Dict[str, Any]:
     model_name = model or "gemini-1.5-flash"
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
     
-    # Enable Google Search Grounding for live internet search
-    payload_with_search = {
-        "contents": [
-            {
-                "parts": [
-                    {"text": f"{sys_prompt}\n\n{user_prompt}"}
-                ]
+    resp = None
+    # Only enable Google Search Grounding when explicitly requested (mode == "WEB")
+    if enable_web_search:
+        payload_with_search = {
+            "contents": [
+                {
+                    "parts": [
+                        {"text": f"{sys_prompt}\n\n{user_prompt}"}
+                    ]
+                }
+            ],
+            "tools": [
+                {"googleSearch": {}}
+            ],
+            "generationConfig": {
+                "temperature": 0.2
             }
-        ],
-        "tools": [
-            {"googleSearch": {}}
-        ],
-        "generationConfig": {
-            "temperature": 0.2
         }
-    }
-    
-    # Try with Google Search Grounding first
-    try:
-        resp = requests.post(endpoint, json=payload_with_search, timeout=timeout)
-    except Exception as exc:
-        logger.warning(f"Gemini with search request failed: {exc}")
-        resp = None
+        try:
+            resp = requests.post(endpoint, json=payload_with_search, timeout=timeout)
+        except Exception as exc:
+            logger.warning(f"Gemini with search request failed: {exc}")
+            resp = None
 
-    # If Search Grounding is not supported on this model or returned error, fallback to standard Gemini call
+    # Standard pure document / reasoning call (NO Google Search tool attached)
     if resp is None or resp.status_code != 200:
         standard_payload = {
             "contents": [
