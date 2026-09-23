@@ -133,6 +133,90 @@ def extract_text_and_map_with_gemini_vision(image_bytes: bytes, page_num: int = 
     return ""
 
 
+def extract_with_tesseract(image_bytes: bytes, page_num: int = 1) -> str:
+    """
+    Local C++ Tesseract OCR for physical scanned pages, ink stamps, and historical borehole logs.
+    Runs locally in ~150-250ms with zero network latency.
+    """
+    try:
+        import pytesseract
+        from PIL import Image, ImageOps
+        img = Image.open(io.BytesIO(image_bytes))
+        img_gray = ImageOps.grayscale(img)
+        img_enhanced = ImageOps.autocontrast(img_gray, cutoff=2)
+        text = pytesseract.image_to_string(img_enhanced, lang='eng', config='--psm 1 --oem 3').strip()
+        if text and len(text) > 10:
+            return f"[Tesseract OCR • Page {page_num}]\n{text}"
+    except Exception as exc:
+        logger.debug(f"Tesseract OCR notice on page {page_num}: {exc}")
+    return ""
+
+
+def extract_with_llama_parse(file_path: str) -> List[Dict[str, Any]]:
+    """
+    LlamaParse Cloud Engine for complex multi-column mining tables,
+    stratigraphic drill logs, and borehole lithology logs.
+    Activated automatically when LLAMA_CLOUD_API_KEY is configured.
+    """
+    api_key = os.getenv("LLAMA_CLOUD_API_KEY", "").strip()
+    if not api_key:
+        return []
+
+    try:
+        from llama_parse import LlamaParse
+        parser = LlamaParse(
+            api_key=api_key,
+            result_type="markdown",
+            verbose=False,
+            language="en"
+        )
+        extra_docs = parser.load_data(file_path)
+        llama_chunks = []
+        for idx, doc in enumerate(extra_docs):
+            content = getattr(doc, "text", "") or ""
+            if content.strip():
+                sub_parts = _chunk_text(content.strip(), max_chars=800, overlap=100)
+                for sc in sub_parts:
+                    llama_chunks.append({
+                        "page_number": idx + 1,
+                        "sheet_name": "LlamaParse Borehole/Table",
+                        "chunk_type": "table",
+                        "content": f"[LlamaParse Consensus Engine • Page {idx+1}]\n{sc}"
+                    })
+        logger.info(f"LlamaParse generated {len(llama_chunks)} high-fidelity table chunks.")
+        return llama_chunks
+    except Exception as exc:
+        logger.warning(f"LlamaParse optional engine notice: {exc}")
+        return []
+
+
+def extract_with_docling(file_path: str) -> List[Dict[str, Any]]:
+    """
+    IBM Docling Layout-Aware Engine.
+    Converts geological documents into structured Markdown tables and section hierarchies.
+    """
+    try:
+        from docling.document_converter import DocumentConverter
+        converter = DocumentConverter()
+        result = converter.convert(file_path)
+        markdown_text = result.document.export_to_markdown()
+        if markdown_text and len(markdown_text.strip()) > 30:
+            docling_chunks = []
+            sub_chunks = _chunk_text(markdown_text, max_chars=800, overlap=120)
+            for idx, sc in enumerate(sub_chunks):
+                docling_chunks.append({
+                    "page_number": idx + 1,
+                    "sheet_name": "Docling Layout",
+                    "chunk_type": "table",
+                    "content": f"[Docling Layout Engine • Section {idx+1}]\n{sc}"
+                })
+            logger.info(f"Docling generated {len(docling_chunks)} structured layout chunks.")
+            return docling_chunks
+    except Exception as exc:
+        logger.debug(f"Docling engine notice: {exc}")
+    return []
+
+
 def _chunk_text(text: str, max_chars: int = 700, overlap: int = 100) -> List[str]:
     """Splits long text into overlapping chunks for high-precision FAISS semantic retrieval."""
     clean = text.strip()
@@ -142,7 +226,6 @@ def _chunk_text(text: str, max_chars: int = 700, overlap: int = 100) -> List[str
         return [clean]
 
     chunks = []
-    # Try splitting by double newlines (paragraphs) first
     paragraphs = [p.strip() for p in clean.split("\n\n") if p.strip()]
     current_chunk = ""
 
@@ -153,7 +236,6 @@ def _chunk_text(text: str, max_chars: int = 700, overlap: int = 100) -> List[str
             if current_chunk:
                 chunks.append(current_chunk)
             if len(p) > max_chars:
-                # Subdivide very long paragraph
                 start = 0
                 while start < len(p):
                     end = start + max_chars
@@ -171,11 +253,17 @@ def _chunk_text(text: str, max_chars: int = 700, overlap: int = 100) -> List[str
 
 def process_pdf(file_path: str) -> Dict[str, Any]:
     """
-    Turbo-Fast PDF Extraction Engine.
-    Uses PyMuPDF (fitz) for instant C++ extraction (under 0.1s for most documents).
-    Only invokes multimodal vision/OCR on truly blank or scanned pages.
-    Guarantees non-empty chunk creation for all readable pages.
+    Quad-Engine Ensemble Document Ingestion Architecture:
+    1. PyMuPDF Turbo (fitz): Instant C++ digital text & structure (<0.1s/page)
+    2. Tesseract OCR (pytesseract): Local C++ OCR for scanned pages/stamps (~0.2s/page)
+    3. Docling (IBM): Layout-aware table extraction (when available)
+    4. LlamaParse: Deep borehole mining log tables (when LLAMA_CLOUD_API_KEY configured)
     """
+    active_engines = []
+    chunks = []
+    full_text_list = []
+    page_count = 1
+
     fitz_module = None
     try:
         import fitz  # PyMuPDF
@@ -188,8 +276,7 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
         try:
             doc = fitz_module.open(file_path)
             page_count = len(doc)
-            chunks = []
-            full_text_list = []
+            active_engines.append("PyMuPDF Turbo")
             
             for page_idx in range(page_count):
                 page_num = page_idx + 1
@@ -197,49 +284,42 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
                 text = page.get_text("text").strip()
                 
                 vision_analysis = ""
-                # Fast path: If digital text is rich (> 30 chars), do NOT run heavy vision/OCR!
-                # Only if text is minimal (< 30 chars) and page has images/maps, check multimodal vision
+                ocr_text = ""
+                
+                # If page is scanned or sparse (< 30 chars), run optical character engines
                 if len(text) < 30:
-                    image_list = page.get_images()
-                    if image_list or len(text) == 0:
-                        try:
-                            # Rasterize at 150 DPI for fast network transfer
-                            pix = page.get_pixmap(dpi=150)
-                            img_bytes = pix.tobytes("jpeg")
+                    try:
+                        pix = page.get_pixmap(dpi=150)
+                        img_bytes = pix.tobytes("jpeg")
+                        
+                        # 1. Local Tesseract OCR (fast ~200ms)
+                        ocr_text = extract_with_tesseract(img_bytes, page_num)
+                        if ocr_text and "Tesseract OCR" not in active_engines:
+                            active_engines.append("Tesseract OCR")
+                        
+                        # 2. Multimodal Vision for complex maps if Tesseract had minimal text
+                        if not ocr_text or len(ocr_text) < 40:
                             vision_analysis = extract_text_and_map_with_gemini_vision(img_bytes, page_num)
-                        except Exception as ve:
-                            logger.warning(f"Vision rasterization notice on page {page_num}: {ve}")
+                            if vision_analysis and "Gemini Vision" not in active_engines:
+                                active_engines.append("Gemini Vision")
+                    except Exception as ve:
+                        logger.warning(f"Page {page_num} OCR/vision notice: {ve}")
 
-                    # Local OCR fallback only if vision was empty and still no text
-                    if not vision_analysis and len(text) < 15:
-                        ocr_engine = get_ocr_engine()
-                        if ocr_engine:
-                            try:
-                                pix = page.get_pixmap(dpi=150)
-                                img_bytes = pix.tobytes("png")
-                                result = ocr_engine.ocr(img_bytes, cls=False)
-                                ocr_lines = []
-                                if result and result[0]:
-                                    for line in result[0]:
-                                        if line and len(line) >= 2 and line[1]:
-                                            ocr_lines.append(line[1][0])
-                                ocr_text = "\n".join(ocr_lines).strip()
-                                if ocr_text:
-                                    text = f"[OCR Extracted Page {page_num}]\n" + ocr_text
-                            except Exception as e:
-                                logger.warning(f"Local OCR failed for PDF page {page_num}: {e}")
-
-                # Combine text and any vision analysis
-                if text and vision_analysis:
-                    final_page_content = f"{text}\n\n{vision_analysis}"
-                elif vision_analysis:
-                    final_page_content = vision_analysis
-                elif text:
-                    final_page_content = text
+                # Synthesize digital text, Tesseract OCR, and Vision analysis
+                parts = []
+                if text:
+                    parts.append(f"[Source: PyMuPDF-Digital • Page {page_num}]\n{text}")
+                if ocr_text:
+                    parts.append(ocr_text)
+                if vision_analysis:
+                    parts.append(vision_analysis)
+                    
+                if parts:
+                    final_page_content = "\n\n".join(parts)
                 else:
                     final_page_content = f"[Document Page {page_num}: Mining Report / Graphic Archive]"
                 
-                # Granular chunking for high-precision FAISS matching
+                # Granular semantic chunking for high-precision FAISS matching
                 page_subchunks = _chunk_text(final_page_content, max_chars=750, overlap=100)
                 if not page_subchunks:
                     page_subchunks = [final_page_content]
@@ -248,54 +328,62 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
                     chunks.append({
                         "page_number": page_num,
                         "sheet_name": None,
-                        "chunk_type": "vision" if vision_analysis else "text",
+                        "chunk_type": "vision" if vision_analysis else ("ocr" if ocr_text else "text"),
                         "content": sc
                     })
 
-                full_text_list.append(f"--- Page {page_num} ---\n{final_page_content}")
-            
             doc.close()
-            full_text = "\n\n".join(full_text_list)
-            return {
-                "page_count": max(page_count, 1),
-                "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "PyMuPDF Turbo"}),
-                "full_text": full_text,
-                "chunks": chunks
-            }
         except Exception as fitz_err:
             logger.warning(f"PyMuPDF failed while parsing '{file_path}': {fitz_err}. Falling back to pypdf.")
 
-    # Fallback to pypdf parser
-    try:
-        import pypdf
-    except ImportError:
-        raise RuntimeError("PDF extraction parser unavailable. Please ensure 'pypdf' is installed.")
-
-    reader = pypdf.PdfReader(file_path)
-    page_count = len(reader.pages)
-    chunks = []
-    full_text_list = []
-    for idx, page in enumerate(reader.pages):
-        page_num = idx + 1
+    # Fallback to pypdf parser if PyMuPDF produced no chunks
+    if not chunks:
         try:
-            text = (page.extract_text() or "").strip()
-        except Exception as pe:
-            logger.warning(f"pypdf extraction error on page {page_num}: {pe}")
-            text = ""
+            import pypdf
+            reader = pypdf.PdfReader(file_path)
+            page_count = len(reader.pages)
+            active_engines.append("pypdf Fallback")
+            for idx, page in enumerate(reader.pages):
+                page_num = idx + 1
+                try:
+                    text = (page.extract_text() or "").strip()
+                except Exception as pe:
+                    logger.warning(f"pypdf extraction error on page {page_num}: {pe}")
+                    text = ""
 
-        content = text or f"[Document Page {page_num}]"
-        chunks.append({
-            "page_number": page_num,
-            "sheet_name": None,
-            "chunk_type": "text",
-            "content": content
-        })
-        full_text_list.append(f"--- Page {page_num} ---\n{content}")
+                content = text or f"[Document Page {page_num}: Content Archive]"
+                chunks.append({
+                    "page_number": page_num,
+                    "sheet_name": None,
+                    "chunk_type": "text",
+                    "content": f"[Source: pypdf • Page {page_num}]\n{content}"
+                })
+                full_text_list.append(f"--- Page {page_num} ---\n{content}")
+        except Exception as pypdf_err:
+            logger.warning(f"pypdf fallback error: {pypdf_err}")
+
+    # 3. LlamaParse Cloud Engine (High-Fidelity Borehole & Mining Tables)
+    llama_chunks = extract_with_llama_parse(file_path)
+    if llama_chunks:
+        active_engines.append("LlamaParse Mining Log")
+        chunks.extend(llama_chunks)
+
+    # 4. IBM Docling Layout Engine (Table Structure & Formula Layout)
+    docling_chunks = extract_with_docling(file_path)
+    if docling_chunks:
+        active_engines.append("Docling Layout")
+        chunks.extend(docling_chunks)
 
     full_text = "\n\n".join(full_text_list)
     return {
-        "page_count": page_count,
-        "meta_info": json.dumps({"pages": page_count, "format": "PDF", "engine": "pypdf"}),
+        "page_count": max(page_count, 1),
+        "meta_info": json.dumps({
+            "pages": page_count,
+            "format": "PDF",
+            "engines": active_engines,
+            "ensemble": len(active_engines) > 1,
+            "total_chunks": len(chunks)
+        }),
         "full_text": full_text,
         "chunks": chunks
     }
@@ -479,7 +567,11 @@ def process_image(file_path: str) -> Dict[str, Any]:
         
     ocr_text = extract_text_and_map_with_gemini_vision(img_bytes, 1)
     
-    # 2. Local fallback if vision returned empty
+    # 2. Fast C++ Tesseract OCR fallback
+    if not ocr_text:
+        ocr_text = extract_with_tesseract(img_bytes, 1)
+
+    # 3. Local PaddleOCR fallback if still empty
     if not ocr_text:
         ocr_engine = get_ocr_engine()
         if ocr_engine:
