@@ -59,7 +59,7 @@ async def auto_reindex_background_task():
         if chunk_dicts:
             await asyncio.to_thread(index_chunks, chunk_dicts)
 
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
+MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE_BYTES", 1024 * 1024 * 1024))  # 1 GB ceiling (50 MB limit removed)
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ async def upload_document(
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=413,
-            detail=f"File exceeds the 50 MB limit ({file_size / 1024 / 1024:.1f} MB uploaded).",
+            detail=f"File exceeds maximum allowed upload size limit ({file_size / 1024 / 1024:.1f} MB uploaded).",
         )
 
     # ── Generate a unique filename and save to disk ────────────────────────
@@ -458,7 +458,7 @@ async def reupload_document(
     if file_size > MAX_FILE_SIZE:
         raise HTTPException(
             status_code=413,
-            detail=f"File exceeds 50 MB limit ({file_size / 1024 / 1024:.1f} MB uploaded)."
+            detail=f"File exceeds maximum allowed upload size limit ({file_size / 1024 / 1024:.1f} MB uploaded)."
         )
 
     safe_name = f"{uuid.uuid4().hex}.{ext}"

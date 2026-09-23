@@ -9,7 +9,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { fetchWithAuth } from "@/lib/api";
 
 const ALLOWED_EXTENSIONS = ['pdf', 'docx', 'xlsx', 'csv', 'jpg', 'jpeg', 'png', 'zip'];
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_SIZE = 1024 * 1024 * 1024; // 1 GB ceiling (50 MB limit removed)
 
 const PIPELINE_STAGES = [
   { id: "UPLOAD", label: "Upload", icon: UploadCloud },
@@ -35,7 +35,7 @@ export function DocumentUploader({ lightTheme = false }: { lightTheme?: boolean 
     if (!ALLOWED_EXTENSIONS.includes(ext))
       return { status: "invalid_type", errorMessage: "Unsupported file type" };
     if (file.size > MAX_FILE_SIZE)
-      return { status: "invalid_size", errorMessage: "File exceeds 50 MB limit" };
+      return { status: "invalid_size", errorMessage: "File exceeds 1 GB limit" };
     if (currentFiles.some(f => f.file.name === file.name))
       return { status: "duplicate", errorMessage: "File already added" };
     return { status: "valid" };
@@ -262,7 +262,7 @@ export function DocumentUploader({ lightTheme = false }: { lightTheme?: boolean 
           </div>
 
           <p className={`text-xs font-mono max-w-md mx-auto ${lightTheme ? 'text-gray-400' : 'text-slate-400'}`}>
-            Supports Geological Reports, Mining Plans, Production Logs & Survey Files (PDF, DOCX, XLSX, CSV, ZIP up to 50 MB)
+            Supports Geological Reports, High-Res Maps, Mining Plans, Production Logs & Survey Files (PDF, DOCX, XLSX, CSV, ZIP)
           </p>
         </div>
       </div>

@@ -199,7 +199,7 @@ const navigationGroups: NavGroup[] = [
     icon: Files,
     items: [
       { name: "Documents Vault", href: "/documents", icon: Files, desc: "Centralized archive & multi-tenant storage" },
-      { name: "Upload Documents", href: "/upload", icon: Upload, desc: "Ingest PDF, DOCX, XLSX up to 50MB" },
+      { name: "Upload Documents", href: "/upload", icon: Upload, desc: "Ingest PDF, High-Res Maps, DOCX, XLSX" },
       { name: "Document Viewer", href: "/documents/viewer", icon: Eye, desc: "Side-by-side OCR & metadata viewer" },
       { name: "Processing Pipeline", href: "/processing", icon: Cpu, desc: "8-stage OCR, chunking & FAISS index" },
     ]
