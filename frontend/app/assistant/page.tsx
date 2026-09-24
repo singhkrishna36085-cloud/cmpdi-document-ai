@@ -295,6 +295,7 @@ function AssistantContent() {
   const [selectedMode, setSelectedMode] = useState<string>("doc");
   const [feedbackMap, setFeedbackMap] = useState<Record<string, "up" | "down">>({});
   const [openReasoning, setOpenReasoning] = useState<Record<string, boolean>>({});
+  const [showPdfSourcesMap, setShowPdfSourcesMap] = useState<Record<string, boolean>>({});
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -652,6 +653,12 @@ function AssistantContent() {
               const hasSources = (msg.sources && msg.sources.length > 0);
               const hasWebSources = (msg.web_sources && msg.web_sources.length > 0);
 
+              // Detect if the preceding user query asked to see the PDF, file, or source document
+              const msgIdx = messages.findIndex(m => m.id === msg.id);
+              const prevUserQuery = msgIdx > 0 && messages[msgIdx - 1]?.sender === "user" ? messages[msgIdx - 1].content.toLowerCase() : "";
+              const userAskedForPdf = /(?:pdf|source|document|file|kisme|kaha se|citation|reference|open pdf|view pdf|link)/i.test(prevUserQuery);
+              const isPdfVisible = showPdfSourcesMap[msg.id] !== undefined ? showPdfSourcesMap[msg.id] : userAskedForPdf;
+
               return (
                 <div
                   key={msg.id}
@@ -828,13 +835,18 @@ function AssistantContent() {
                         </div>
                       )}
 
-                      {/* Evidence & Source Citations Section */}
-                      {hasSources && (
+                      {/* Evidence & Source Citations Section (Shown only when requested or toggled) */}
+                      {hasSources && isPdfVisible && (
                         <div className="mt-4 pt-3.5 border-t border-slate-200">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                              <Database className="w-3.5 h-3.5 text-blue-600" />
-                              <span>Evidence Citations & Traceability ({msg.sources?.length})</span>
+                              <FileText className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Source PDF & Traceability ({msg.sources?.length})</span>
+                              {userAskedForPdf && (
+                                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-100 text-blue-700 border border-blue-200">
+                                  Requested in query
+                                </span>
+                              )}
                             </div>
 
                             <button
@@ -929,6 +941,21 @@ function AssistantContent() {
                         </div>
 
                         <div className="flex items-center gap-2 font-mono">
+                          {hasSources && (
+                            <button
+                              onClick={() => setShowPdfSourcesMap((prev) => ({ ...prev, [msg.id]: !isPdfVisible }))}
+                              className={`px-2.5 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 text-xs cursor-pointer ${
+                                isPdfVisible
+                                  ? "bg-blue-50 text-blue-700 border-blue-300 font-bold shadow-sm"
+                                  : "text-slate-600 hover:text-blue-700 hover:bg-slate-100 border-slate-200"
+                              }`}
+                              title={isPdfVisible ? "Hide source PDF files" : "Show source PDF files & citations"}
+                            >
+                              <FileText className="w-3.5 h-3.5 text-blue-600" />
+                              <span>{isPdfVisible ? "Hide PDF Source" : `Show Source PDF (${msg.sources?.length || 1})`}</span>
+                            </button>
+                          )}
+
                           <button
                             onClick={() => handleCopy(msg.id, msg.content)}
                             className="px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-blue-700 hover:bg-slate-100 border border-slate-200 transition-all flex items-center gap-1.5 text-xs cursor-pointer"

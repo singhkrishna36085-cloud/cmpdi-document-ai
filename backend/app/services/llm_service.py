@@ -137,9 +137,11 @@ CRITICAL INSTRUCTIONS:
    - Do NOT restrict yourself to only looking for specific mining parameters like coal seams, thickness, or boreholes. Every page contains valuable information (whether text, overview, history, or data) — analyze and explain whatever is actually written there!
    - STRICT PROHIBITION: NEVER output canned refusals such as "No specific geological, coal-seam, thickness, or bore-hole figures are provided on this page" or "If you need detailed quantitative data from other sections of the report, please indicate the page or chapter". If a page contains narrative, background, or qualitative discussion, summarize and explain that narrative fully!
 
-2. DOCUMENT GROUNDING & CITATIONS:
-   - Extract and explain all facts, insights, and data directly from the retrieved document context blocks.
-   - Always cite the source document name and page number (e.g. `[Page 3]`, `[Document: filename.pdf]`).
+2. PURE TEXT FORMAT & DIRECT SUBSTANCE:
+   - Deliver all answers, facts, explanations, data, and analyses directly in rich, readable TEXT format.
+   - Do NOT start your response with mechanical metadata headers like "**Document Title:** ...", "**Document Type:** PDF", etc., unless the user explicitly asked for document metadata or the source file name.
+   - Do NOT pepper paragraphs with raw PDF file names or repetitively mention "[Document: filename.pdf]".
+   - ONLY include specific source PDF file names or document references when the user explicitly asks for them (e.g., "which pdf?", "show pdf", "source document kya hai?", "pdf link"). Otherwise, present all findings thoroughly in text format!
 
 3. THOROUGH & HELPFUL RESPONSES:
    - When asked "What is in this document?", "Explain this page", "Summarize", or any specific topic, provide a well-structured, detailed, and insightful breakdown covering all sections, key points, findings, and context available in the blocks.
@@ -228,8 +230,10 @@ def generate_llm_answer(
             f"Retrieved Document Content & Context Blocks:\n{formatted_context}\n\n"
             f"Task:\n"
             f"Provide a comprehensive, accurate, and structured answer to the user question using the context blocks above.\n"
+            f"- FORMAT: Deliver full details directly in rich, readable TEXT format (clear uppercase headings, stylish arrow points '➤', and clean paragraphs).\n"
+            f"- Do NOT start the answer with mechanical file headers like '**Document Title:** XYZ.pdf' or '**Document Type:** PDF' unless explicitly requested by the user. Focus directly on the actual content, facts, and insights!\n"
+            f"- Do NOT inject raw PDF file names or document links into the text unless the user explicitly asked for the PDF or source file.\n"
             f"- Identify and explain ALL content, topics, summaries, narrative details, data, numbers, tables, and conclusions present in the blocks.\n"
-            f"- Always cite the source document name and relevant page numbers.\n"
             f"- STRICT RULE: Do NOT limit yourself to only mining terms or coal seams. Whatever is written on the page (text, introduction, findings, equipment, operations, etc.), summarize and explain it thoroughly.\n"
             f"- NEVER refuse or say that specific geological/coal-seam figures are missing when the user asks about the page or document content. Explain everything that IS present!"
         )
