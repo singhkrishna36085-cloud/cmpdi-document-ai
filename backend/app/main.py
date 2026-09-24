@@ -145,6 +145,7 @@ async def db_health_check(db: AsyncSession = Depends(get_db)):
             detail={
                 "message": "Database connection failed",
                 "error_type": type(exc).__name__,
+                "error_detail": str(exc),
                 "diagnostics": db_info,
                 "hint": hint,
             }
