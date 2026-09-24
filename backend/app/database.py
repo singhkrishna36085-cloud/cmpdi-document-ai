@@ -13,6 +13,7 @@ KEY DESIGN DECISIONS:
 """
 
 import os
+import ssl
 import logging
 import urllib.parse
 from dotenv import load_dotenv
@@ -20,6 +21,13 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
+
+def _get_ssl_context() -> ssl.SSLContext:
+    """Creates a TLS context that encrypts traffic while accepting Supabase/cloud pooler certificates."""
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    return ctx
 
 # Ensure startup logs are visible in Render / Docker / cloud environments
 logging.basicConfig(
@@ -174,13 +182,13 @@ if not raw_db_url:
     _is_local = _host.lower() in ("localhost", "127.0.0.1", "::1", "host.docker.internal", "db", "postgres")
     _db_ssl = os.getenv("DB_SSL", "").lower()
     if not _is_local or _db_ssl in ("true", "1", "require"):
-        connect_args["ssl"] = True
+        connect_args["ssl"] = _get_ssl_context()
         ssl_enabled = True
 else:
     url_source = "DATABASE_URL env var"
     DATABASE_URL, sanitized_host, sanitized_port, sanitized_db, ssl_enabled = _build_clean_url(raw_db_url)
     if ssl_enabled:
-        connect_args["ssl"] = True
+        connect_args["ssl"] = _get_ssl_context()
 
 # ── 3. asyncpg-compatible connect_args ────────────────────────────────────────
 # statement_cache_size=0: required for PgBouncer / Neon / Supabase transaction poolers
