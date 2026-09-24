@@ -121,6 +121,19 @@ def _build_clean_url(raw: str) -> tuple[str, str, str, str, bool]:
         not is_local  # non-localhost → cloud → require SSL
     )
 
+    # On long-running web servers (FastAPI/Uvicorn on Render), connecting through
+    # Neon's PgBouncer pooler (-pooler) causes session limit exhaustion and
+    # "53000 InsufficientResourcesError".
+    # Neon provides an identical direct host without '-pooler.' that accepts standard asyncpg connections.
+    prefer_direct = os.getenv("PREFER_DIRECT_DB", "true").lower() in ("true", "1")
+    if prefer_direct and "-pooler." in db_host:
+        original_host = db_host
+        db_host = db_host.replace("-pooler.", ".")
+        logger.info(
+            "Auto-switching Neon host from pooler (%s) to direct (%s) for persistent asyncpg connection.",
+            original_host, db_host,
+        )
+
     # Rebuild URL from scratch — NO query params (this is what prevents the error)
     if raw_user and raw_pass:
         clean_url = f"postgresql+asyncpg://{raw_user}:{raw_pass}@{db_host}:{db_port}/{db_name}"
@@ -196,7 +209,12 @@ engine_kwargs: dict = {
     "connect_args": connect_args,
 }
 
-if not DATABASE_URL.startswith("sqlite"):
+if "-pooler" in sanitized_host or os.getenv("USE_NULL_POOL", "false").lower() in ("true", "1"):
+    from sqlalchemy.pool import NullPool
+    engine_kwargs["poolclass"] = NullPool
+    engine_kwargs.pop("pool_recycle", None)
+    logger.info("Using NullPool for connection pooler (%s)", sanitized_host)
+elif not DATABASE_URL.startswith("sqlite"):
     engine_kwargs["pool_size"] = int(os.getenv("DB_POOL_SIZE", "5"))
     engine_kwargs["max_overflow"] = int(os.getenv("DB_MAX_OVERFLOW", "10"))
 

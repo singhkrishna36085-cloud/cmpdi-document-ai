@@ -87,6 +87,17 @@ async def global_exception_handler(request: Request, exc: Exception):
     debug_mode = os.getenv("DEBUG", "False").lower() in ("true", "1")
     if debug_mode:
         return JSONResponse(status_code=500, content={"detail": str(exc)})
+    
+    exc_type = type(exc).__name__
+    exc_str = str(exc)
+    if any(k in exc_type for k in ("InsufficientResourcesError", "PostgresConnectionError", "CannotConnectNowError", "OperationalError")):
+        return JSONResponse(
+            status_code=503,
+            content={
+                "detail": f"Database temporarily unavailable ({exc_type}: {exc_str}). Please check Neon cloud database compute quota or status.",
+                "error_type": exc_type
+            }
+        )
     return JSONResponse(status_code=500, content={"detail": "An internal server error occurred."})
 
 
