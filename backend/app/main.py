@@ -52,6 +52,18 @@ async def on_startup():
     except Exception as exc:
         logger.warning(f"Startup maintenance notice: {exc}")
 
+    # 3. Check FAISS vector index and auto-reindex from PostgreSQL if empty
+    try:
+        from app.services.vector_search import get_index_status
+        v_status = get_index_status()
+        if v_status.get("total_vectors", 0) == 0:
+            from app.routers.documents import auto_reindex_background_task
+            import asyncio
+            asyncio.create_task(auto_reindex_background_task())
+            logger.info("Triggered auto_reindex_background_task on startup to populate FAISS.")
+    except Exception as exc:
+        logger.warning(f"Startup vector index verification notice: {exc}")
+
 
 # ── CORS: dynamic support for Vercel, Railway, Render, custom domains, and local dev ──
 raw_origins = os.getenv("ALLOWED_ORIGINS", os.getenv("FRONTEND_PUBLIC_URL", ""))

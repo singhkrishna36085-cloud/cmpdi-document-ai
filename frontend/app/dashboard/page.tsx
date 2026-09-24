@@ -45,7 +45,14 @@ export default function Dashboard() {
       });
 
       if (!res.ok) {
-        throw new Error(`Server returned HTTP ${res.status}: ${res.statusText}`);
+        let errDetail = "";
+        try {
+          const errData = await res.json();
+          errDetail = errData?.detail || JSON.stringify(errData);
+        } catch {
+          errDetail = res.statusText ? `HTTP ${res.status}: ${res.statusText}` : `HTTP ${res.status}`;
+        }
+        throw new Error(errDetail || `Server returned HTTP ${res.status}`);
       }
 
       const result: DashboardOverviewResponse = await res.json();
@@ -157,13 +164,31 @@ export default function Dashboard() {
       ) : error && !data ? (
         <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-8 text-center max-w-2xl mx-auto my-12">
           <AlertOctagon className="h-12 w-12 text-rose-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900">System Unavailable</h3>
+          <h3 className="text-lg font-semibold text-slate-900">
+            {error.toLowerCase().includes("quota") ? "Cloud Database Quota Limit Reached" : "System Unavailable"}
+          </h3>
           <p className="mt-2 text-sm text-slate-600">
-            Unable to establish a connection with the central database.
+            {error.toLowerCase().includes("quota")
+              ? "Your Neon.tech PostgreSQL database free tier monthly compute limit has been reached."
+              : "Unable to establish a connection with the central database."}
           </p>
+
           <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-md">
-             <p className="text-xs text-rose-700 text-left">{error}</p>
+            <p className="text-xs text-rose-700 text-left font-mono break-all">{error}</p>
           </div>
+
+          {error.toLowerCase().includes("quota") && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-md text-left text-xs text-amber-900 space-y-2">
+              <p className="font-semibold text-amber-950">Quick 2-Minute Solution:</p>
+              <ol className="list-decimal list-inside space-y-1 text-slate-700">
+                <li>Log in to <a href="https://console.neon.tech" target="_blank" rel="noreferrer" className="text-blue-600 underline font-medium">console.neon.tech</a> (or <a href="https://supabase.com" target="_blank" rel="noreferrer" className="text-blue-600 underline font-medium">supabase.com</a>).</li>
+                <li>Create a new free project or reset your current project quota.</li>
+                <li>Copy the connection string and update <code className="bg-amber-100 px-1 py-0.5 rounded text-amber-950 font-bold">DATABASE_URL</code> in your Render dashboard environment variables.</li>
+                <li>Wait 1 minute for auto-redeploy, then click Retry below.</li>
+              </ol>
+            </div>
+          )}
+
           <button
             onClick={() => fetchDashboardData(rangeFilter)}
             className="mt-6 inline-flex items-center space-x-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"

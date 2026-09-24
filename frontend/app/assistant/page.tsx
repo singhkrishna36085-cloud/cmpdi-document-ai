@@ -421,17 +421,8 @@ function AssistantContent() {
     try {
       const docIdFilter = targetDocId !== undefined ? targetDocId : paramDocId;
 
-      // Enrich query with targeted context directive if a specific mode is selected
-      let finalQuery = textToSubmit;
-      if (selectedMode === "doc") {
-        finalQuery = `[CMPDI DOCUMENT RETRIEVAL ONLY - Ground answer strictly on authorized CMPDI reports and borehole logs] ${textToSubmit}`;
-      } else if (selectedMode === "web") {
-        finalQuery = `[LIVE WEB INTEL - Search and ground with latest 2026 Ministry of Coal guidelines and news] ${textToSubmit}`;
-      } else if (selectedMode === "calc") {
-        finalQuery = `[MINING CALCULATION - Compute step-by-step mathematical formulas, units, and clear numbers] ${textToSubmit}`;
-      } else if (selectedMode === "safety") {
-        finalQuery = `[DGMS COMPLIANCE - Ground answer in Directorate General of Mines Safety and CMR 2017 regulations] ${textToSubmit}`;
-      }
+      // Send clean query text directly so vector embeddings and regex match actual user intent
+      const finalQuery = textToSubmit;
 
       const response = await fetchWithAuth("/api/assistant/query", {
         method: "POST",

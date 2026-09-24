@@ -204,38 +204,144 @@ async def assistant_query_endpoint(
                 "status": "success"
             }
 
+        import re
+        search_query_clean = re.sub(r"^\[.*?\]\s*", "", query_clean).strip()
+        if not search_query_clean:
+            search_query_clean = query_clean
+
+        # Extract explicit document ID if mentioned by user (e.g., "Document #3", "doc 3", "file 11", "#3")
+        target_doc_id = req.doc_id
+        if target_doc_id is None:
+            doc_id_match = re.search(r"(?:document|doc|file|report|no\.?|#)\s*#?\s*(\d+)", search_query_clean, re.IGNORECASE)
+            if doc_id_match:
+                try:
+                    target_doc_id = int(doc_id_match.group(1))
+                except (ValueError, TypeError):
+                    pass
+
         allowed_doc_ids = None
         try:
             allowed_doc_ids = await get_allowed_document_ids(db, user)
-            if req.doc_id is not None:
+            if target_doc_id is not None:
                 if allowed_doc_ids is None:
-                    allowed_doc_ids = {req.doc_id}
+                    allowed_doc_ids = {target_doc_id}
                 else:
-                    if req.doc_id in allowed_doc_ids:
-                        allowed_doc_ids = {req.doc_id}
+                    if target_doc_id in allowed_doc_ids:
+                        allowed_doc_ids = {target_doc_id}
                     else:
                         allowed_doc_ids = set()
         except Exception as rbac_err:
             logger.warning(f"Notice on RBAC filter: {rbac_err}")
             allowed_doc_ids = None
 
-        # 3. RAG Retrieval via existing STEP 9.1 service with RBAC filtering
+        retrieved_chunks = []
+        raw_chunks = []
+
+        # 3. DIRECT TARGETED DOCUMENT RETRIEVAL (If specific Document ID requested)
+        if target_doc_id is not None and route_mode != "WEB":
+            try:
+                from sqlalchemy import select
+                from app.models import Document, DocumentChunk, StructuredExtraction
+
+                doc_stmt = select(Document).where(Document.id == target_doc_id)
+                if allowed_doc_ids is not None and target_doc_id not in allowed_doc_ids:
+                    doc_stmt = doc_stmt.where(Document.id.in_(allowed_doc_ids))
+                doc_row = (await db.execute(doc_stmt)).scalar_one_or_none()
+
+                if doc_row:
+                    # Fetch chunks directly for this document from PostgreSQL
+                    chunk_stmt = select(DocumentChunk).where(DocumentChunk.document_id == target_doc_id).order_by(DocumentChunk.id).limit(20)
+                    chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
+                    for ch in chunk_rows:
+                        retrieved_chunks.append({
+                            "document_id": doc_row.id,
+                            "chunk_id": ch.id,
+                            "original_filename": doc_row.original_filename,
+                            "document_name": doc_row.name,
+                            "page_number": ch.page_number,
+                            "sheet_name": ch.sheet_name,
+                            "source_reference": f"Page {ch.page_number}" if ch.page_number else (f"Sheet: {ch.sheet_name}" if ch.sheet_name else "Document text"),
+                            "chunk_type": ch.chunk_type,
+                            "relevance_score": 1.0,
+                            "content": ch.content
+                        })
+
+                    # Fallback to extracted_text if chunks are not yet created
+                    if not retrieved_chunks and doc_row.extracted_text:
+                        retrieved_chunks.append({
+                            "document_id": doc_row.id,
+                            "chunk_id": 1,
+                            "original_filename": doc_row.original_filename,
+                            "document_name": doc_row.name,
+                            "page_number": 1,
+                            "sheet_name": None,
+                            "source_reference": f"Document Full Extracted Text ({doc_row.original_filename})",
+                            "chunk_type": "text",
+                            "relevance_score": 1.0,
+                            "content": doc_row.extracted_text[:6000]
+                        })
+                else:
+                    # Target document not found — list available documents to help the user
+                    avail_stmt = select(Document.id, Document.original_filename, Document.processing_status).order_by(Document.id).limit(15)
+                    if allowed_doc_ids is not None:
+                        avail_stmt = avail_stmt.where(Document.id.in_(allowed_doc_ids))
+                    avail_docs = (await db.execute(avail_stmt)).all()
+                    if avail_docs:
+                        doc_list_str = "\n".join([f"• Document #{row[0]}: {row[1]} (Status: {row[2]})" for row in avail_docs])
+                        summary_header = f"Notice: Document #{target_doc_id} could not be found in your database. Currently available documents in your vault:\n{doc_list_str}\n\n"
+                    else:
+                        summary_header = f"Notice: Document #{target_doc_id} was not found, and no other documents are currently in your database vault.\n\n"
+            except Exception as doc_err:
+                logger.warning(f"Direct document #{target_doc_id} lookup notice: {doc_err}")
+
+        # 4. RAG VECTOR RETRIEVAL (Semantic search if not targeted or needing more context)
         effective_top_k = req.top_k or 5
-        query_lower = query_clean.lower()
+        query_lower = search_query_clean.lower()
         if any(k in query_lower for k in ["highest", "total", "summary", "compare", "all", "sabse", "max"]):
             effective_top_k = max(effective_top_k, 15)
 
-        retrieved_chunks = []
-        raw_chunks = []
-        if route_mode != "WEB":
+        if not retrieved_chunks and route_mode != "WEB":
             try:
-                retrieval_res = await asyncio.to_thread(retrieve_rag_context, query_clean, effective_top_k, allowed_doc_ids)
+                retrieval_res = await asyncio.to_thread(retrieve_rag_context, search_query_clean, effective_top_k, allowed_doc_ids)
                 raw_chunks = retrieval_res.get("retrieved_chunks", [])
                 retrieved_chunks = [c for c in raw_chunks if c.get("relevance_score", 0.0) >= 0.15]
             except Exception as e:
                 logger.warning(f"RAG retrieval fallback: {e}")
                 raw_chunks = []
                 retrieved_chunks = []
+
+        # 5. POSTGRESQL KEYWORD FALLBACK (If FAISS has 0 vectors or empty on restart)
+        if not retrieved_chunks and route_mode != "WEB":
+            try:
+                from sqlalchemy import or_, select
+                from app.models import DocumentChunk, Document
+                keywords = [w for w in re.findall(r"\b[A-Za-z0-9_-]+\b", search_query_clean) if len(w) >= 3][:6]
+                if keywords:
+                    conds = [DocumentChunk.content.ilike(f"%{kw}%") for kw in keywords]
+                    fb_stmt = (
+                        select(DocumentChunk, Document)
+                        .join(Document, DocumentChunk.document_id == Document.id)
+                        .where(or_(*conds))
+                        .limit(effective_top_k)
+                    )
+                    if allowed_doc_ids is not None:
+                        fb_stmt = fb_stmt.where(Document.id.in_(allowed_doc_ids))
+                    fb_rows = (await db.execute(fb_stmt)).all()
+                    for ch, dc in fb_rows:
+                        retrieved_chunks.append({
+                            "document_id": dc.id,
+                            "chunk_id": ch.id,
+                            "original_filename": dc.original_filename,
+                            "document_name": dc.name,
+                            "page_number": ch.page_number,
+                            "sheet_name": ch.sheet_name,
+                            "source_reference": f"Page {ch.page_number}" if ch.page_number else "Document text",
+                            "chunk_type": ch.chunk_type,
+                            "relevance_score": 0.85,
+                            "content": ch.content
+                        })
+            except Exception as fb_err:
+                logger.warning(f"SQL keyword chunk fallback notice: {fb_err}")
 
         # 4. Handle cross-document calculations & summary header derived directly from PostgreSQL extractions
         summary_header = ""

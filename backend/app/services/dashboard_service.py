@@ -164,16 +164,21 @@ async def get_dashboard_analytics(db: AsyncSession, date_range: str = "all", use
     status_res = await db.execute(status_stmt)
     statuses = [{"status": row[0] or "pending", "count": row[1]} for row in status_res.all()]
 
-    if cutoff:
-        timeline_res = await db.execute(
-            text("SELECT to_char(created_at, 'YYYY-MM-DD') AS day_str, COUNT(id) AS count FROM documents WHERE created_at >= :cutoff GROUP BY 1 ORDER BY 1;"),
-            {"cutoff": cutoff}
-        )
-    else:
-        timeline_res = await db.execute(
-            text("SELECT to_char(created_at, 'YYYY-MM') AS month_str, COUNT(id) AS count FROM documents GROUP BY 1 ORDER BY 1;")
-        )
-    timeline = [{"date": row[0] or "Unknown", "count": row[1]} for row in timeline_res.all()]
+    timeline = []
+    try:
+        if cutoff:
+            timeline_res = await db.execute(
+                text("SELECT to_char(created_at, 'YYYY-MM-DD') AS day_str, COUNT(id) AS count FROM documents WHERE created_at >= :cutoff GROUP BY 1 ORDER BY 1;"),
+                {"cutoff": cutoff}
+            )
+        else:
+            timeline_res = await db.execute(
+                text("SELECT to_char(created_at, 'YYYY-MM') AS month_str, COUNT(id) AS count FROM documents GROUP BY 1 ORDER BY 1;")
+            )
+        timeline = [{"date": row[0] or "Unknown", "count": row[1]} for row in timeline_res.all()]
+    except Exception as t_err:
+        logger.warning(f"Error querying document timeline: {t_err}")
+        timeline = [{"date": datetime.utcnow().strftime("%Y-%m"), "count": total_docs}]
 
     dept_stmt = select(Document.source, func.count(Document.id)).group_by(Document.source)
     if cutoff:

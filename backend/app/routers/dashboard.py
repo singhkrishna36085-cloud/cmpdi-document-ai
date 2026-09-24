@@ -4,6 +4,7 @@ GET /api/dashboard/overview — Consolidated real-time analytics endpoint
 Supports interactive date range filtering (?range=all|7d|30d|90d).
 """
 
+import logging
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +14,8 @@ from app.models import User
 from app.core.dependencies import get_optional_user
 from app.schemas.dashboard import DashboardOverviewResponse
 from app.services.dashboard_service import get_dashboard_analytics
+
+logger = logging.getLogger("dashboard_router")
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -44,8 +47,15 @@ async def get_dashboard_overview(
         data = await get_dashboard_analytics(db, date_range=range, user=user)
         return data
     except Exception as exc:
+        err_msg = str(exc)
+        logger.exception(f"Failed to generate dashboard analytics: {err_msg}")
+        if "quota" in err_msg.lower() or "insufficientresources" in err_msg.lower():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Database Quota Exceeded: Your cloud PostgreSQL database (Neon) has reached its free tier compute or storage limit ({err_msg}). Please reset your project quota on console.neon.tech or provide a new DATABASE_URL in Render."
+            )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to generate dashboard analytics: {str(exc)}"
+            detail=f"Failed to generate dashboard analytics: {err_msg}"
         )
 
