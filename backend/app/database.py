@@ -136,9 +136,18 @@ def _build_clean_url(raw: str) -> tuple[str, str, str, str, bool]:
 
     # Rebuild URL from scratch — NO query params (this is what prevents the error)
     if raw_user and raw_pass:
-        clean_url = f"postgresql+asyncpg://{raw_user}:{raw_pass}@{db_host}:{db_port}/{db_name}"
+        # Strip literal brackets if user retained them from [YOUR-PASSWORD]
+        clean_pass = raw_pass.strip()
+        if clean_pass.startswith("[") and clean_pass.endswith("]"):
+            clean_pass = clean_pass[1:-1]
+        
+        # Safely percent-encode password so special characters like @, #, : do not corrupt asyncpg connection
+        enc_pass = urllib.parse.quote(urllib.parse.unquote(clean_pass), safe="")
+        enc_user = urllib.parse.quote(urllib.parse.unquote(raw_user), safe=".")
+        clean_url = f"postgresql+asyncpg://{enc_user}:{enc_pass}@{db_host}:{db_port}/{db_name}"
     elif raw_user:
-        clean_url = f"postgresql+asyncpg://{raw_user}@{db_host}:{db_port}/{db_name}"
+        enc_user = urllib.parse.quote(urllib.parse.unquote(raw_user), safe=".")
+        clean_url = f"postgresql+asyncpg://{enc_user}@{db_host}:{db_port}/{db_name}"
     else:
         clean_url = f"postgresql+asyncpg://{db_host}:{db_port}/{db_name}"
 
