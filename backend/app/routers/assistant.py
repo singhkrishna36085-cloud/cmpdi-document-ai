@@ -249,9 +249,48 @@ async def assistant_query_endpoint(
                 doc_row = (await db.execute(doc_stmt)).scalar_one_or_none()
 
                 if doc_row:
-                    # Fetch chunks directly for this document from PostgreSQL
-                    chunk_stmt = select(DocumentChunk).where(DocumentChunk.document_id == target_doc_id).order_by(DocumentChunk.id).limit(20)
-                    chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
+                    from sqlalchemy import func, or_
+
+                    # 1. Detect if the user asked about a specific page (e.g. "page 3", "pg 2", "p. 5")
+                    page_match = re.search(r"\b(?:page|pg|p\.?)\s*#?\s*(\d+)\b", search_query_clean, re.IGNORECASE)
+                    target_page = int(page_match.group(1)) if page_match else None
+
+                    if target_page is not None:
+                        chunk_stmt = select(DocumentChunk).where(
+                            DocumentChunk.document_id == target_doc_id,
+                            DocumentChunk.page_number == target_page
+                        ).order_by(DocumentChunk.id)
+                        chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
+                    else:
+                        # 2. Check total chunks in this document
+                        cnt_res = await db.execute(
+                            select(func.count(DocumentChunk.id)).where(DocumentChunk.document_id == target_doc_id)
+                        )
+                        total_cnt = cnt_res.scalar() or 0
+
+                        if total_cnt <= 45:
+                            # Deliver the COMPLETE document chunks to the LLM so it has the entire PDF in context
+                            chunk_stmt = select(DocumentChunk).where(
+                                DocumentChunk.document_id == target_doc_id
+                            ).order_by(DocumentChunk.id)
+                            chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
+                        else:
+                            # For large documents, retrieve keyword-matching chunks or representative cross-section
+                            doc_kws = [w for w in re.findall(r"\b[A-Za-z0-9_-]+\b", search_query_clean) if len(w) >= 3][:8]
+                            is_general = any(k in search_query_clean.lower() for k in ["summary", "overview", "pura", "all", "explain", "kya hai", "about"])
+                            if doc_kws and not is_general:
+                                kw_conds = [DocumentChunk.content.ilike(f"%{kw}%") for kw in doc_kws]
+                                chunk_stmt = select(DocumentChunk).where(
+                                    DocumentChunk.document_id == target_doc_id,
+                                    or_(*kw_conds)
+                                ).order_by(DocumentChunk.id).limit(40)
+                                chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
+                            else:
+                                chunk_stmt = select(DocumentChunk).where(
+                                    DocumentChunk.document_id == target_doc_id
+                                ).order_by(DocumentChunk.id).limit(40)
+                                chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
+
                     for ch in chunk_rows:
                         retrieved_chunks.append({
                             "document_id": doc_row.id,
