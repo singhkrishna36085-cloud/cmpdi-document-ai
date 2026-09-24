@@ -278,7 +278,7 @@ export function TopNavbar() {
 
   useEffect(() => {
     fetchLiveNotifications();
-    const interval = setInterval(fetchLiveNotifications, 12000); // 12-second live polling
+    const interval = setInterval(fetchLiveNotifications, 45000); // 45-second gentle live polling
     return () => clearInterval(interval);
   }, [readNotifIds]);
 
