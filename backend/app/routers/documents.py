@@ -31,10 +31,10 @@ ALLOWED_EXTENSIONS = {"pdf", "docx", "xlsx", "csv", "jpg", "jpeg", "png", "zip"}
 
 async def auto_reindex_background_task():
     """Background task to completely rebuild the FAISS index after a document change."""
-    from app.database import async_session_maker
+    from app.database import AsyncSessionLocal
     from app.services.vector_search import index_chunks
     
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         res = await db.execute(
             select(DocumentChunk, Document)
             .join(Document, DocumentChunk.document_id == Document.id)
@@ -270,6 +270,31 @@ async def list_documents(
     stmt = stmt.order_by(Document.created_at.desc()).offset(skip).limit(limit)
     result = await db.execute(stmt)
     docs = result.scalars().all()
+
+    # Auto-resolve stale / orphaned processing documents (e.g. server restart or network timeout)
+    now = datetime.utcnow()
+    has_updates = False
+    for d in docs:
+        if getattr(d, "processing_status", "") == "processing":
+            started = getattr(d, "processing_started_at", None) or getattr(d, "created_at", None)
+            if started and (now - started).total_seconds() > 120:
+                from sqlalchemy import func
+                cnt_res = await db.execute(select(func.count(DocumentChunk.id)).where(DocumentChunk.document_id == d.id))
+                chunk_cnt = cnt_res.scalar() or 0
+                if chunk_cnt > 0:
+                    d.processing_status = "completed"
+                    d.processing_completed_at = now
+                else:
+                    d.processing_status = "failed"
+                    d.error_message = "Processing was interrupted by server restart or memory limit. Please click Re-process."
+                has_updates = True
+
+    if has_updates:
+        try:
+            await db.commit()
+        except Exception:
+            pass
+
     return {"total": len(docs), "documents": [_doc_to_dict(d) for d in docs]}
 
 

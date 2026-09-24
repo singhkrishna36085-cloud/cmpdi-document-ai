@@ -278,6 +278,9 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
             page_count = len(doc)
             active_engines.append("PyMuPDF Turbo")
             
+            vision_calls = 0
+            max_vision_pages = int(os.getenv("MAX_VISION_PAGES", "3"))
+
             for page_idx in range(page_count):
                 page_num = page_idx + 1
                 page = doc[page_idx]
@@ -286,8 +289,8 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
                 vision_analysis = ""
                 ocr_text = ""
                 
-                # If page is scanned or sparse (< 30 chars), run optical character engines
-                if len(text) < 30:
+                # If page is scanned or sparse (< 30 chars), run optical character engines (capped to prevent delays)
+                if len(text) < 30 and vision_calls < max_vision_pages:
                     try:
                         pix = page.get_pixmap(dpi=150)
                         img_bytes = pix.tobytes("jpeg")
@@ -300,8 +303,10 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
                         # 2. Multimodal Vision for complex maps if Tesseract had minimal text
                         if not ocr_text or len(ocr_text) < 40:
                             vision_analysis = extract_text_and_map_with_gemini_vision(img_bytes, page_num)
-                            if vision_analysis and "Gemini Vision" not in active_engines:
-                                active_engines.append("Gemini Vision")
+                            if vision_analysis:
+                                vision_calls += 1
+                                if "Gemini Vision" not in active_engines:
+                                    active_engines.append("Gemini Vision")
                     except Exception as ve:
                         logger.warning(f"Page {page_num} OCR/vision notice: {ve}")
 
@@ -362,17 +367,18 @@ def process_pdf(file_path: str) -> Dict[str, Any]:
         except Exception as pypdf_err:
             logger.warning(f"pypdf fallback error: {pypdf_err}")
 
-    # 3. LlamaParse Cloud Engine (High-Fidelity Borehole & Mining Tables)
-    llama_chunks = extract_with_llama_parse(file_path)
-    if llama_chunks:
-        active_engines.append("LlamaParse Mining Log")
-        chunks.extend(llama_chunks)
+    # 3. LlamaParse & Docling Cloud Engines: Only run if PyMuPDF found zero text or explicitly requested
+    enable_deep = os.getenv("ENABLE_DEEP_CLOUD_PARSER", "false").lower() in ("true", "1")
+    if not chunks or enable_deep:
+        llama_chunks = extract_with_llama_parse(file_path)
+        if llama_chunks:
+            active_engines.append("LlamaParse Mining Log")
+            chunks.extend(llama_chunks)
 
-    # 4. IBM Docling Layout Engine (Table Structure & Formula Layout)
-    docling_chunks = extract_with_docling(file_path)
-    if docling_chunks:
-        active_engines.append("Docling Layout")
-        chunks.extend(docling_chunks)
+        docling_chunks = extract_with_docling(file_path)
+        if docling_chunks:
+            active_engines.append("Docling Layout")
+            chunks.extend(docling_chunks)
 
     full_text = "\n\n".join(full_text_list)
     return {

@@ -16,7 +16,8 @@ import {
   Clock,
   Download,
   Trash2,
-  Loader2
+  Loader2,
+  RotateCcw
 } from "lucide-react";
 
 export default function DocumentsPage() {
@@ -26,6 +27,29 @@ export default function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
+  const [reprocessingId, setReprocessingId] = useState<number | null>(null);
+
+  const handleReprocess = async (docId: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setReprocessingId(docId);
+    try {
+      const res = await fetchWithAuth(`/api/documents/${docId}/process`, { method: "POST" });
+      if (res.ok) {
+        const refreshRes = await fetchWithAuth("/api/documents");
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          setDocuments(data.documents || []);
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Re-process notice: ${err.detail || "Processing could not be started"}`);
+      }
+    } catch (err: any) {
+      alert(`Network error: ${err.message}`);
+    } finally {
+      setReprocessingId(null);
+    }
+  };
 
   const handleDownload = async (docId: number, filename: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -268,6 +292,20 @@ export default function DocumentsPage() {
                         >
                           <Eye className="w-4 h-4" /> View
                         </Link>
+                        {doc.processing_status !== "completed" && (
+                          <button
+                            onClick={(e) => handleReprocess(doc.id, e)}
+                            disabled={reprocessingId === doc.id}
+                            className="text-amber-600 hover:text-amber-800 transition-colors p-1 disabled:opacity-50"
+                            title="Re-run fast document processing"
+                          >
+                            {reprocessingId === doc.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
+                            ) : (
+                              <RotateCcw className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
                         <button
                           onClick={(e) => handleDownload(doc.id, doc.original_filename, e)}
                           disabled={downloadingId === doc.id}

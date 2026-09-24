@@ -63,7 +63,7 @@ class ConflictSummary(BaseModel):
     source_ref_a: Optional[str] = None
     source_ref_b: Optional[str] = None
     message: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
 
 class ValidationAnalytics(BaseModel):
@@ -81,7 +81,7 @@ class ReportSummary(BaseModel):
     report_type: str
     status: str
     created_by: Optional[str] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
 
@@ -101,7 +101,7 @@ class ReportAnalytics(BaseModel):
 
 class TopicAnalysisSummary(BaseModel):
     id: int
-    created_at: datetime
+    created_at: Optional[datetime] = None
     document_count: int
     topic_count: int
     top_terms: List[str]
@@ -126,7 +126,7 @@ class KnowledgeBaseAnalytics(BaseModel):
 class ActivityItem(BaseModel):
     type: str
     title: str
-    timestamp: datetime
+    timestamp: Optional[datetime] = None
     status: str
     id: Optional[int] = None
     details: Optional[str] = None
