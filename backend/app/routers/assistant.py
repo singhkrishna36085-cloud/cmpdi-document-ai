@@ -289,11 +289,11 @@ async def assistant_query_endpoint(
                         )
                         total_cnt = cnt_res.scalar() or 0
 
-                        if total_cnt <= 45:
-                            # Deliver the COMPLETE document chunks to the LLM so it has the entire PDF in context
+                        if total_cnt <= 18:
+                            # Deliver document chunks to LLM within safe token budget
                             chunk_stmt = select(DocumentChunk).where(
                                 DocumentChunk.document_id == target_doc_id
-                            ).order_by(DocumentChunk.id)
+                            ).order_by(DocumentChunk.id).limit(18)
                             chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
                         else:
                             # For large documents, retrieve keyword-matching chunks or representative cross-section
@@ -304,12 +304,12 @@ async def assistant_query_endpoint(
                                 chunk_stmt = select(DocumentChunk).where(
                                     DocumentChunk.document_id == target_doc_id,
                                     or_(*kw_conds)
-                                ).order_by(DocumentChunk.id).limit(40)
+                                ).order_by(DocumentChunk.id).limit(18)
                                 chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
                             else:
                                 chunk_stmt = select(DocumentChunk).where(
                                     DocumentChunk.document_id == target_doc_id
-                                ).order_by(DocumentChunk.id).limit(40)
+                                ).order_by(DocumentChunk.id).limit(18)
                                 chunk_rows = (await db.execute(chunk_stmt)).scalars().all()
 
                     for ch in chunk_rows:

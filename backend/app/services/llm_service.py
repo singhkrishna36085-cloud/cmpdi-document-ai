@@ -24,10 +24,8 @@ _GROQ_LAST_WORKING_MODEL: Optional[str] = None
 # High-quality verified Groq fallback models in preference order
 _STATIC_GROQ_FALLBACKS = [
     "openai/gpt-oss-120b",
-    "groq/compound",
     "qwen/qwen3.8-27b",
     "openai/gpt-oss-20b",
-    "groq/compound-mini",
     "allam-2-7b",
 ]
 
@@ -371,38 +369,56 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
         if sm not in candidate_models and sm not in _DEPRECATED_OR_INVALID_GROQ_MODELS:
             candidate_models.append(sm)
 
+    # Pre-emptively enforce safe prompt length for Groq 8,000 TPM limit (~20,000 chars)
+    def _truncate_prompt(text: str, max_len: int) -> str:
+        if len(text) <= max_len:
+            return text
+        return text[:max_len] + "\n\n[Notice: Additional context truncated to satisfy TPM rate limit quota]"
+
     last_error = ""
     for candidate in candidate_models:
-        payload = {
-            "model": candidate,
-            "messages": [
-                {"role": "system", "content": sys_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            "temperature": 0.2
-        }
-        try:
-            resp = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
-            if resp.status_code == 200:
-                data = resp.json()
-                answer = data["choices"][0]["message"]["content"].strip()
-                _GROQ_LAST_WORKING_MODEL = candidate
-                return {
-                    "answer": answer,
-                    "provider": "groq",
-                    "model": candidate,
-                    "web_sources": [],
-                    "status": "success"
-                }
-            else:
-                last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
-                logger.warning(f"Groq model '{candidate}' returned {resp.status_code} -> trying next candidate...")
-                if resp.status_code in [400, 404]:
-                    _DEPRECATED_OR_INVALID_GROQ_MODELS.add(candidate)
-        except requests.exceptions.Timeout:
-            last_error = f"Groq request for '{candidate}' timed out after {timeout}s."
-        except Exception as exc:
-            last_error = f"Groq request error on '{candidate}': {str(exc)}"
+        for attempt_chars in [20000, 13000, 6500]:
+            attempt_prompt = _truncate_prompt(user_prompt, attempt_chars)
+            payload = {
+                "model": candidate,
+                "messages": [
+                    {"role": "system", "content": sys_prompt},
+                    {"role": "user", "content": attempt_prompt}
+                ],
+                "temperature": 0.2
+            }
+            try:
+                resp = requests.post(endpoint, headers=headers, json=payload, timeout=timeout)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    answer = data["choices"][0]["message"]["content"].strip()
+                    _GROQ_LAST_WORKING_MODEL = candidate
+                    return {
+                        "answer": answer,
+                        "provider": "groq",
+                        "model": candidate,
+                        "web_sources": [],
+                        "status": "success"
+                    }
+                elif resp.status_code == 413 or (resp.status_code == 429 and "rate_limit_exceeded" in resp.text):
+                    logger.warning(
+                        f"Groq TPM limit 413/429 encountered for '{candidate}' ({len(attempt_prompt)} chars). "
+                        f"Dynamically reducing context and retrying..."
+                    )
+                    last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
+                    continue  # Try next smaller attempt_chars (13000, then 6500)
+                else:
+                    last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
+                    logger.warning(f"Groq model '{candidate}' returned {resp.status_code} -> trying next candidate...")
+                    if resp.status_code in [400, 404]:
+                        _DEPRECATED_OR_INVALID_GROQ_MODELS.add(candidate)
+                    break  # Don't retry non-413 errors with smaller context
+            except requests.exceptions.Timeout:
+                last_error = f"Groq request for '{candidate}' timed out after {timeout}s."
+                break
+            except Exception as exc:
+                last_error = f"Groq request error on '{candidate}': {str(exc)}"
+                break
 
     return {
         "answer": None,

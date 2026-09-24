@@ -11,15 +11,18 @@ from app.services.vector_search import search_knowledge_base
 logger = logging.getLogger("rag_service")
 
 
-def format_context_for_llm(chunks: List[Dict[str, Any]]) -> str:
+def format_context_for_llm(chunks: List[Dict[str, Any]], max_total_chars: int = 18000) -> str:
     """
     Formats retrieved document chunks into a structured markdown context string
     suitable for downstream LLM prompt injection.
+    Enforces a strict character budget (default: 18,000 chars ~ 4,500 tokens)
+    so prompts never exceed Groq's 8,000 TPM rate limit.
     """
     if not chunks:
         return ""
 
     blocks = []
+    current_chars = 0
     for idx, chunk in enumerate(chunks, 1):
         file_name = chunk.get("original_filename") or chunk.get("document_name") or "Unknown Document"
         src_ref = chunk.get("source_reference") or "N/A"
@@ -34,7 +37,17 @@ def format_context_for_llm(chunks: List[Dict[str, Any]]) -> str:
             f"Reference: {src_ref} | Similarity Score: {score:.4f}"
         )
         block = f"{header}\nContent:\n{content}"
+
+        if current_chars + len(block) > max_total_chars:
+            remaining_chars = max_total_chars - current_chars - len(header) - 30
+            if remaining_chars > 200:
+                trimmed_content = content[:remaining_chars] + "... [context truncated to fit token quota]"
+                block = f"{header}\nContent:\n{trimmed_content}"
+                blocks.append(block)
+            break
+
         blocks.append(block)
+        current_chars += len(block) + 50
 
     return "\n\n" + ("\n\n" + "=" * 50 + "\n\n").join(blocks)
 
