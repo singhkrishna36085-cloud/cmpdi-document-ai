@@ -219,6 +219,27 @@ async def assistant_query_endpoint(
                 except (ValueError, TypeError):
                     pass
 
+        # If still None, check if user mentioned any document filename keywords (e.g., "NRA report", "Mine Operations")
+        if target_doc_id is None:
+            try:
+                from app.models import Document
+                from sqlalchemy import select
+                all_docs_stmt = select(Document.id, Document.original_filename, Document.name)
+                all_docs_res = (await db.execute(all_docs_stmt)).all()
+                q_words = set(re.findall(r"\b[A-Za-z0-9_-]+\b", search_query_clean.lower()))
+                best_match_id = None
+                best_match_score = 0
+                for d_id, orig_fn, d_name in all_docs_res:
+                    fn_words = set(re.findall(r"\b[A-Za-z0-9_-]+\b", (orig_fn or "").lower() + " " + (d_name or "").lower()))
+                    overlap = len(q_words.intersection(fn_words))
+                    if overlap > best_match_score and overlap >= 2:
+                        best_match_score = overlap
+                        best_match_id = d_id
+                if best_match_id:
+                    target_doc_id = best_match_id
+            except Exception as match_err:
+                logger.warning(f"Filename match notice: {match_err}")
+
         allowed_doc_ids = None
         try:
             allowed_doc_ids = await get_allowed_document_ids(db, user)
