@@ -653,11 +653,11 @@ function AssistantContent() {
               const hasSources = (msg.sources && msg.sources.length > 0);
               const hasWebSources = (msg.web_sources && msg.web_sources.length > 0);
 
-              // Detect if the preceding user query asked to see the PDF, file, or source document
+              // Only show PDF if user EXPLICITLY asks for PDF recommendation or toggles it on demand
               const msgIdx = messages.findIndex(m => m.id === msg.id);
               const prevUserQuery = msgIdx > 0 && messages[msgIdx - 1]?.sender === "user" ? messages[msgIdx - 1].content.toLowerCase() : "";
-              const userAskedForPdf = /(?:pdf|source|document|file|kisme|kaha se|citation|reference|open pdf|view pdf|link)/i.test(prevUserQuery);
-              const isPdfVisible = showPdfSourcesMap[msg.id] !== undefined ? showPdfSourcesMap[msg.id] : userAskedForPdf;
+              const userExplicitlyRequestedPdf = /\b(?:recommend(?:ation)?|recommend\s+pdf|pdf\s+recommend|provide\s+pdf|pdf\s+provide|pdf\s+dikhao|pdf\s+bhejo|pdf\s+link|show\s+pdf|give\s+pdf|open\s+pdf|view\s+pdf|download\s+pdf)\b/i.test(prevUserQuery);
+              const isPdfVisible = showPdfSourcesMap[msg.id] !== undefined ? showPdfSourcesMap[msg.id] : userExplicitlyRequestedPdf;
 
               return (
                 <div
@@ -842,9 +842,9 @@ function AssistantContent() {
                             <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
                               <FileText className="w-3.5 h-3.5 text-blue-600" />
                               <span>Source PDF & Traceability ({msg.sources?.length})</span>
-                              {userAskedForPdf && (
+                              {userExplicitlyRequestedPdf && (
                                 <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-blue-100 text-blue-700 border border-blue-200">
-                                  Requested in query
+                                  Requested Recommendation
                                 </span>
                               )}
                             </div>
@@ -949,10 +949,10 @@ function AssistantContent() {
                                   ? "bg-blue-50 text-blue-700 border-blue-300 font-bold shadow-sm"
                                   : "text-slate-600 hover:text-blue-700 hover:bg-slate-100 border-slate-200"
                               }`}
-                              title={isPdfVisible ? "Hide source PDF files" : "Show source PDF files & citations"}
+                              title={isPdfVisible ? "Hide PDF" : "Request PDF Recommendation / Source Reference"}
                             >
                               <FileText className="w-3.5 h-3.5 text-blue-600" />
-                              <span>{isPdfVisible ? "Hide PDF Source" : `Show Source PDF (${msg.sources?.length || 1})`}</span>
+                              <span>{isPdfVisible ? "Hide PDF" : `PDF Recommendation (${msg.sources?.length || 1})`}</span>
                             </button>
                           )}
 

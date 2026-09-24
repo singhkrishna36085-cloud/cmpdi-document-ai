@@ -231,6 +231,7 @@ def generate_llm_answer(
             f"Task:\n"
             f"Provide a comprehensive, accurate, and structured answer to the user question using the context blocks above.\n"
             f"- FORMAT: Deliver full details directly in rich, readable TEXT format (clear uppercase headings, stylish arrow points '➤', and clean paragraphs).\n"
+            f"- STRICT TEXT FORMAT: Explain everything purely in text format. Do NOT provide, attach, or recommend PDF files or links unless the user explicitly asks for a PDF recommendation or source file link.\n"
             f"- Do NOT start the answer with mechanical file headers like '**Document Title:** XYZ.pdf' or '**Document Type:** PDF' unless explicitly requested by the user. Focus directly on the actual content, facts, and insights!\n"
             f"- Do NOT inject raw PDF file names or document links into the text unless the user explicitly asked for the PDF or source file.\n"
             f"- Identify and explain ALL content, topics, summaries, narrative details, data, numbers, tables, and conclusions present in the blocks.\n"
