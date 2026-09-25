@@ -30,6 +30,10 @@ _STATIC_GROQ_FALLBACKS = [
 ]
 
 _DEPRECATED_OR_INVALID_GROQ_MODELS = {
+    "groq/compound",
+    "groq/compound-mini",
+    "compound",
+    "compound-mini",
     "llama-3.3-70b-versatile",
     "llama-3.1-8b-instant",
     "llama3-70b-8192",
@@ -68,26 +72,24 @@ def get_live_groq_models(api_key: str) -> List[str]:
                 mid = item.get("id", "")
                 mid_lower = mid.lower()
                 # Skip non-chat/audio/guard/moderation models
-                if any(skip in mid_lower for skip in ["whisper", "guard", "safeguard", "embed", "tts", "orpheus-arabic"]):
+                if any(skip in mid_lower for skip in ["whisper", "guard", "safeguard", "embed", "tts", "orpheus"]):
                     continue
                 # Skip known deprecated models
                 if mid in _DEPRECATED_OR_INVALID_GROQ_MODELS:
                     continue
                 valid_chat_models.append(mid)
             
-            # Prioritize top-tier models (120b, compound, 27b, 20b, compound-mini)
+            # Prioritize top-tier verified active models (120b, 27b, 20b, allam)
             def model_priority(m: str) -> int:
                 m_low = m.lower()
                 if "120b" in m_low:
                     return 0
-                if "compound" in m_low and "mini" not in m_low:
-                    return 1
                 if "qwen3.8" in m_low or "27b" in m_low:
-                    return 2
+                    return 1
                 if "20b" in m_low:
+                    return 2
+                if "allam" in m_low:
                     return 3
-                if "compound-mini" in m_low:
-                    return 4
                 return 10
 
             valid_chat_models.sort(key=model_priority)
@@ -410,7 +412,7 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
                 else:
                     last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
                     logger.warning(f"Groq model '{candidate}' returned {resp.status_code} -> trying next candidate...")
-                    if resp.status_code in [400, 404]:
+                    if resp.status_code in [400, 404] or "model_not_found" in resp.text:
                         _DEPRECATED_OR_INVALID_GROQ_MODELS.add(candidate)
                     break  # Don't retry non-413 errors with smaller context
             except requests.exceptions.Timeout:
