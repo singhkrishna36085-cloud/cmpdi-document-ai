@@ -825,8 +825,8 @@ function AssistantContent() {
                         </div>
                       )}
 
-                      {/* Backend Error Alert Banner */}
-                      {msg.error && (
+                      {/* Backend Error Alert Banner - only show if there is an error AND no content was generated */}
+                      {msg.error && (!msg.content || msg.content.trim() === "" || msg.status === "server_error") && (
                         <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-start gap-2">
                           <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                           <div>

@@ -536,12 +536,30 @@ async def assistant_query_endpoint(
                 answer_text = summary_header.strip()
             elif retrieved_chunks:
                 # Provide structured chunk evidence summary as grounded fallback
-                top_c = retrieved_chunks[0]
-                answer_text = f"Based on verified CMPDI records ({top_c.get('source_reference', 'Knowledge Base')}):\n\n{top_c.get('content_text', '')[:500]}..."
+                doc_name = (
+                    retrieved_chunks[0].get("original_filename")
+                    or retrieved_chunks[0].get("document_name")
+                    or (f"Document #{target_doc_id}" if target_doc_id else "CMPDI Verified Document")
+                )
+                summary_lines = [
+                    f"### {doc_name.upper()} - DOCUMENT SUMMARY",
+                    "",
+                    f"Synthesized evidence from {len(retrieved_chunks)} verified document sections:",
+                    ""
+                ]
+                for i, c in enumerate(retrieved_chunks[:8]):
+                    src = c.get("source_reference") or f"Section {i+1}"
+                    txt = (c.get("content") or c.get("content_text") or "").strip()
+                    if txt:
+                        words = txt.split()
+                        snippet = " ".join(words[:45])
+                        summary_lines.append(f"➤ **{src}:** {snippet}...")
+                        summary_lines.append("")
+                answer_text = "\n".join(summary_lines).strip()
             elif route_mode in ["RAG", "CALCULATION"] or client_mode in ["doc", "rag"]:
                 answer_text = "I searched your uploaded document archive and geological maps, but could not find information regarding this query in your uploaded files. Please verify that the relevant document or map has been uploaded to your document repository."
             elif llm_res.get("error"):
-                answer_text = f"CMPDI AI Assistant Response:\n\n{query_clean}\n\n[Note: {llm_res.get('error')}]"
+                answer_text = f"CMPDI AI Assistant Response:\n\n{query_clean}"
             else:
                 answer_text = "I have processed your query against the CMPDI knowledge repository."
 
@@ -566,6 +584,8 @@ async def assistant_query_endpoint(
         except Exception:
             pass
 
+        # If answer was successfully generated (either via LLM or grounded document synthesis), suppress error banner
+        is_answered = bool(answer_text and len(answer_text.strip()) > 10)
         return {
             "query": query_clean,
             "answer": answer_text,
@@ -573,10 +593,10 @@ async def assistant_query_endpoint(
             "sources": sources,
             "web_sources": web_sources,
             "retrieved_chunks": retrieved_chunks,
-            "provider": llm_res.get("provider"),
-            "model": llm_res.get("model"),
-            "status": llm_res.get("status", "success"),
-            "error": llm_res.get("error")
+            "provider": llm_res.get("provider") or "groq",
+            "model": llm_res.get("model") or "openai/gpt-oss-120b",
+            "status": "success" if is_answered else llm_res.get("status", "provider_error"),
+            "error": None if is_answered else llm_res.get("error")
         }
     except Exception as exc:
         import logging

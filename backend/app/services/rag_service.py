@@ -11,11 +11,11 @@ from app.services.vector_search import search_knowledge_base
 logger = logging.getLogger("rag_service")
 
 
-def format_context_for_llm(chunks: List[Dict[str, Any]], max_total_chars: int = 18000) -> str:
+def format_context_for_llm(chunks: List[Dict[str, Any]], max_total_chars: int = 7000) -> str:
     """
     Formats retrieved document chunks into a structured markdown context string
     suitable for downstream LLM prompt injection.
-    Enforces a strict character budget (default: 18,000 chars ~ 4,500 tokens)
+    Enforces a strict character budget (default: 7,000 chars ~ 1,750 tokens)
     so prompts never exceed Groq's 8,000 TPM rate limit.
     """
     if not chunks:
@@ -29,7 +29,7 @@ def format_context_for_llm(chunks: List[Dict[str, Any]], max_total_chars: int = 
         doc_id = chunk.get("document_id")
         chunk_id = chunk.get("chunk_id")
         score = chunk.get("relevance_score", 0.0)
-        content = (chunk.get("content") or "").strip()
+        content = (chunk.get("content") or chunk.get("content_text") or "").strip()
 
         header = (
             f"[Context Block {idx}]\n"

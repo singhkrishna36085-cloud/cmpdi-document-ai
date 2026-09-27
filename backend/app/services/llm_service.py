@@ -24,9 +24,9 @@ _GROQ_LAST_WORKING_MODEL: Optional[str] = None
 # High-quality verified Groq fallback models in preference order
 _STATIC_GROQ_FALLBACKS = [
     "openai/gpt-oss-120b",
-    "qwen/qwen3.8-27b",
     "openai/gpt-oss-20b",
     "allam-2-7b",
+    "qwen/qwen3.8-27b",
 ]
 
 _DEPRECATED_OR_INVALID_GROQ_MODELS = {
@@ -43,6 +43,24 @@ _DEPRECATED_OR_INVALID_GROQ_MODELS = {
     "gemma2-9b-it",
     "llama-3.1-70b-versatile"
 }
+
+def is_invalid_or_deprecated_groq_model(model_name: Optional[str]) -> bool:
+    """Returns True if the given model name is invalid, deprecated, non-chat, or known to 404."""
+    if not model_name:
+        return True
+    m = model_name.strip().lower()
+    if not m:
+        return True
+    # Blacklist any model containing compound, deprecated Llama versions, audio/guard models
+    blacklisted_substrings = [
+        "compound", "llama-3.1", "llama3", "mixtral", "gemma2",
+        "whisper", "guard", "safeguard", "orpheus", "tts", "embed"
+    ]
+    if any(bad in m for bad in blacklisted_substrings):
+        return True
+    if m in {x.lower() for x in _DEPRECATED_OR_INVALID_GROQ_MODELS}:
+        return True
+    return False
 
 def get_live_groq_models(api_key: str) -> List[str]:
     """
@@ -70,25 +88,20 @@ def get_live_groq_models(api_key: str) -> List[str]:
             valid_chat_models = []
             for item in models_data:
                 mid = item.get("id", "")
-                mid_lower = mid.lower()
-                # Skip non-chat/audio/guard/moderation models
-                if any(skip in mid_lower for skip in ["whisper", "guard", "safeguard", "embed", "tts", "orpheus"]):
-                    continue
-                # Skip known deprecated models
-                if mid in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+                if is_invalid_or_deprecated_groq_model(mid):
                     continue
                 valid_chat_models.append(mid)
             
-            # Prioritize top-tier verified active models (120b, 27b, 20b, allam)
+            # Prioritize top-tier verified active models (120b, 20b, allam, 27b)
             def model_priority(m: str) -> int:
                 m_low = m.lower()
                 if "120b" in m_low:
                     return 0
-                if "qwen3.8" in m_low or "27b" in m_low:
-                    return 1
                 if "20b" in m_low:
-                    return 2
+                    return 1
                 if "allam" in m_low:
+                    return 2
+                if "qwen3.8" in m_low or "27b" in m_low:
                     return 3
                 return 10
 
@@ -110,7 +123,10 @@ def get_default_provider() -> str:
 def get_default_model() -> str:
     provider = get_default_provider()
     if provider == "groq":
-        return os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
+        env_model = os.getenv("LLM_MODEL", "")
+        if env_model and not is_invalid_or_deprecated_groq_model(env_model):
+            return env_model
+        return "openai/gpt-oss-120b"
     elif provider == "gemini":
         return os.getenv("LLM_MODEL", "gemini-1.5-flash")
     return os.getenv("LLM_MODEL", "openai/gpt-oss-120b")
@@ -352,34 +368,39 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
     candidate_models: List[str] = []
 
     # 1. Last known working model for fast execution
-    if _GROQ_LAST_WORKING_MODEL and _GROQ_LAST_WORKING_MODEL not in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+    if _GROQ_LAST_WORKING_MODEL and not is_invalid_or_deprecated_groq_model(_GROQ_LAST_WORKING_MODEL):
         candidate_models.append(_GROQ_LAST_WORKING_MODEL)
 
-    # 2. User-requested model if provided and not explicitly deprecated
+    # 2. User-requested model if provided and not explicitly deprecated or invalid
     req_model = (model or "").strip()
-    if req_model and req_model not in _DEPRECATED_OR_INVALID_GROQ_MODELS and req_model not in candidate_models:
+    if req_model and not is_invalid_or_deprecated_groq_model(req_model) and req_model not in candidate_models:
         candidate_models.insert(0, req_model)
 
     # 3. Discovered live models from Groq API
     live_models = get_live_groq_models(clean_key)
     for lm in live_models:
-        if lm not in candidate_models and lm not in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+        if lm not in candidate_models and not is_invalid_or_deprecated_groq_model(lm):
             candidate_models.append(lm)
 
     # 4. Static verified fallbacks
     for sm in _STATIC_GROQ_FALLBACKS:
-        if sm not in candidate_models and sm not in _DEPRECATED_OR_INVALID_GROQ_MODELS:
+        if sm not in candidate_models and not is_invalid_or_deprecated_groq_model(sm):
             candidate_models.append(sm)
 
-    # Pre-emptively enforce safe prompt length for Groq 8,000 TPM limit (~20,000 chars)
+    # Fallback to guaranteed models if list is somehow empty
+    if not candidate_models:
+        candidate_models = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "allam-2-7b"]
+
+    # Pre-emptively enforce safe prompt length for Groq 8,000 TPM limit
     def _truncate_prompt(text: str, max_len: int) -> str:
         if len(text) <= max_len:
             return text
-        return text[:max_len] + "\n\n[Notice: Additional context truncated to satisfy TPM rate limit quota]"
+        return text[:max_len] + "\n\n[Notice: Context truncated to satisfy token rate limit quota]"
 
     last_error = ""
     for candidate in candidate_models:
-        for attempt_chars in [20000, 13000, 6500]:
+        # 8000 chars (~2000 tokens) + 1024 max_tokens ensures we stay comfortably within 8000 TPM
+        for attempt_chars in [8000, 5000, 3000]:
             attempt_prompt = _truncate_prompt(user_prompt, attempt_chars)
             payload = {
                 "model": candidate,
@@ -387,6 +408,7 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
                     {"role": "system", "content": sys_prompt},
                     {"role": "user", "content": attempt_prompt}
                 ],
+                "max_tokens": 1024,
                 "temperature": 0.2
             }
             try:
@@ -402,19 +424,19 @@ def _call_groq(user_prompt: str, model: str, api_key: str, timeout: int, sys_pro
                         "web_sources": [],
                         "status": "success"
                     }
-                elif resp.status_code == 413 or (resp.status_code == 429 and "rate_limit_exceeded" in resp.text):
+                elif resp.status_code in [413, 429] or "rate_limit" in resp.text.lower():
                     logger.warning(
-                        f"Groq TPM limit 413/429 encountered for '{candidate}' ({len(attempt_prompt)} chars). "
-                        f"Dynamically reducing context and retrying..."
+                        f"Groq TPM limit encountered for '{candidate}' ({len(attempt_prompt)} chars). "
+                        f"Reducing context length..."
                     )
                     last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
-                    continue  # Try next smaller attempt_chars (13000, then 6500)
+                    continue  # Try next smaller attempt_chars (5000, then 3000)
                 else:
                     last_error = f"Groq API HTTP {resp.status_code} ({candidate}): {resp.text}"
                     logger.warning(f"Groq model '{candidate}' returned {resp.status_code} -> trying next candidate...")
                     if resp.status_code in [400, 404] or "model_not_found" in resp.text:
                         _DEPRECATED_OR_INVALID_GROQ_MODELS.add(candidate)
-                    break  # Don't retry non-413 errors with smaller context
+                    break  # Don't retry non-413/429 errors with smaller context
             except requests.exceptions.Timeout:
                 last_error = f"Groq request for '{candidate}' timed out after {timeout}s."
                 break
