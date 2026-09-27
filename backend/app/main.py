@@ -145,7 +145,12 @@ def root_index():
 
 @app.get("/api/health", tags=["health"])
 def health_check():
-    return {"status": "ok", "message": "CMPDI backend is running."}
+    return {
+        "status": "ok",
+        "message": "CMPDI backend is running.",
+        "version": "1.0.1-token-budget",
+        "build": "20f2f0f-v2"
+    }
 
 
 @app.get("/api/health/db", tags=["health"])
